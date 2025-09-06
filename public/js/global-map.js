@@ -7,7 +7,7 @@ let map;
 let geocoder;
 let placesService;
 
-// --- UI & Geocoding Logic (No changes here) ---
+// --- UI & Geocoding Logic ---
 function updateInfoPanel(code, address, suffix) {
     const codeDisplay = document.getElementById('code-display');
     const line1Display = document.getElementById('line1-display');
@@ -40,20 +40,65 @@ function getPlaceDetails(latLng) {
     });
 }
 
+// --- FIX APPLIED: Hybrid Geocoding Strategy ---
+/**
+ * Intelligently parses and merges results from both the Geocoding and Places APIs
+ * to construct the most accurate, human-readable address.
+ * @param {google.maps.GeocoderAddressComponent[]} geocodeComponents - Results from Reverse Geocoding.
+ * @param {google.maps.places.PlaceResult} placeResult - Results from Places API Nearby Search.
+ * @returns {{line1: string, line2: string, line3: string}} The structured address.
+ */
 function parseAddressComponents(geocodeComponents, placeResult) {
-    const foundNames = [];
-    const getComponent = type => geocodeComponents.find(c => c.types.includes(type))?.long_name || null;
-    if (placeResult?.name) foundNames.push(placeResult.name);
-    const priorityList = ['locality', 'administrative_area_level_2', 'administrative_area_level_1', 'country'];
-    for (const type of priorityList) {
-        if (foundNames.length >= 3) break;
-        const foundName = getComponent(type);
-        if (foundName && !foundNames.includes(foundName)) foundNames.push(foundName);
-    }
-    return { line1: foundNames[0] || '', line2: foundNames[1] || '', line3: foundNames[2] || 'Unknown Location' };
-}
+    const address = {
+        line1: '', // Most specific: Neighbourhood or Village
+        line2: '', // Primary Town or City
+        line3: ''  // Region or Country
+    };
 
-// --- Event Handlers (No changes here) ---
+    // Helper to find a component by type
+    const getComponent = (type) => geocodeComponents.find(c => c.types.includes(type))?.long_name || null;
+
+    // Line 1: Prioritize the named "place" first, then fall back to geocoded components.
+    // This gives us the most human-relevant name for the immediate area.
+    address.line1 = placeResult?.name || getComponent('neighborhood') || getComponent('sublocality_level_1') || getComponent('sublocality');
+
+    // Line 2: Find the primary city or town.
+    address.line2 = getComponent('locality') || getComponent('administrative_area_level_3');
+
+    // Line 3: Find the broader region or country.
+    address.line3 = getComponent('administrative_area_level_1') || getComponent('country');
+
+    // --- Deduplication and Cleanup Logic ---
+    // If Line 1 and Line 2 are the same (e.g., in a small town), remove Line 1.
+    if (address.line1 === address.line2) {
+        address.line1 = '';
+    }
+    // If Line 2 and Line 3 are the same, remove Line 2.
+    if (address.line2 === address.line3) {
+        address.line2 = '';
+    }
+    // If Line 1 is now empty, promote Line 2.
+    if (!address.line1 && address.line2) {
+        address.line1 = address.line2;
+        address.line2 = address.line3;
+        address.line3 = '';
+    }
+    // If Line 2 is now empty, promote Line 3.
+    if (!address.line2 && address.line3) {
+        address.line2 = address.line3;
+        address.line3 = '';
+    }
+    
+    // Final fallback if everything is empty
+    if (!address.line1 && !address.line2 && !address.line3) {
+        address.line1 = getComponent('country') || 'Unknown Location';
+    }
+
+    return address;
+}
+// --- END OF FIX ---
+
+// --- Event Handlers ---
 async function handleMapClick(rawLatLng) {
     MapCore.drawAddressBoxes(map, rawLatLng);
     const snappedLatLng = MapCore.snapToGridCenter(rawLatLng);
@@ -86,7 +131,7 @@ function handleGeolocate() {
 
 // --- Initialization ---
 function initApp() {
-    map = MapCore.initializeBaseMap(document.getElementById("map"), {});
+    map = MapCore.initializeBaseMap(document.getElementById("map"), { center: { lat: 0, lng: 0 }, zoom: 3 });
     geocoder = new google.maps.Geocoder();
     placesService = new google.maps.places.PlacesService(map);
 
@@ -100,10 +145,7 @@ function initApp() {
 
 async function startApp() {
     try {
-        // --- FIX APPLIED ---
-        // We now call the loader with the API key and an array of required libraries.
         await loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY, ['places', 'geometry']);
-        // --- END OF FIX ---
         initApp();
     } catch (error) {
         console.error(error);
