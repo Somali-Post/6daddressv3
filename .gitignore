@@ -1,1 +1,14 @@
-# Git ignore file
+# Ignore Node.js dependencies
+node_modules/
+
+# Ignore environment variables file (for storing secret API keys)
+.env
+
+# Ignore build output directories
+.netlify/
+dist/
+build/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db

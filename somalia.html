@@ -1,1 +1,28 @@
-<!-- Content for somalia.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6D Address - Somalia Registration</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <!-- The map container will take up the full screen -->
+    <div id="map"></div>
+
+    <!-- The registration sidebar, hidden by default -->
+    <div id="registration-sidebar" class="sidebar hidden">
+        <!-- Registration form content will be added here -->
+        <h2>Register Your 6D Address</h2>
+    </div>
+
+    <!-- 
+      IMPORTANT: Replace YOUR_GOOGLE_MAPS_API_KEY with your actual API key.
+      For production, this should be managed via environment variables.
+      The 'callback=initMap' tells the API to run the global initMap function once loaded.
+    -->
+        <!-- ... inside the <body> tag ... -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=__GOOGLE_MAPS_API_KEY__&callback=initMap&libraries=geometry&v=weekly" async defer></script>
+    <script type="module" src="/js/somalia-map.js"></script>
+</body>
+</html>
