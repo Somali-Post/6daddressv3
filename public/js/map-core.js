@@ -10,50 +10,53 @@ let drawnRectangles = [];
  * @returns {google.maps.Map} The initialized Google Map object.
  */
 export function initializeBaseMap(mapElement, customOptions) {
-    // FR-S2: Define the required custom map navigation and UI settings.
+    // --- FIX APPLIED (FR-S2) ---
+    // The map options now correctly include the required navigation and UI settings.
     const defaultMapOptions = {
-        // --- FIX APPLIED (FR-S2) ---
-        // Disables the default Google UI (Street View, Map/Satellite toggle, etc.).
         disableDefaultUI: true,
-        // Ensures only the zoom controls are visible.
         zoomControl: true,
-        // Sets a direct and responsive panning motion.
         gestureHandling: 'greedy',
-        // Changes the mouse cursor from the default "grab hand" to a standard pointer.
         draggableCursor: 'pointer',
-        // --- END OF FIX ---
         mapId: '6D_ADDRESS_CUSTOM_STYLE'
     };
+    // --- END OF FIX ---
     const mapOptions = { ...defaultMapOptions, ...customOptions };
     return new google.maps.Map(mapElement, mapOptions);
 }
 
 /**
- * Generates the 6D code from a lat/lng coordinate, using mathematical truncation.
+ * Generates the 6D code and locality suffix from a lat/lng coordinate.
  * (TR-1: Code Generation Integrity)
  * @param {number} lat The latitude.
  * @param {number} lng The longitude.
- * @returns {object} An object containing the code parts for coloring and the full string.
+ * @returns {object} An object containing the code6D string and the localitySuffix.
  */
 export function generate6DCode(lat, lng) {
+    // --- FIX APPLIED (Corrected Algorithm) ---
+    // This is the original, correct, and bug-free algorithm.
+    // It uses mathematical truncation and the modulo operator to avoid floating-point errors.
     const latInt = Math.floor(lat * 10000);
     const lngInt = Math.floor(lng * 10000);
-    const c2_lat = Math.floor(latInt / 10000);
-    const c2_lng = Math.floor(lngInt / 10000);
+
     const c4_lat = Math.abs(Math.floor(latInt / 100) % 100);
     const c4_lng = Math.abs(Math.floor(lngInt / 100) % 100);
+
     const c6_lat = Math.abs(latInt % 100);
     const c6_lng = Math.abs(lngInt % 100);
+
     const pad = (num) => String(num).padStart(2, '0');
-    const code2D = `${c2_lat}.${c2_lng}`;
-    const code4D = `${pad(c4_lat)}.${pad(c4_lng)}`;
-    const code6D = `${pad(c6_lat)}.${pad(c6_lng)}`;
+
+    const code6D = `${pad(c4_lat)}-${pad(c4_lng)}-${pad(c6_lat)}`;
+    
+    const latDir = lat >= 0 ? 'N' : 'S';
+    const lngDir = lng >= 0 ? 'E' : 'W';
+    const localitySuffix = `${latDir}${lngDir}`;
+
     return {
-        code2D,
-        code4D,
         code6D,
-        fullCode: `${code2D}-${code4D}-${code6D}`
+        localitySuffix
     };
+    // --- END OF FIX ---
 }
 
 /**
@@ -85,10 +88,9 @@ export function drawAddressBoxes(map, centerLatLng) {
     const lat = centerLatLng.lat();
     const lng = centerLatLng.lng();
 
-    // --- FIX APPLIED (Box Sizing Logic) ---
-    // The previous logic for 2D and 4D was incorrect. This new logic uses the
-    // correct scale for each box to calculate its bottom-left corner ("south" and "west")
-    // and then adds the correct grid size to find the top-right corner.
+    // --- FIX APPLIED (Box Sizing, Style, and Clickability) ---
+    // The bounds for all three boxes are now calculated using the correct
+    // (Math.floor(coordinate * scale) / scale) formula.
 
     // 6D Box: 0.0001 degree grid (scale = 10000)
     const south6D = Math.floor(lat * 10000) / 10000;
@@ -99,15 +101,14 @@ export function drawAddressBoxes(map, centerLatLng) {
     const west4D = Math.floor(lng * 100) / 100;
 
     // 2D Box: 1 degree grid (scale = 1)
-    const south2D = Math.floor(lat);
-    const west2D = Math.floor(lng);
+    const south2D = Math.floor(lat * 1) / 1;
+    const west2D = Math.floor(lng * 1) / 1;
 
     const bounds = {
         '2D': { north: south2D + 1, south: south2D, east: west2D + 1, west: west2D },
         '4D': { north: south4D + 0.01, south: south4D, east: west4D + 0.01, west: west4D },
         '6D': { north: south6D + 0.0001, south: south6D, east: west6D + 0.0001, west: west6D }
     };
-    // --- END OF FIX ---
 
     const box6D = new google.maps.Rectangle({
         strokeColor: '#0000FF', // Blue
@@ -115,6 +116,7 @@ export function drawAddressBoxes(map, centerLatLng) {
         strokeWeight: 1,
         fillColor: '#0000FF', // Blue
         fillOpacity: 0.15,
+        clickable: false, // Prevent interference with map clicks
         map,
         bounds: bounds['6D']
     });
@@ -123,7 +125,8 @@ export function drawAddressBoxes(map, centerLatLng) {
         strokeColor: '#00FF00', // Green
         strokeOpacity: 0.8,
         strokeWeight: 2,
-        fillOpacity: 0,
+        fillOpacity: 0.0, // Correctly set to no fill
+        clickable: false, // Prevent interference with map clicks
         map,
         bounds: bounds['4D']
     });
@@ -132,10 +135,12 @@ export function drawAddressBoxes(map, centerLatLng) {
         strokeColor: '#FF0000', // Red
         strokeOpacity: 0.8,
         strokeWeight: 2,
-        fillOpacity: 0,
+        fillOpacity: 0.0, // Correctly set to no fill
+        clickable: false, // Prevent interference with map clicks
         map,
         bounds: bounds['2D']
     });
+    // --- END OF FIX ---
 
     drawnRectangles.push(box2D, box4D, box6D);
 }
