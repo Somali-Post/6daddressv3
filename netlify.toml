@@ -1,15 +1,14 @@
 # Netlify Build Configuration
 
 [build]
-  # This command will run during Netlify's build process.
-  # It executes the 'build' script defined in package.json.
+  # This command executes the 'build' script defined in package.json.
+  # It runs our inject-env.js script to handle the API key.
   command = "npm run build"
 
-  # The directory that contains the deploy-ready assets.
-  # Since our HTML files are in the root and we modify them in-place,
-  # the publish directory is the root.
+  # The directory that contains the deploy-ready assets. This is the critical fix.
+  # Netlify will make the contents of this directory the root of the live website.
   publish = "public"
 
 [build.environment]
-  # This ensures Netlify uses a compatible version of Node.js to run our script.
+  # This ensures Netlify uses a compatible and stable version of Node.js to run our script.
   NODE_VERSION = "18"
