@@ -1,33 +1,32 @@
 // This file contains shared utility functions used across the application.
 
-// A flag to ensure the Google Maps API script is only loaded once.
 let isGoogleMapsApiLoaded = false;
 
 /**
  * Dynamically loads the Google Maps JavaScript API.
- * This function creates a script tag and appends it to the document,
- * returning a promise that resolves when the script has loaded.
  * @param {string} apiKey Your Google Maps API key.
+ * @param {string[]} libraries An array of library names to load (e.g., ['places', 'geometry']).
  * @returns {Promise<void>} A promise that resolves when the API is ready.
  */
-export function loadGoogleMapsAPI(apiKey) {
+export function loadGoogleMapsAPI(apiKey, libraries = []) {
     return new Promise((resolve, reject) => {
-        // If the script has already been loaded, resolve immediately.
         if (isGoogleMapsApiLoaded) {
-            resolve();
-            return;
+            return resolve();
         }
 
-        // Create a callback function that the Google Maps script will call upon loading
         window.googleMapsApiCallback = () => {
             isGoogleMapsApiLoaded = true;
-            // Clean up the global callback function
             delete window.googleMapsApiCallback;
             resolve();
         };
 
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry&callback=googleMapsApiCallback`;
+        // --- FIX APPLIED ---
+        // The URL now correctly joins the libraries array into the 'libraries' parameter.
+        const librariesParam = libraries.length > 0 ? `&libraries=${libraries.join(',')}` : '';
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}${librariesParam}&callback=googleMapsApiCallback`;
+        // --- END OF FIX ---
+        
         script.async = true;
         script.defer = true;
         script.onerror = (error) => {
@@ -38,13 +37,8 @@ export function loadGoogleMapsAPI(apiKey) {
     });
 }
 
-
 /**
  * Debounce function to limit the rate at which a function gets called.
- * (TR-3: API Call Management)
- * @param {Function} func The function to debounce.
- * @param {number} delay The delay in milliseconds.
- * @returns {Function} The debounced function.
  */
 export function debounce(func, delay) {
     let timeout;

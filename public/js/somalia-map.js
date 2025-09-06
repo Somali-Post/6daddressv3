@@ -147,7 +147,10 @@ function initApp() {
 
 async function main() {
     try {
-        await loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY);
+        // --- PROACTIVE FIX APPLIED ---
+        // This now correctly loads only the 'geometry' library needed for this page.
+        await loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY, ['geometry']);
+        // --- END OF FIX ---
         initApp();
     } catch (error) {
         console.error("Failed to load Google Maps API.", error);

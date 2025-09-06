@@ -7,7 +7,7 @@ let map;
 let geocoder;
 let placesService;
 
-// --- UI & Geocoding Logic ---
+// --- UI & Geocoding Logic (No changes here) ---
 function updateInfoPanel(code, address, suffix) {
     const codeDisplay = document.getElementById('code-display');
     const line1Display = document.getElementById('line1-display');
@@ -53,7 +53,7 @@ function parseAddressComponents(geocodeComponents, placeResult) {
     return { line1: foundNames[0] || '', line2: foundNames[1] || '', line3: foundNames[2] || 'Unknown Location' };
 }
 
-// --- Event Handlers ---
+// --- Event Handlers (No changes here) ---
 async function handleMapClick(rawLatLng) {
     MapCore.drawAddressBoxes(map, rawLatLng);
     const snappedLatLng = MapCore.snapToGridCenter(rawLatLng);
@@ -100,8 +100,10 @@ function initApp() {
 
 async function startApp() {
     try {
-        // The 'places' library is essential for the geocoding logic
-        await loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY + '&libraries=places');
+        // --- FIX APPLIED ---
+        // We now call the loader with the API key and an array of required libraries.
+        await loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY, ['places', 'geometry']);
+        // --- END OF FIX ---
         initApp();
     } catch (error) {
         console.error(error);
