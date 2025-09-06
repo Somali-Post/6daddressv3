@@ -9,8 +9,8 @@ const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
 // List of files to process
 const filesToProcess = [
-    path.join(__dirname, '..', 'index.html'),
-    path.join(__dirname, '..', 'somalia.html')
+    path.join(__dirname, '..', 'public', 'index.html'),
+    path.join(__dirname, '..', 'public', 'somalia.html')
 ];
 
 // Check if the API key is available

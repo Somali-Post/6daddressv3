@@ -8,7 +8,7 @@
   # The directory that contains the deploy-ready assets.
   # Since our HTML files are in the root and we modify them in-place,
   # the publish directory is the root.
-  publish = "."
+  publish = "public"
 
 [build.environment]
   # This ensures Netlify uses a compatible version of Node.js to run our script.
