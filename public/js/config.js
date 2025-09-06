@@ -1,7 +1,10 @@
 // This file holds configuration data, keeping it separate from application logic.
 
+// IMPORTANT: This is a temporary placeholder. Our Netlify build script will
+// be updated to replace this string with the actual API key.
+export const GOOGLE_MAPS_API_KEY = "__GOOGLE_MAPS_API_KEY_PLACEHOLDER__";
+
 // Authoritative list of Somali regions and their districts.
-// This will be used to populate the cascading dropdowns in the registration form.
 export const somaliRegions = {
     "Awdal": ["Baki", "Borama", "Lughaya", "Zeila"],
     "Bakool": ["El Barde", "Hudur", "Tiyeglow", "Wajid", "Rabdhure"],
