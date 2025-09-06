@@ -3,26 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>6D Address - Global Map</title>
+    <title>6D Address - Global Demonstrator</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <div id="map"></div>
 
-    <div class="logo">6D Address</div>
+    <div id="logo">
+        <img src="/assets/logo.png" alt="6D Address Logo">
+    </div>
 
-    <button id="geolocate-btn" class="control-button" title="Find My Location">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><line x1="21" y1="12" x2="23" y2="12"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line></svg>
+    <button id="geolocate-btn" title="Find My Location">
+        <img src="/assets/geolocate.svg" alt="Find My Location">
     </button>
 
-    <!-- --- FIX APPLIED --- -->
-    <div class="info-panel" id="info-panel">
-        <div id="code-display" class="code-line">-- -- --</div>
-        <div id="line1-display" class="address-line">Click the map to generate an address</div>
-        <div id="line2-display" class="address-line"></div>
-        <div id="line3-display" class="address-line"></div>
+    <div id="info-panel">
+        <div id="code-display"></div>
+        <div id="address-display">
+            <div id="line1-display">Click on the map to generate</div>
+            <div id="line2-display">a 6D Address</div>
+            <div id="line3-display"></div>
+        </div>
     </div>
-    <!-- --- END OF FIX --- -->
     
     <script type="module" src="/js/global-map.js"></script>
 </body>
