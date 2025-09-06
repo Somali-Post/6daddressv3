@@ -1,0 +1,15 @@
+# Netlify Build Configuration
+
+[build]
+  # This command will run during Netlify's build process.
+  # It executes the 'build' script defined in package.json.
+  command = "npm run build"
+
+  # The directory that contains the deploy-ready assets.
+  # Since our HTML files are in the root and we modify them in-place,
+  # the publish directory is the root.
+  publish = "."
+
+[build.environment]
+  # This ensures Netlify uses a compatible version of Node.js to run our script.
+  NODE_VERSION = "18"
