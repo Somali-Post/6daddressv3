@@ -94,8 +94,10 @@ export function drawAddressBoxes(map, centerLatLng) {
 
     const bounds = {
         '2D': { north: south2D + (1/scale2D), south: south2D, east: west2D + (1/scale2D), west: west2D },
+        // --- FIX APPLIED ---
         '4D': { north: south4D + (1/scale4D), south: south4D, east: west4D + (1/scale4D), west: west4D },
         '6D': { north: south6D + (1/scale6D), south: south6D, east: west6D + (1/scale6D), west: west6D }
+        // --- END OF FIX ---
     };
 
     // DRAW RECTANGLES
