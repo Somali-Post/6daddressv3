@@ -7,9 +7,22 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+    <!-- --- FIX APPLIED (Missing HTML 3) --- -->
     <div id="map"></div>
 
-    <!-- The Google Maps script is now loaded dynamically by our JS module -->
+    <div class="logo">6D Address</div>
+
+    <button id="geolocate-btn" class="control-button" title="Find My Location">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><line x1="21" y1="12" x2="23" y2="12"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line></svg>
+    </button>
+
+    <div class="info-panel" id="info-panel">
+        <div id="code-display" class="code-line">--.-- - --.-- - --.--</div>
+        <div id="line1-display" class="address-line">Click the map to generate an address</div>
+        <div id="line2-display" class="address-line"></div>
+        <div id="line3-display" class="address-line"></div>
+    </div>
+    <!-- --- END OF FIX --- -->
     
     <script type="module" src="/js/global-map.js"></script>
 </body>
