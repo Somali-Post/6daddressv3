@@ -12,32 +12,63 @@ function updateInfoPanel(code, address, suffix) {
     const codeDisplay = document.getElementById('code-display');
     const line1Display = document.getElementById('line1-display');
     const line2Display = document.getElementById('line2-display');
-    const line3Display = document.getElementById('line3-display');
+    const line3Display = document.getElementById('line3-display'); // We will clear this one
     
     const parts = code.split('-');
     codeDisplay.innerHTML = `<span class="code-2d">${parts[0]}</span>-<span class="code-4d">${parts[1]}</span>-<span class="code-6d">${parts[2]}</span>`;
     
-    line1Display.textContent = address.line1;
-    line2Display.textContent = address.line2;
-    const finalLine = `${address.line3} ${suffix}`.trim();
-    line3Display.textContent = finalLine;
+    // Set the two lines of the address
+    line1Display.textContent = address.line1; // Village or Neighbourhood
+    
+    // Append the suffix to the Town/City line
+    const finalLine2 = `${address.line2} ${suffix}`.trim();
+    line2Display.textContent = finalLine2;
+
+    // Ensure the third line is empty
+    line3Display.textContent = '';
 }
 
-function getReverseGeocode(latLng) {
-    return new Promise(resolve => {
-        geocoder.geocode({ location: latLng }, (results, status) => {
-            resolve((status === 'OK' && results[0]) ? results[0].address_components : []);
-        });
-    });
-}
+/**
+ * Intelligently parses and merges results to construct the specific two-line address
+ * format required for the Global Map.
+ * Line 1: Most specific Village or Neighbourhood.
+ * Line 2: Primary Town or City.
+ */
+function parseAddressComponents(geocodeComponents, placeResult) {
+    let line1 = ''; // Village or Neighbourhood
+    let line2 = ''; // Town or City
 
-function getPlaceDetails(latLng) {
-    return new Promise(resolve => {
-        const request = { location: latLng, rankBy: google.maps.places.RankBy.DISTANCE, type: 'neighborhood' };
-        placesService.nearbySearch(request, (results, status) => {
-            resolve((status === google.maps.places.PlacesServiceStatus.OK && results[0]) ? results[0] : null);
-        });
-    });
+    const getComponent = (type) => geocodeComponents.find(c => c.types.includes(type))?.long_name || null;
+
+    // Prioritize the named "place" from Places API for the most specific location.
+    line1 = placeResult?.name || getComponent('neighborhood') || getComponent('sublocality');
+
+    // Find the primary town or city.
+    line2 = getComponent('locality') || getComponent('administrative_area_level_2') || getComponent('administrative_area_level_1');
+
+    // --- Deduplication and Cleanup Logic ---
+    // If the specific location is the same as the city (e.g., in a small town),
+    // we only want to show the city name.
+    if (line1 === line2) {
+        line1 = '';
+    }
+
+    // If we couldn't find a specific neighborhood (line1 is empty),
+    // promote the city to line 1 and find a broader region for line 2.
+    if (!line1) {
+        line1 = line2;
+        line2 = getComponent('administrative_area_level_1') || getComponent('country');
+    }
+    
+    // Final check for duplicates after promotion
+    if (line1 === line2) {
+        line2 = getComponent('country');
+    }
+
+    return { 
+        line1: line1 || '', 
+        line2: line2 || 'Unknown Location' 
+    };
 }
 
 // --- FIX APPLIED: Hybrid Geocoding Strategy ---
