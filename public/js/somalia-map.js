@@ -1,4 +1,3 @@
-// Main script for the Somalia Registration Map (somalia.html).
 import * as MapCore from './map-core.js';
 import { loadGoogleMapsAPI, debounce } from './utils.js';
 import { GOOGLE_MAPS_API_KEY, somaliRegions } from './config.js';
@@ -7,7 +6,8 @@ import { GOOGLE_MAPS_API_KEY, somaliRegions } from './config.js';
 let map, geocoder, somaliaPolygon;
 
 // --- DOM Element References (will be assigned in initApp) ---
-let sidebar, form, findMyLocationBtn, regionSelect, districtSelect, codeInput, nameInput, phoneInput, registerBtn;
+let sidebar, form, findMyLocationBtn, regionSelect, districtSelect, codeInput, nameInput, phoneInput,
+    step1, step2, sendOtpBtn, verifyBtn, otpInput, otpPhoneDisplay, formMessage;
 
 // --- UI & Form Logic ---
 function populateRegionsDropdown() {
@@ -40,7 +40,13 @@ function validateForm() {
                     codeInput.value.trim() !== '' &&
                     regionSelect.value !== '' &&
                     districtSelect.value !== '';
-    registerBtn.disabled = !isValid;
+    // This line is now corrected to use the right variable
+    sendOtpBtn.disabled = !isValid;
+}
+
+function displayFormMessage(message, type = 'error') {
+    formMessage.textContent = message;
+    formMessage.className = `form-message ${type}`;
 }
 
 async function updateAndShowSidebar(sixDCode, latLng) {
@@ -48,6 +54,8 @@ async function updateAndShowSidebar(sixDCode, latLng) {
     updateDistrictsDropdown();
     codeInput.value = sixDCode;
     sidebar.classList.remove('hidden');
+    step1.classList.remove('hidden');
+    step2.classList.add('hidden');
 
     try {
         const response = await geocoder.geocode({ location: latLng });
@@ -68,6 +76,67 @@ async function updateAndShowSidebar(sixDCode, latLng) {
     } catch (error) { console.error("Geocoding failed:", error); }
     
     validateForm();
+}
+
+// --- API Communication ---
+async function handleSendOtp(event) {
+    event.preventDefault();
+    displayFormMessage('', '');
+    sendOtpBtn.disabled = true;
+    sendOtpBtn.innerHTML = '<div class="spinner"></div>';
+
+    try {
+        const response = await fetch('/api/send-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phoneNumber: phoneInput.value })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || 'Failed to send OTP.');
+
+        step1.classList.add('hidden');
+        step2.classList.remove('hidden');
+        otpPhoneDisplay.textContent = phoneInput.value;
+        otpInput.focus();
+    } catch (error) {
+        displayFormMessage(error.message, 'error');
+    } finally {
+        sendOtpBtn.disabled = false;
+        sendOtpBtn.innerHTML = 'Send Verification Code';
+    }
+}
+
+async function handleVerifyAndRegister(event) {
+    event.preventDefault();
+    displayFormMessage('', '');
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML = '<div class="spinner"></div>';
+
+    const formData = {
+        fullName: nameInput.value,
+        phoneNumber: phoneInput.value,
+        sixDCode: codeInput.value,
+        region: regionSelect.value,
+        district: districtSelect.value,
+        otp: otpInput.value
+    };
+
+    try {
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || 'Registration failed.');
+
+        displayFormMessage('Registration successful! Your address is now verified.', 'success');
+        step2.innerHTML = '<p>Thank you for registering.</p>';
+    } catch (error) {
+        displayFormMessage(error.message, 'error');
+        verifyBtn.disabled = false;
+        verifyBtn.innerHTML = 'Verify & Complete Registration';
+    }
 }
 
 // --- Event Handlers ---
@@ -114,11 +183,11 @@ function setupUIListeners() {
     findMyLocationBtn.addEventListener('click', handleFindMyLocation);
     regionSelect.addEventListener('change', updateDistrictsDropdown);
     form.addEventListener('input', validateForm);
+    sendOtpBtn.addEventListener('click', handleSendOtp);
+    verifyBtn.addEventListener('click', handleVerifyAndRegister);
 }
 
 function initApp() {
-    // --- FIX APPLIED ---
-    // Assign DOM elements here, after the DOM is guaranteed to be ready.
     sidebar = document.getElementById('registration-sidebar');
     form = document.getElementById('registration-form');
     findMyLocationBtn = document.getElementById('find-my-location-btn');
@@ -127,19 +196,22 @@ function initApp() {
     codeInput = document.getElementById('six_d_code');
     nameInput = document.getElementById('full_name');
     phoneInput = document.getElementById('phone_number');
-    registerBtn = document.getElementById('register-btn');
-    // --- END OF FIX ---
+    step1 = document.getElementById('step1');
+    step2 = document.getElementById('step2');
+    sendOtpBtn = document.getElementById('send-otp-btn');
+    verifyBtn = document.getElementById('verify-btn');
+    otpInput = document.getElementById('otp');
+    otpPhoneDisplay = document.getElementById('otp-phone-display');
+    formMessage = document.getElementById('form-message');
 
     const mapElement = document.getElementById('map');
     map = MapCore.initializeBaseMap(mapElement, { center: { lat: 2.0469, lng: 45.3182 }, zoom: 13 });
     geocoder = new google.maps.Geocoder();
-
     populateRegionsDropdown();
     updateDistrictsDropdown();
     loadSomaliaBoundary();
     setupUIListeners();
     validateForm();
-
     const debouncedUpdateGrid = debounce(() => MapCore.updateDynamicGrid(map), 250);
     map.addListener('idle', debouncedUpdateGrid);
     MapCore.updateDynamicGrid(map);
@@ -147,10 +219,7 @@ function initApp() {
 
 async function main() {
     try {
-        // --- PROACTIVE FIX APPLIED ---
-        // This now correctly loads only the 'geometry' library needed for this page.
         await loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY, ['geometry']);
-        // --- END OF FIX ---
         initApp();
     } catch (error) {
         console.error("Failed to load Google Maps API.", error);
