@@ -1,0 +1,60 @@
+/* --- SHARED STYLES --- */
+/* These rules apply to all pages in the application. */
+
+/* Basic Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+    background-color: #f0f0f0;
+}
+
+/* Shared style for control buttons like "Find My Location" */
+.control-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+    background-color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Shared spinner for loading states */
+.spinner {
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border-left-color: #000;
+    animation: spin 1s ease infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Shared utility class */
+.hidden {
+    display: none !important;
+}
