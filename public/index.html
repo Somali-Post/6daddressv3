@@ -4,23 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>6D Address - Global Demonstrator</title>
-    <!-- Correctly linked stylesheets -->
     <link rel="stylesheet" href="/css/shared.css">
     <link rel="stylesheet" href="/css/global-map.css">
 </head>
 <body>
-    <!-- Body content remains the same -->
-    <div id="accuracy-warning" class="warning-banner hidden">
-        <span id="accuracy-message"></span>
-        <button id="accuracy-retry-btn">Retry</button>
-    </div>
     <div id="map"></div>
+
     <div id="logo">
         <img src="/assets/logo.png" alt="6D Address Logo">
     </div>
+
+    <!-- UI Controls Grouped Together -->
     <button id="geolocate-btn" class="control-button" title="Find My Location">
         <img src="/assets/geolocate.svg" alt="Find My Location">
     </button>
+
+    <div id="accuracy-warning" class="warning-bubble hidden">
+        <span id="accuracy-message"></span>
+        <button id="accuracy-retry-btn">Retry</button>
+    </div>
+    <!-- End of UI Controls -->
+
     <div id="info-panel">
         <div id="code-display"></div>
         <div id="address-display">
@@ -29,6 +33,7 @@
             <div id="line3-display"></div>
         </div>
     </div>
+    
     <script type="module" src="/js/global-map.js"></script>
 </body>
 </html>

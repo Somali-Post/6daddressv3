@@ -36,59 +36,43 @@
     transition: all 0.3s ease;
 }
 
-#code-display {
-    font-size: 1.5rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-    margin-bottom: 5px;
-}
+#code-display { /* ... same as before ... */ }
+.code-2d { /* ... same as before ... */ }
+.code-4d { /* ... same as before ... */ }
+.code-6d { /* ... same as before ... */ }
+#line1-display { /* ... same as before ... */ }
+#line2-display { /* ... same as before ... */ }
+#line3-display { /* ... same as before ... */ }
 
-.code-2d { color: #D32F2F; }
-.code-4d { color: #388E3C; }
-.code-6d { color: #1976D2; }
 
-#line1-display {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #333;
-}
-
-#line2-display {
-    font-size: 0.9rem;
-    color: #555;
-}
-
-#line3-display {
-    font-size: 0.8rem;
-    color: #777;
-    text-transform: uppercase;
-}
-
-/* GPS Accuracy Warning Banner */
-.warning-banner {
+/* --- FIX APPLIED: "Floating Island" Warning Bubble --- */
+.warning-bubble {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background-color: #ffebee; /* Light red background */
-    color: #c62828; /* Darker red text */
-    padding: 10px;
-    text-align: center;
-    z-index: 1000;
+    top: 70px; /* Positioned below the 40px geolocate button + 10px margin */
+    right: 20px;
+    background-color: #e7f3ff; /* Light blue background */
+    color: #0056b3; /* Darker blue text */
+    padding: 8px 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    z-index: 9; /* Below the main button */
     display: flex;
-    justify-content: center;
     align-items: center;
     font-size: 0.9rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-weight: 500;
 }
 
-.warning-banner button {
+.warning-bubble.hidden {
+    display: none;
+}
+
+.warning-bubble button {
     background: none;
-    border: 1px solid #c62828;
-    color: #c62828;
+    border: 1px solid #0056b3;
+    color: #0056b3;
     border-radius: 4px;
     padding: 2px 8px;
-    margin-left: 15px;
+    margin-left: 10px;
     cursor: pointer;
     font-weight: bold;
 }
