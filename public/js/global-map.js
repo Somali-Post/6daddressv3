@@ -30,38 +30,43 @@ async function handleMapClick(rawLatLng) {
     updateInfoPanel(code6D, finalAddress, localitySuffix);
 }
 
-// --- FIX APPLIED: Smooth "Swoop" Animation ---
+// --- FIX APPLIED: Event-Driven "Swoop" Animation ---
+
 /**
- * Creates a smooth, multi-step animation to the user's location.
- * @param {google.maps.LatLng} userLatLng The coordinate to animate to.
+ * A helper function that returns a Promise that resolves when the map's 'idle' event fires.
+ * @param {google.maps.Map} map The map instance to listen to.
+ * @returns {Promise<void>}
  */
-function animateMapToLocation(userLatLng) {
-    // Step 1: Briefly zoom out to an intermediate level for context
-    map.setZoom(10);
-
-    // Use a short timeout to allow the zoom-out to render before panning
-    setTimeout(() => {
-        // Step 2: Smoothly pan to the new location
-        map.panTo(userLatLng);
-
-        // Step 3: Wait for the pan animation to finish
-        google.maps.event.addListenerOnce(map, 'idle', () => {
-            // Step 4: Perform a staged zoom-in for a "swoop" effect
-            setTimeout(() => map.setZoom(14), 500); // First zoom step
-            setTimeout(() => map.setZoom(18), 1000); // Final zoom step
-
-            // Step 5: Trigger the address generation after the animation is complete
-            setTimeout(() => {
-                handleMapClick(userLatLng);
-                // Restore the button now that everything is finished
-                findMyAddressBtn.disabled = false;
-                findMyAddressBtn.innerHTML = '<img src="/assets/geolocate.svg" alt="Find My Location"><span>Find My 6D Address</span>';
-            }, 1500);
-        });
-    }, 200); // 200ms delay
+function waitForMapIdle(map) {
+    return new Promise(resolve => google.maps.event.addListenerOnce(map, 'idle', resolve));
 }
 
-function handleGeolocate() {
+/**
+ * Creates a smooth, multi-step animation that waits for the map to be ready at each stage.
+ * @param {google.maps.LatLng} userLatLng The coordinate to animate to.
+ */
+async function animateMapToLocation(userLatLng) {
+    // Stage 1: Zoom out for context
+    map.setZoom(10);
+    await waitForMapIdle(map);
+
+    // Stage 2: Smoothly pan to the new location
+    map.panTo(userLatLng);
+    await waitForMapIdle(map);
+
+    // Stage 3: First step of the zoom-in
+    map.setZoom(14);
+    await waitForMapIdle(map);
+
+    // Stage 4: Final zoom-in
+    map.setZoom(18);
+    await waitForMapIdle(map);
+
+    // Stage 5: Now that the animation is fully complete, generate the address
+    handleMapClick(userLatLng);
+}
+
+async function handleGeolocate() {
     if (!navigator.geolocation) {
         alert("Geolocation is not supported by your browser.");
         return;
@@ -71,7 +76,7 @@ function handleGeolocate() {
     findMyAddressBtn.innerHTML = '<div class="spinner"></div>';
     accuracyWarning.classList.add('hidden');
 
-    const successCallback = (position) => {
+    const successCallback = async (position) => {
         const accuracy = position.coords.accuracy;
         if (accuracy > 50) {
             accuracyMessage.textContent = `Poor GPS accuracy: ${Math.round(accuracy)}m`;
@@ -79,8 +84,12 @@ function handleGeolocate() {
         }
         const userLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
         
-        // Call our new animation function instead of the old jump-cut
-        animateMapToLocation(userLatLng);
+        // Await the entire animation sequence to complete
+        await animateMapToLocation(userLatLng);
+
+        // Restore the button only after the animation and geocoding are done
+        findMyAddressBtn.disabled = false;
+        findMyAddressBtn.innerHTML = '<img src="/assets/geolocate.svg" alt="Find My Location"><span>Find My 6D Address</span>';
     };
 
     const errorCallback = (error) => {
@@ -96,7 +105,7 @@ function handleGeolocate() {
     };
 
     navigator.geolocation.getCurrentPosition(
-        successCallback,
+        successCallback, // This is now an async function
         errorCallback,
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
