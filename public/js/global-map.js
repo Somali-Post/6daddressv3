@@ -15,37 +15,37 @@ function updateInfoPanel(code, address, suffix) {
     const line2Display = document.getElementById('line2-display');
     const line3Display = document.getElementById('line3-display');
     
+    // Line 1 of Display: The 6D Code (e.g., "44-06-07")
     const parts = code.split('-');
     codeDisplay.innerHTML = `<span class="code-2d">${parts[0]}</span>-<span class="code-4d">${parts[1]}</span>-<span class="code-6d">${parts[2]}</span>`;
     
-    // Set the two lines of the address
-    line1Display.textContent = address.line1; // Village or Neighbourhood
+    // Line 2 of Display: Village/Neighbourhood (e.g., "Old Mogadishu")
+    line1Display.textContent = address.line1;
     
-    // Append the suffix to the Town/City line
+    // Line 3 of Display: Town/City + Suffix (e.g., "Muqdisho 03")
     const finalLine2 = `${address.line2} ${suffix}`.trim();
     line2Display.textContent = finalLine2;
 
-    // Ensure the third line is empty
+    // Ensure the fourth line of display is always empty
     line3Display.textContent = '';
 }
 
 /**
- * Intelligently parses and merges results to construct the specific two-line address
- * format required for the Global Map.
- * Line 1: Most specific Village or Neighbourhood.
- * Line 2: Primary Town or City.
+ * Intelligently parses and merges results to construct the specific two-line TEXT address
+ * format required for the Global Map, which results in a 3-line total display.
+ * @returns {{line1: string, line2: string}} An object with Village/Neighbourhood and Town/City.
  */
 function parseAddressComponents(geocodeComponents, placeResult) {
-    let line1 = ''; // Village or Neighbourhood
-    let line2 = ''; // Town or City
+    let line1 = ''; // This will be Village/Neighbourhood
+    let line2 = ''; // This will be Town/City
 
     const getComponent = (type) => geocodeComponents.find(c => c.types.includes(type))?.long_name || null;
 
-    // Prioritize the named "place" from Places API for the most specific location.
+    // Prioritize the human-friendly name from the Places API for the most specific location.
     line1 = placeResult?.name || getComponent('neighborhood') || getComponent('sublocality');
 
     // Find the primary town or city.
-    line2 = getComponent('locality') || getComponent('administrative_area_level_2') || getComponent('administrative_area_level_1');
+    line2 = getComponent('locality') || getComponent('administrative_area_level_2');
 
     // --- Deduplication and Cleanup Logic ---
     if (line1 === line2) {
@@ -88,9 +88,14 @@ function getPlaceDetails(latLng) {
 async function handleMapClick(rawLatLng) {
     MapCore.drawAddressBoxes(map, rawLatLng);
     const snappedLatLng = MapCore.snapToGridCenter(rawLatLng);
+    
+    // --- FIX APPLIED ---
+    // Get the code string directly. The old helper function is removed.
     const { code6D, localitySuffix } = MapCore.generate6DCode(snappedLatLng.lat(), snappedLatLng.lng());
     
+    // Pass the raw code string to updateInfoPanel.
     updateInfoPanel(code6D, { line1: 'Locating...', line2: '' }, '');
+    // --- END OF FIX ---
     
     const [geocodeResult, placeResult] = await Promise.all([
         getReverseGeocode(snappedLatLng),
@@ -102,17 +107,12 @@ async function handleMapClick(rawLatLng) {
 }
 
 function handleGeolocate() {
-    // ... (This function remains the same as the last correct version)
     const geolocateBtn = document.getElementById('geolocate-btn');
-    if (!navigator.geolocation) {
-        alert("Geolocation is not supported by your browser.");
-        return;
-    }
+    const accuracyWarning = document.getElementById('accuracy-warning');
+    if (!navigator.geolocation) { alert("Geolocation is not supported by your browser."); return; }
     geolocateBtn.disabled = true;
     geolocateBtn.innerHTML = '<div class="spinner"></div>';
-    const accuracyWarning = document.getElementById('accuracy-warning');
     accuracyWarning.classList.add('hidden');
-
     const successCallback = (position) => {
         const accuracy = position.coords.accuracy;
         if (accuracy > 50) {
@@ -147,13 +147,11 @@ function initApp() {
     map = MapCore.initializeBaseMap(document.getElementById("map"), { center: { lat: 0, lng: 0 }, zoom: 3 });
     geocoder = new google.maps.Geocoder();
     placesService = new google.maps.places.PlacesService(map);
-
     map.addListener('click', (event) => handleMapClick(event.latLng));
     const debouncedUpdateGrid = debounce(() => MapCore.updateDynamicGrid(map), 250);
     map.addListener('idle', debouncedUpdateGrid);
     geolocateBtn.addEventListener('click', handleGeolocate);
     accuracyRetryBtn.addEventListener('click', handleGeolocate);
-    
     MapCore.updateDynamicGrid(map);
 }
 
