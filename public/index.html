@@ -14,25 +14,28 @@
         <img src="/assets/logo.png" alt="6D Address Logo">
     </div>
 
-    <button id="geolocate-btn" class="control-button" title="Find My Location">
-        <img src="/assets/geolocate.svg" alt="Find My Location">
-    </button>
-
+    <!-- The old geolocate button is correctly removed -->
+    
     <div id="accuracy-warning" class="warning-bubble hidden">
         <span id="accuracy-message"></span>
         <button id="accuracy-retry-btn">Retry</button>
     </div>
 
-    <!-- --- FIX APPLIED: Restored Info Panel HTML Structure --- -->
     <div id="info-panel">
-        <div id="code-display"></div>
-        <div id="address-display">
-            <div id="line1-display">Click on the map to generate</div>
-            <div id="line2-display">a 6D Address</div>
-            <div id="line3-display"></div>
+        <button id="find-my-address-btn" class="find-address-btn">
+            <img src="/assets/geolocate.svg" alt="Find My Location">
+            <span>Find My 6D Address</span>
+        </button>
+
+        <div id="address-content" class="hidden">
+            <div id="code-display"></div>
+            <div id="address-display">
+                <div id="line1-display"></div>
+                <div id="line2-display"></div>
+                <div id="line3-display"></div>
+            </div>
         </div>
     </div>
-    <!-- --- END OF FIX --- -->
     
     <script type="module" src="/js/global-map.js"></script>
 </body>
