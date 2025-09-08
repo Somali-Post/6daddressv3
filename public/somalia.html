@@ -15,7 +15,6 @@
     </div>
 
     <div id="info-panel">
-        <!-- Button is now disabled by default -->
         <button id="find-my-address-btn" class="find-address-btn" title="Loading map data..." disabled>
             <img src="/assets/geolocate.svg" alt="Find My Location">
             <span>Find My 6D Address</span>
@@ -23,10 +22,45 @@
     </div>
 
     <div id="registration-sidebar" class="sidebar hidden">
-        <!-- ... sidebar content remains the same ... -->
+        <div class="sidebar-header">
+            <img src="/assets/logo-somalia.png" alt="6D Address Somalia Logo">
+        </div>
+        <form id="registration-form" novalidate>
+            <div id="step1">
+                <div class="form-group">
+                    <label for="six_d_code">6D Address</label>
+                    <input type="text" id="six_d_code" name="six_d_code" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="full_name">Full Name</label>
+                    <input type="text" id="full_name" name="full_name" required placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label for="phone_number">Phone Number</label>
+                    <input type="tel" id="phone_number" name="phone_number" required placeholder="e.g., 61XXXXXXX">
+                </div>
+                <div class="form-group">
+                    <label for="region">Region</label>
+                    <select id="region" name="region" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="district">District</label>
+                    <select id="district" name="district" required disabled></select>
+                </div>
+                <button type="button" id="send-otp-btn" disabled>Send Verification Code</button>
+            </div>
+            <div id="step2" class="hidden">
+                <p class="otp-prompt">Enter the 6-digit code sent to <strong id="otp-phone-display"></strong>.</p>
+                <div class="form-group">
+                    <label for="otp">Verification Code</label>
+                    <input type="text" id="otp" name="otp" required maxlength="6" inputmode="numeric" pattern="\d{6}">
+                </div>
+                <button type="button" id="verify-btn">Verify & Complete Registration</button>
+            </div>
+            <div id="form-message" class="form-message"></div>
+        </form>
     </div>
 
-    <!-- Button is now disabled by default -->
     <button id="find-my-location-btn" class="control-button" title="Loading map data..." disabled>
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><line x1="21" y1="12" x2="23" y2="12"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line></svg>
     </button>
