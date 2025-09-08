@@ -4,18 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>6D Address - Somalia Registration</title>
-    <!-- Correctly linked stylesheets -->
     <link rel="stylesheet" href="/css/shared.css">
     <link rel="stylesheet" href="/css/somalia-map.css">
 </head>
 <body>
-    <!-- Body content remains the same -->
     <div id="map"></div>
+
+    <!-- --- NEW: Logo and Info Panel from Global Map --- -->
+    <div id="logo">
+        <img src="/assets/logo-somalia.png" alt="6D Address Somalia Logo">
+    </div>
+
+    <div id="info-panel">
+        <button id="find-my-address-btn" class="find-address-btn">
+            <img src="/assets/geolocate.svg" alt="Find My Location">
+            <span>Find My 6D Address</span>
+        </button>
+    </div>
+    <!-- --- END OF NEW --- -->
+
     <div id="registration-sidebar" class="sidebar hidden">
         <div class="sidebar-header">
             <img src="/assets/logo-somalia.png" alt="6D Address Somalia Logo">
         </div>
         <form id="registration-form" novalidate>
+            <!-- Form content remains the same -->
             <div id="step1">
                 <div class="form-group">
                     <label for="six_d_code">6D Address</label>
@@ -50,9 +63,11 @@
             <div id="form-message" class="form-message"></div>
         </form>
     </div>
+
     <button id="find-my-location-btn" class="control-button" title="Find My Location">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><line x1="21" y1="12" x2="23" y2="12"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line></svg>
     </button>
+    
     <script type="module" src="/js/somalia-map.js"></script>
 </body>
 </html>

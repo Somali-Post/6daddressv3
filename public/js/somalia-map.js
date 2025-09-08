@@ -5,9 +5,9 @@ import { GOOGLE_MAPS_API_KEY, somaliRegions } from './config.js';
 // --- Module-level variables ---
 let map, geocoder, somaliaPolygon;
 
-// --- DOM Element References (will be assigned in initApp) ---
+// --- DOM Element References ---
 let sidebar, form, findMyLocationBtn, regionSelect, districtSelect, codeInput, nameInput, phoneInput,
-    step1, step2, sendOtpBtn, verifyBtn, otpInput, otpPhoneDisplay, formMessage;
+    step1, step2, sendOtpBtn, verifyBtn, otpInput, otpPhoneDisplay, formMessage, findMyAddressBtn;
 
 // --- UI & Form Logic ---
 function populateRegionsDropdown() {
@@ -40,7 +40,6 @@ function validateForm() {
                     codeInput.value.trim() !== '' &&
                     regionSelect.value !== '' &&
                     districtSelect.value !== '';
-    // This line is now corrected to use the right variable
     sendOtpBtn.disabled = !isValid;
 }
 
@@ -63,7 +62,6 @@ async function updateAndShowSidebar(sixDCode, latLng) {
             const components = response.results[0].address_components;
             const regionComp = components.find(c => c.types.includes('administrative_area_level_1'));
             const districtComp = components.find(c => c.types.includes('administrative_area_level_2')) || components.find(c => c.types.includes('locality'));
-
             if (regionComp && somaliRegions[regionComp.long_name]) {
                 regionSelect.value = regionComp.long_name;
                 updateDistrictsDropdown();
@@ -74,7 +72,6 @@ async function updateAndShowSidebar(sixDCode, latLng) {
             }
         }
     } catch (error) { console.error("Geocoding failed:", error); }
-    
     validateForm();
 }
 
@@ -84,7 +81,6 @@ async function handleSendOtp(event) {
     displayFormMessage('', '');
     sendOtpBtn.disabled = true;
     sendOtpBtn.innerHTML = '<div class="spinner"></div>';
-
     try {
         const response = await fetch('/api/send-otp', {
             method: 'POST',
@@ -93,7 +89,6 @@ async function handleSendOtp(event) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message || 'Failed to send OTP.');
-
         step1.classList.add('hidden');
         step2.classList.remove('hidden');
         otpPhoneDisplay.textContent = phoneInput.value;
@@ -111,16 +106,10 @@ async function handleVerifyAndRegister(event) {
     displayFormMessage('', '');
     verifyBtn.disabled = true;
     verifyBtn.innerHTML = '<div class="spinner"></div>';
-
     const formData = {
-        fullName: nameInput.value,
-        phoneNumber: phoneInput.value,
-        sixDCode: codeInput.value,
-        region: regionSelect.value,
-        district: districtSelect.value,
-        otp: otpInput.value
+        fullName: nameInput.value, phoneNumber: phoneInput.value, sixDCode: codeInput.value,
+        region: regionSelect.value, district: districtSelect.value, otp: otpInput.value
     };
-
     try {
         const response = await fetch('/api/register', {
             method: 'POST',
@@ -129,7 +118,6 @@ async function handleVerifyAndRegister(event) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message || 'Registration failed.');
-
         displayFormMessage('Registration successful! Your address is now verified.', 'success');
         step2.innerHTML = '<p>Thank you for registering.</p>';
     } catch (error) {
@@ -151,18 +139,62 @@ async function onMapClick(event) {
     await updateAndShowSidebar(code6D, snappedLatLng);
 }
 
-function handleFindMyLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const userLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-                map.setCenter(userLatLng);
-                map.setZoom(18);
-                onMapClick({ latLng: userLatLng });
-            },
-            () => alert("Error: Could not get your location.")
-        );
-    } else { alert("Error: Your browser doesn't support geolocation."); }
+function waitForMapIdle(map) {
+    return new Promise(resolve => google.maps.event.addListenerOnce(map, 'idle', resolve));
+}
+
+async function animateMapToLocation(userLatLng) {
+    map.setZoom(10);
+    await waitForMapIdle(map);
+    map.panTo(userLatLng);
+    await waitForMapIdle(map);
+    map.setZoom(14);
+    await waitForMapIdle(map);
+    map.setZoom(18);
+    await waitForMapIdle(map);
+    await onMapClick({ latLng: userLatLng });
+}
+
+async function handleGeolocate() {
+    if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+    }
+    const buttons = [findMyLocationBtn, findMyAddressBtn];
+    buttons.forEach(btn => {
+        if(btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner"></div>';
+        }
+    });
+
+    const successCallback = async (position) => {
+        const userLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+        await animateMapToLocation(userLatLng);
+    };
+    const errorCallback = (error) => {
+        switch (error.code) {
+            case error.PERMISSION_DENIED: alert("You denied the request for Geolocation."); break;
+            case error.POSITION_UNAVAILABLE: alert("Location information is unavailable."); break;
+            case error.TIMEOUT: alert("The request to get user location timed out."); break;
+            default: alert("An unknown error occurred."); break;
+        }
+    };
+    const finalCallback = () => {
+        if(findMyLocationBtn) {
+            findMyLocationBtn.disabled = false;
+            findMyLocationBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><line x1="21" y1="12" x2="23" y2="12"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line></svg>';
+        }
+        if(findMyAddressBtn) {
+            findMyAddressBtn.disabled = false;
+            findMyAddressBtn.innerHTML = '<img src="/assets/geolocate.svg" alt="Find My Location"><span>Find My 6D Address</span>';
+        }
+    };
+    navigator.geolocation.getCurrentPosition(
+        (pos) => { successCallback(pos).finally(finalCallback); },
+        (err) => { errorCallback(err); finalCallback(); },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
 }
 
 // --- Initialization ---
@@ -180,7 +212,8 @@ async function loadSomaliaBoundary() {
 
 function setupUIListeners() {
     map.addListener('click', onMapClick);
-    findMyLocationBtn.addEventListener('click', handleFindMyLocation);
+    findMyLocationBtn.addEventListener('click', handleGeolocate);
+    findMyAddressBtn.addEventListener('click', handleGeolocate);
     regionSelect.addEventListener('change', updateDistrictsDropdown);
     form.addEventListener('input', validateForm);
     sendOtpBtn.addEventListener('click', handleSendOtp);
@@ -203,6 +236,7 @@ function initApp() {
     otpInput = document.getElementById('otp');
     otpPhoneDisplay = document.getElementById('otp-phone-display');
     formMessage = document.getElementById('form-message');
+    findMyAddressBtn = document.getElementById('find-my-address-btn');
 
     const mapElement = document.getElementById('map');
     map = MapCore.initializeBaseMap(mapElement, { center: { lat: 2.0469, lng: 45.3182 }, zoom: 13 });
