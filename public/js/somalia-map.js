@@ -198,12 +198,26 @@ async function handleGeolocate() {
 }
 
 // --- Initialization ---
+// ... (imports and other functions remain the same) ...
+
+// --- Initialization ---
+
 async function loadSomaliaBoundary() {
     try {
         const response = await fetch('/data/somalia.geojson');
         const geoJson = await response.json();
         const coordinates = geoJson.features[0].geometry.coordinates[0].map(c => ({ lat: c[1], lng: c[0] }));
         somaliaPolygon = new google.maps.Polygon({ paths: coordinates });
+        
+        // --- FIX APPLIED ---
+        // Enable the buttons now that the boundary is loaded and ready.
+        findMyLocationBtn.disabled = false;
+        findMyLocationBtn.title = 'Find My Location';
+        findMyAddressBtn.disabled = false;
+        findMyAddressBtn.title = 'Find My 6D Address';
+        console.log("Somalia boundary loaded. UI is now active.");
+        // --- END OF FIX ---
+
     } catch (error) {
         console.error("Failed to load Somalia boundary:", error);
         alert("Error: Could not load country boundary. Registration is disabled.");
@@ -220,7 +234,8 @@ function setupUIListeners() {
     verifyBtn.addEventListener('click', handleVerifyAndRegister);
 }
 
-function initApp() {
+async function initApp() {
+    // Assign all DOM elements
     sidebar = document.getElementById('registration-sidebar');
     form = document.getElementById('registration-form');
     findMyLocationBtn = document.getElementById('find-my-location-btn');
@@ -241,10 +256,16 @@ function initApp() {
     const mapElement = document.getElementById('map');
     map = MapCore.initializeBaseMap(mapElement, { center: { lat: 2.0469, lng: 45.3182 }, zoom: 13 });
     geocoder = new google.maps.Geocoder();
+    
     populateRegionsDropdown();
     updateDistrictsDropdown();
-    loadSomaliaBoundary();
+    
+    // --- FIX APPLIED ---
+    // We now wait for the boundary to load before setting up listeners.
+    await loadSomaliaBoundary();
     setupUIListeners();
+    // --- END OF FIX ---
+
     validateForm();
     const debouncedUpdateGrid = debounce(() => MapCore.updateDynamicGrid(map), 250);
     map.addListener('idle', debouncedUpdateGrid);
@@ -254,7 +275,7 @@ function initApp() {
 async function main() {
     try {
         await loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY, ['geometry']);
-        initApp();
+        await initApp(); // initApp is now async, so we await it
     } catch (error) {
         console.error("Failed to load Google Maps API.", error);
         document.getElementById('map').innerText = 'Error: Could not load the map.';
