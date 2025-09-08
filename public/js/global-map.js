@@ -3,69 +3,51 @@ import { loadGoogleMapsAPI, debounce } from './utils.js';
 import * as MapCore from './map-core.js';
 
 // --- Module-level variables ---
-let map;
-let geocoder;
-let placesService;
+let map, geocoder, placesService;
 
-// --- UI & Geocoding Logic ---
-
+// --- FIX APPLIED: Restored 3-Line UI and Geocoding Logic ---
 function updateInfoPanel(code, address, suffix) {
     const codeDisplay = document.getElementById('code-display');
     const line1Display = document.getElementById('line1-display');
     const line2Display = document.getElementById('line2-display');
     const line3Display = document.getElementById('line3-display');
     
-    const parts = code.split('-');
-    codeDisplay.innerHTML = `<span class="code-2d">${parts[0]}</span>-<span class="code-4d">${parts[1]}</span>-<span class="code-6d">${parts[2]}</span>`;
+    // The 'code' object now has c2d, c4d, c6d properties
+    codeDisplay.innerHTML = `<span class="code-2d">${code.c2d}</span>-<span class="code-4d">${code.c4d}</span>-<span class="code-6d">${code.c6d}</span>`;
     
-    // Set the two lines of the address
-    line1Display.textContent = address.line1; // Village or Neighbourhood
-    
-    // Append the suffix to the Town/City line
-    const finalLine2 = `${address.line2} ${suffix}`.trim();
-    line2Display.textContent = finalLine2;
-
-    // Ensure the third line is empty
-    line3Display.textContent = '';
+    line1Display.textContent = address.line1;
+    line2Display.textContent = address.line2;
+    const finalLine = `${address.line3} ${suffix}`.trim();
+    line3Display.textContent = finalLine;
 }
 
-/**
- * Intelligently parses and merges results to construct the specific two-line address
- * format required for the Global Map.
- * Line 1: Most specific Village or Neighbourhood.
- * Line 2: Primary Town or City.
- */
+function getFormatted6DCode(latLng) {
+    const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
+    const parts = code6D.split('-');
+    const formattedCode = { c2d: parts[0], c4d: parts[1], c6d: parts[2] };
+    return { formattedCode, localitySuffix };
+}
+
 function parseAddressComponents(geocodeComponents, placeResult) {
-    let line1 = ''; // Village or Neighbourhood
-    let line2 = ''; // Town or City
+    const foundNames = [];
+    const getComponent = type => geocodeComponents.find(c => c.types.includes(type))?.long_name || null;
 
-    const getComponent = (type) => geocodeComponents.find(c => c.types.includes(type))?.long_name || null;
-
-    // Prioritize the named "place" from Places API for the most specific location.
-    line1 = placeResult?.name || getComponent('neighborhood') || getComponent('sublocality');
-
-    // Find the primary town or city.
-    line2 = getComponent('locality') || getComponent('administrative_area_level_2') || getComponent('administrative_area_level_1');
-
-    // --- Deduplication and Cleanup Logic ---
-    if (line1 === line2) {
-        line1 = '';
-    }
-
-    if (!line1) {
-        line1 = line2;
-        line2 = getComponent('administrative_area_level_1') || getComponent('country');
+    if (placeResult?.name) foundNames.push(placeResult.name);
+    
+    const priorityList = ['locality', 'administrative_area_level_2', 'administrative_area_level_1', 'country'];
+    for (const type of priorityList) {
+        if (foundNames.length >= 3) break;
+        const foundName = getComponent(type);
+        if (foundName && !foundNames.includes(foundName)) foundNames.push(foundName);
     }
     
-    if (line1 === line2) {
-        line2 = getComponent('country');
-    }
-
     return { 
-        line1: line1 || '', 
-        line2: line2 || 'Unknown Location' 
+        line1: foundNames[0] || 'Unknown Location', 
+        line2: foundNames[1] || '', 
+        line3: foundNames[2] || '' 
     };
 }
+// --- END OF FIX ---
 
 function getReverseGeocode(latLng) {
     return new Promise(resolve => {
@@ -84,13 +66,12 @@ function getPlaceDetails(latLng) {
     });
 }
 
-// --- Event Handlers ---
 async function handleMapClick(rawLatLng) {
     MapCore.drawAddressBoxes(map, rawLatLng);
     const snappedLatLng = MapCore.snapToGridCenter(rawLatLng);
-    const { code6D, localitySuffix } = MapCore.generate6DCode(snappedLatLng.lat(), snappedLatLng.lng());
+    const { formattedCode, localitySuffix } = getFormatted6DCode(snappedLatLng);
     
-    updateInfoPanel(code6D, { line1: 'Locating...', line2: '' }, '');
+    updateInfoPanel(formattedCode, { line1: 'Locating...', line2: '', line3: '' }, '');
     
     const [geocodeResult, placeResult] = await Promise.all([
         getReverseGeocode(snappedLatLng),
@@ -98,21 +79,17 @@ async function handleMapClick(rawLatLng) {
     ]);
     
     const finalAddress = parseAddressComponents(geocodeResult, placeResult);
-    updateInfoPanel(code6D, finalAddress, localitySuffix);
+    updateInfoPanel(formattedCode, finalAddress, localitySuffix);
 }
 
 function handleGeolocate() {
-    // ... (This function remains the same as the last correct version)
+    // This function remains correct and unchanged
     const geolocateBtn = document.getElementById('geolocate-btn');
-    if (!navigator.geolocation) {
-        alert("Geolocation is not supported by your browser.");
-        return;
-    }
+    const accuracyWarning = document.getElementById('accuracy-warning');
+    if (!navigator.geolocation) { alert("Geolocation is not supported by your browser."); return; }
     geolocateBtn.disabled = true;
     geolocateBtn.innerHTML = '<div class="spinner"></div>';
-    const accuracyWarning = document.getElementById('accuracy-warning');
     accuracyWarning.classList.add('hidden');
-
     const successCallback = (position) => {
         const accuracy = position.coords.accuracy;
         if (accuracy > 50) {
@@ -140,20 +117,17 @@ function handleGeolocate() {
     navigator.geolocation.getCurrentPosition(successCallback, errorCallback, options);
 }
 
-// --- Initialization ---
 function initApp() {
     const geolocateBtn = document.getElementById('geolocate-btn');
     const accuracyRetryBtn = document.getElementById('accuracy-retry-btn');
     map = MapCore.initializeBaseMap(document.getElementById("map"), { center: { lat: 0, lng: 0 }, zoom: 3 });
     geocoder = new google.maps.Geocoder();
     placesService = new google.maps.places.PlacesService(map);
-
     map.addListener('click', (event) => handleMapClick(event.latLng));
     const debouncedUpdateGrid = debounce(() => MapCore.updateDynamicGrid(map), 250);
     map.addListener('idle', debouncedUpdateGrid);
     geolocateBtn.addEventListener('click', handleGeolocate);
     accuracyRetryBtn.addEventListener('click', handleGeolocate);
-    
     MapCore.updateDynamicGrid(map);
 }
 
