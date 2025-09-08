@@ -9,11 +9,51 @@ let map, geocoder, placesService;
 let findMyAddressBtn, addressContent, accuracyWarning, accuracyMessage, accuracyRetryBtn;
 
 // --- UI & Geocoding Logic (No changes here) ---
-function showAddressDisplay() { /* ... same as before ... */ }
-function updateInfoPanel(code, address, suffix) { /* ... same as before ... */ }
-function parseAddressComponents(geocodeComponents, placeResult) { /* ... same as before ... */ }
-function getReverseGeocode(latLng) { /* ... same as before ... */ }
-function getPlaceDetails(latLng) { /* ... same as before ... */ }
+function showAddressDisplay() {
+    findMyAddressBtn.classList.add('hidden');
+    addressContent.classList.remove('hidden');
+}
+function updateInfoPanel(code, address, suffix) {
+    showAddressDisplay();
+    const codeDisplay = document.getElementById('code-display');
+    const line1Display = document.getElementById('line1-display');
+    const line2Display = document.getElementById('line2-display');
+    const line3Display = document.getElementById('line3-display');
+    const parts = code.split('-');
+    codeDisplay.innerHTML = `<span class="code-2d">${parts[0]}</span>-<span class="code-4d">${parts[1]}</span>-<span class="code-6d">${parts[2]}</span>`;
+    line1Display.textContent = address.line1;
+    const finalLine2 = `${address.line2} ${suffix}`.trim();
+    line2Display.textContent = finalLine2;
+    line3Display.textContent = '';
+}
+function parseAddressComponents(geocodeComponents, placeResult) {
+    let line1 = '', line2 = '';
+    const getComponent = (type) => geocodeComponents.find(c => c.types.includes(type))?.long_name || null;
+    line1 = placeResult?.name || getComponent('neighborhood') || getComponent('sublocality');
+    line2 = getComponent('locality') || getComponent('administrative_area_level_2');
+    if (line1 === line2) { line1 = ''; }
+    if (!line1) {
+        line1 = line2;
+        line2 = getComponent('administrative_area_level_1') || getComponent('country');
+    }
+    if (line1 === line2) { line2 = getComponent('country'); }
+    return { line1: line1 || '', line2: line2 || 'Unknown Location' };
+}
+function getReverseGeocode(latLng) {
+    return new Promise(resolve => {
+        geocoder.geocode({ location: latLng }, (results, status) => {
+            resolve((status === 'OK' && results[0]) ? results[0].address_components : []);
+        });
+    });
+}
+function getPlaceDetails(latLng) {
+    return new Promise(resolve => {
+        const request = { location: latLng, rankBy: google.maps.places.RankBy.DISTANCE, type: 'neighborhood' };
+        placesService.nearbySearch(request, (results, status) => {
+            resolve((status === google.maps.places.PlacesServiceStatus.OK && results[0]) ? results[0] : null);
+        });
+    });
+}
 
 // --- Event Handlers ---
 async function handleMapClick(rawLatLng) {
@@ -30,39 +70,19 @@ async function handleMapClick(rawLatLng) {
     updateInfoPanel(code6D, finalAddress, localitySuffix);
 }
 
-// --- FIX APPLIED: Event-Driven "Swoop" Animation ---
-
-/**
- * A helper function that returns a Promise that resolves when the map's 'idle' event fires.
- * @param {google.maps.Map} map The map instance to listen to.
- * @returns {Promise<void>}
- */
 function waitForMapIdle(map) {
     return new Promise(resolve => google.maps.event.addListenerOnce(map, 'idle', resolve));
 }
 
-/**
- * Creates a smooth, multi-step animation that waits for the map to be ready at each stage.
- * @param {google.maps.LatLng} userLatLng The coordinate to animate to.
- */
 async function animateMapToLocation(userLatLng) {
-    // Stage 1: Zoom out for context
     map.setZoom(10);
     await waitForMapIdle(map);
-
-    // Stage 2: Smoothly pan to the new location
     map.panTo(userLatLng);
     await waitForMapIdle(map);
-
-    // Stage 3: First step of the zoom-in
     map.setZoom(14);
     await waitForMapIdle(map);
-
-    // Stage 4: Final zoom-in
     map.setZoom(18);
     await waitForMapIdle(map);
-
-    // Stage 5: Now that the animation is fully complete, generate the address
     handleMapClick(userLatLng);
 }
 
@@ -84,12 +104,12 @@ async function handleGeolocate() {
         }
         const userLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
         
-        // Await the entire animation sequence to complete
         await animateMapToLocation(userLatLng);
 
-        // Restore the button only after the animation and geocoding are done
-        findMyAddressBtn.disabled = false;
-        findMyAddressBtn.innerHTML = '<img src="/assets/geolocate.svg" alt="Find My Location"><span>Find My 6D Address</span>';
+        // --- FIX APPLIED ---
+        // The code to restore the button has been REMOVED from here to prevent the race condition.
+        // The UI state is now correctly managed by handleMapClick -> showAddressDisplay.
+        // --- END OF FIX ---
     };
 
     const errorCallback = (error) => {
@@ -105,33 +125,27 @@ async function handleGeolocate() {
     };
 
     navigator.geolocation.getCurrentPosition(
-        successCallback, // This is now an async function
+        successCallback,
         errorCallback,
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 }
-// --- END OF FIX ---
 
 // --- Initialization ---
 function initApp() {
-    // Assign DOM elements
     findMyAddressBtn = document.getElementById('find-my-address-btn');
     addressContent = document.getElementById('address-content');
     accuracyWarning = document.getElementById('accuracy-warning');
     accuracyMessage = document.getElementById('accuracy-message');
     accuracyRetryBtn = document.getElementById('accuracy-retry-btn');
-
     map = MapCore.initializeBaseMap(document.getElementById("map"), { center: { lat: 0, lng: 0 }, zoom: 3 });
     geocoder = new google.maps.Geocoder();
     placesService = new google.maps.places.PlacesService(map);
-
-    // Attach listeners
     map.addListener('click', (event) => handleMapClick(event.latLng));
     const debouncedUpdateGrid = debounce(() => MapCore.updateDynamicGrid(map), 250);
     map.addListener('idle', debouncedUpdateGrid);
     findMyAddressBtn.addEventListener('click', handleGeolocate);
     accuracyRetryBtn.addEventListener('click', handleGeolocate);
-    
     MapCore.updateDynamicGrid(map);
 }
 
