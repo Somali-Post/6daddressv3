@@ -3,13 +3,12 @@ import { loadGoogleMapsAPI, debounce } from './utils.js';
 import * as MapCore from './map-core.js';
 
 // --- Module-level variables ---
-let map, geocoder; // placesService is no longer needed
+let map, geocoder;
 
 // --- DOM Element References ---
 let findMyAddressBtn, addressContent, accuracyWarning, accuracyMessage, accuracyRetryBtn;
 
 // --- UI & Geocoding Logic ---
-
 function showAddressDisplay() {
     findMyAddressBtn.classList.add('hidden');
     addressContent.classList.remove('hidden');
@@ -22,27 +21,34 @@ function updateInfoPanel(code, address, suffix) {
     const line2Display = document.getElementById('line2-display');
     const line3Display = document.getElementById('line3-display');
     
-    // Line 1 of Display: The 6D Code
     const parts = code.split('-');
     codeDisplay.innerHTML = `<span class="code-2d">${parts[0]}</span>-<span class="code-4d">${parts[1]}</span>-<span class="code-6d">${parts[2]}</span>`;
     
-    // Line 2 of Display: Town/City + Suffix
     const finalTextLine = `${address.mainAddressLine} ${suffix}`.trim();
     line1Display.textContent = finalTextLine;
 
-    // Ensure the other text lines are empty
     line2Display.textContent = '';
     line3Display.textContent = '';
 }
 
 /**
- * Parses geocode results to find the single best name for the Town or City.
- * @returns {{mainAddressLine: string}} An object with the single address line.
+ * Parses geocode results to find the best name for the Town or City.
+ * Includes special logic to prioritize "postal_town" for UK addresses.
  */
 function parseAddressComponents(geocodeComponents) {
     const getComponent = (type) => geocodeComponents.find(c => c.types.includes(type))?.long_name || null;
 
-    // Create a fallback chain to find the most relevant location name
+    // --- FIX APPLIED: UK-Specific Logic ---
+    const country = geocodeComponents.find(c => c.types.includes('country'));
+    if (country && country.short_name === 'GB') {
+        const postTown = getComponent('postal_town');
+        if (postTown) {
+            return { mainAddressLine: postTown };
+        }
+    }
+    // --- END OF FIX ---
+
+    // Fallback logic for all other countries or if postal_town is not found
     const mainAddressLine = getComponent('locality') || 
                           getComponent('administrative_area_level_2') || 
                           getComponent('administrative_area_level_1') || 
@@ -60,8 +66,6 @@ function getReverseGeocode(latLng) {
     });
 }
 
-// The getPlaceDetails function is no longer needed and has been removed.
-
 // --- Event Handlers ---
 async function handleMapClick(rawLatLng) {
     MapCore.drawAddressBoxes(map, rawLatLng);
@@ -71,7 +75,6 @@ async function handleMapClick(rawLatLng) {
     showAddressDisplay();
     updateInfoPanel(code6D, { mainAddressLine: 'Locating...' }, '');
     
-    // We only need to call the Reverse Geocode API now
     const geocodeResult = await getReverseGeocode(snappedLatLng);
     
     const finalAddress = parseAddressComponents(geocodeResult);
@@ -79,7 +82,6 @@ async function handleMapClick(rawLatLng) {
 }
 
 async function handleGeolocate() {
-    // This function remains correct and unchanged
     if (!navigator.geolocation) { alert("Geolocation is not supported by your browser."); return; }
     findMyAddressBtn.disabled = true;
     findMyAddressBtn.innerHTML = '<div class="spinner"></div>';
@@ -96,13 +98,17 @@ async function handleGeolocate() {
     const errorCallback = (error) => {
         findMyAddressBtn.disabled = false;
         findMyAddressBtn.innerHTML = '<img src="/assets/geolocate.svg" alt="Find My Location"><span>Find My 6D Address</span>';
-        switch (error.code) { /* ... error handling ... */ }
+        switch (error.code) {
+            case error.PERMISSION_DENIED: alert("You denied the request for Geolocation."); break;
+            case error.POSITION_UNAVAILABLE: alert("Location information is unavailable."); break;
+            case error.TIMEOUT: alert("The request to get user location timed out."); break;
+            default: alert("An unknown error occurred."); break;
+        }
     };
     navigator.geolocation.getCurrentPosition(successCallback, errorCallback, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
 }
 
 async function animateMapToLocation(userLatLng) {
-    // This function remains correct and unchanged
     map.setZoom(10);
     await waitForMapIdle(map);
     map.panTo(userLatLng);
@@ -111,7 +117,7 @@ async function animateMapToLocation(userLatLng) {
     await waitForMapIdle(map);
     map.setZoom(18);
     await waitForMapIdle(map);
-    await handleMapClick(userLatLng); // Make sure to await this
+    await handleMapClick(userLatLng);
     findMyAddressBtn.disabled = false;
     findMyAddressBtn.innerHTML = '<img src="/assets/geolocate.svg" alt="Find My Location"><span>Find My 6D Address</span>';
 }
@@ -129,7 +135,6 @@ function initApp() {
     accuracyRetryBtn = document.getElementById('accuracy-retry-btn');
     map = MapCore.initializeBaseMap(document.getElementById("map"), { center: { lat: 0, lng: 0 }, zoom: 3 });
     geocoder = new google.maps.Geocoder();
-    // placesService is no longer needed
     map.addListener('click', (event) => handleMapClick(event.latLng));
     const debouncedUpdateGrid = debounce(() => MapCore.updateDynamicGrid(map), 250);
     map.addListener('idle', debouncedUpdateGrid);
@@ -140,7 +145,7 @@ function initApp() {
 
 async function startApp() {
     try {
-        // We no longer need the 'places' library for the global map
+        // We removed the 'places' library as it's no longer needed for this simplified address
         await loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY, ['geometry']);
         initApp();
     } catch (error) {
