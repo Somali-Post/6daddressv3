@@ -8,40 +8,86 @@ let map, geocoder;
 // --- DOM Element References ---
 let findMyAddressBtn, addressContent, accuracyWarning, accuracyMessage, accuracyRetryBtn;
 
-// --- UI & Geocoding Logic (No changes here) ---
-function showAddressDisplay() { /* ... same as before ... */ }
-function updateInfoPanel(code, address, suffix) { /* ... same as before ... */ }
-function parseAddressComponents(geocodeComponents) { /* ... same as before ... */ }
-function getReverseGeocode(latLng) { /* ... same as before ... */ }
+// --- UI & Geocoding Logic ---
+function showAddressDisplay() {
+    findMyAddressBtn.classList.add('hidden');
+    addressContent.classList.remove('hidden');
+}
+
+// --- FIX APPLIED: Restored Correct Info Panel Logic ---
+function updateInfoPanel(code, address, suffix) {
+    showAddressDisplay();
+    const codeDisplay = document.getElementById('code-display');
+    const line1Display = document.getElementById('line1-display');
+    const line2Display = document.getElementById('line2-display');
+    const line3Display = document.getElementById('line3-display');
+    
+    // Line 1 of Display: The 6D Code
+    const parts = code.split('-');
+    codeDisplay.innerHTML = `<span class="code-2d">${parts[0]}</span>-<span class="code-4d">${parts[1]}</span>-<span class="code-6d">${parts[2]}</span>`;
+    
+    // Line 2 of Display: Town/City + Suffix
+    const finalTextLine = `${address.mainAddressLine} ${suffix}`.trim();
+    line1Display.textContent = finalTextLine;
+
+    // Ensure the other text lines are empty
+    line2Display.textContent = '';
+    line3Display.textContent = '';
+}
+
+function parseAddressComponents(geocodeComponents) {
+    const getComponent = (type) => geocodeComponents.find(c => c.types.includes(type))?.long_name || null;
+
+    const country = geocodeComponents.find(c => c.types.includes('country'));
+    if (country && country.short_name === 'GB') {
+        const postTown = getComponent('postal_town');
+        if (postTown) {
+            return { mainAddressLine: postTown };
+        }
+    }
+
+    const mainAddressLine = getComponent('locality') || 
+                          getComponent('administrative_area_level_2') || 
+                          getComponent('administrative_area_level_1') || 
+                          getComponent('country') || 
+                          'Unknown Location';
+
+    return { mainAddressLine };
+}
+// --- END OF FIX ---
+
+function getReverseGeocode(latLng) {
+    return new Promise(resolve => {
+        geocoder.geocode({ location: latLng }, (results, status) => {
+            resolve((status === 'OK' && results[0]) ? results[0].address_components : []);
+        });
+    });
+}
 
 // --- Event Handlers ---
 async function handleMapClick(rawLatLng) {
     MapCore.drawAddressBoxes(map, rawLatLng);
     const snappedLatLng = MapCore.snapToGridCenter(rawLatLng);
     const { code6D, localitySuffix } = MapCore.generate6DCode(snappedLatLng.lat(), snappedLatLng.lng());
+    
     showAddressDisplay();
     updateInfoPanel(code6D, { mainAddressLine: 'Locating...' }, '');
+    
     const geocodeResult = await getReverseGeocode(snappedLatLng);
+    
     const finalAddress = parseAddressComponents(geocodeResult);
     updateInfoPanel(code6D, finalAddress, localitySuffix);
 }
 
-// --- FIX APPLIED: New Continuous Zoom Animation ---
-/**
- * Creates a smooth, continuous pan-and-zoom animation to the user's location.
- * @param {google.maps.LatLng} userLatLng The coordinate to animate to.
- */
 function animateMapToLocation(userLatLng) {
     const startZoom = map.getZoom();
     const endZoom = 18;
-    const duration = 2000; // 2 seconds for the zoom animation
-    const intervalTime = 50; // Update every 50ms
+    const duration = 2000;
+    const intervalTime = 50;
     const zoomStep = (endZoom - startZoom) / (duration / intervalTime);
 
-    // First, smoothly pan to the user's location.
     map.panTo(userLatLng);
 
-    // Once the pan is complete, start the custom zoom animation.
     google.maps.event.addListenerOnce(map, 'idle', () => {
         let currentZoom = map.getZoom();
         const zoomInterval = setInterval(() => {
@@ -49,7 +95,6 @@ function animateMapToLocation(userLatLng) {
             if (currentZoom >= endZoom) {
                 clearInterval(zoomInterval);
                 map.setZoom(endZoom);
-                // Trigger the final actions after the animation is fully complete.
                 handleMapClick(userLatLng);
                 findMyAddressBtn.disabled = false;
                 findMyAddressBtn.innerHTML = '<img src="/assets/geolocate.svg" alt="Find My Location"><span>Find My 6D Address</span>';
@@ -77,13 +122,10 @@ async function handleGeolocate() {
             accuracyWarning.classList.remove('hidden');
         }
         const userLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-        
-        // Call our new animation function.
         animateMapToLocation(userLatLng);
     };
 
     const errorCallback = (error) => {
-        // Restore the button immediately on error.
         findMyAddressBtn.disabled = false;
         findMyAddressBtn.innerHTML = '<img src="/assets/geolocate.svg" alt="Find My Location"><span>Find My 6D Address</span>';
         switch (error.code) {
@@ -100,7 +142,6 @@ async function handleGeolocate() {
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 }
-// --- END OF FIX ---
 
 // --- Initialization ---
 function initApp() {
@@ -110,8 +151,8 @@ function initApp() {
     accuracyMessage = document.getElementById('accuracy-message');
     accuracyRetryBtn = document.getElementById('accuracy-retry-btn');
 
-    // --- FIX APPLIED: Set a more reasonable default zoom level ---
-    map = MapCore.initializeBaseMap(document.getElementById("map"), { center: { lat: 51.5072, lng: -0.1276 }, zoom: 6 });
+    // --- FIX APPLIED: Restored Default World View ---
+    map = MapCore.initializeBaseMap(document.getElementById("map"), { center: { lat: 0, lng: 0 }, zoom: 3 });
     // --- END OF FIX ---
     
     geocoder = new google.maps.Geocoder();
