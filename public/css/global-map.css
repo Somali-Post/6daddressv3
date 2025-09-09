@@ -6,18 +6,29 @@
     top: 25px;
     left: 25px;
     z-index: 10;
+    
+    /* Set a fixed size for the container to keep it consistent */
+    width: 150px;
+    height: 150px;
+    
+    /* Use Flexbox to perfectly center the image inside */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* Existing glass effect styles */
     background-color: rgba(255, 255, 255, 0.75);
     box-shadow: 0 8px 24px rgba(0,0,0,0.2);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    padding: 10px;
     border-radius: 12px;
     transition: all 0.3s ease;
 }
 
 #logo img {
-    height: 120px;
-    display: block;
+    /* Increase the size of the image itself */
+    height: 140px;
+    width: auto; /* Maintain aspect ratio */
 }
 
 /* Info Panel Styling */
