@@ -82,7 +82,7 @@ async function handleMapClick(rawLatLng) {
 function animateMapToLocation(userLatLng) {
     const startZoom = map.getZoom();
     const endZoom = 18;
-    const duration = 2000;
+    const duration = 4000;
     const intervalTime = 50;
     const zoomStep = (endZoom - startZoom) / (duration / intervalTime);
 
