@@ -8,53 +8,36 @@ let map, geocoder;
 // --- DOM Element References ---
 let findMyAddressBtn, addressContent, accuracyWarning, accuracyMessage, accuracyRetryBtn;
 
-// --- UI & Geocoding Logic ---
+// --- UI & Geocoding Logic (Verified and Correct) ---
 function showAddressDisplay() {
     findMyAddressBtn.classList.add('hidden');
     addressContent.classList.remove('hidden');
 }
 
-// --- FIX APPLIED: Restored Correct Info Panel Logic ---
 function updateInfoPanel(code, address, suffix) {
     showAddressDisplay();
     const codeDisplay = document.getElementById('code-display');
     const line1Display = document.getElementById('line1-display');
     const line2Display = document.getElementById('line2-display');
     const line3Display = document.getElementById('line3-display');
-    
-    // Line 1 of Display: The 6D Code
     const parts = code.split('-');
     codeDisplay.innerHTML = `<span class="code-2d">${parts[0]}</span>-<span class="code-4d">${parts[1]}</span>-<span class="code-6d">${parts[2]}</span>`;
-    
-    // Line 2 of Display: Town/City + Suffix
     const finalTextLine = `${address.mainAddressLine} ${suffix}`.trim();
     line1Display.textContent = finalTextLine;
-
-    // Ensure the other text lines are empty
     line2Display.textContent = '';
     line3Display.textContent = '';
 }
 
 function parseAddressComponents(geocodeComponents) {
     const getComponent = (type) => geocodeComponents.find(c => c.types.includes(type))?.long_name || null;
-
     const country = geocodeComponents.find(c => c.types.includes('country'));
     if (country && country.short_name === 'GB') {
         const postTown = getComponent('postal_town');
-        if (postTown) {
-            return { mainAddressLine: postTown };
-        }
+        if (postTown) return { mainAddressLine: postTown };
     }
-
-    const mainAddressLine = getComponent('locality') || 
-                          getComponent('administrative_area_level_2') || 
-                          getComponent('administrative_area_level_1') || 
-                          getComponent('country') || 
-                          'Unknown Location';
-
+    const mainAddressLine = getComponent('locality') || getComponent('administrative_area_level_2') || getComponent('administrative_area_level_1') || getComponent('country') || 'Unknown Location';
     return { mainAddressLine };
 }
-// --- END OF FIX ---
 
 function getReverseGeocode(latLng) {
     return new Promise(resolve => {
@@ -69,40 +52,39 @@ async function handleMapClick(rawLatLng) {
     MapCore.drawAddressBoxes(map, rawLatLng);
     const snappedLatLng = MapCore.snapToGridCenter(rawLatLng);
     const { code6D, localitySuffix } = MapCore.generate6DCode(snappedLatLng.lat(), snappedLatLng.lng());
-    
     showAddressDisplay();
     updateInfoPanel(code6D, { mainAddressLine: 'Locating...' }, '');
-    
     const geocodeResult = await getReverseGeocode(snappedLatLng);
-    
     const finalAddress = parseAddressComponents(geocodeResult);
     updateInfoPanel(code6D, finalAddress, localitySuffix);
 }
 
-function animateMapToLocation(userLatLng) {
-    const startZoom = map.getZoom();
-    const endZoom = 18;
-    const duration = 4000;
-    const intervalTime = 50;
-    const zoomStep = (endZoom - startZoom) / (duration / intervalTime);
+// --- FIX APPLIED: Reverted to Robust Event-Driven Animation ---
+/**
+ * A helper function that returns a Promise that resolves when the map's 'idle' event fires.
+ */
+function waitForMapIdle(map) {
+    return new Promise(resolve => google.maps.event.addListenerOnce(map, 'idle', resolve));
+}
 
+/**
+ * Creates a smooth, multi-step animation that waits for the map to be ready at each stage.
+ */
+async function animateMapToLocation(userLatLng) {
+    // Step 1: Smoothly pan to the new location. This is the first and longest step.
     map.panTo(userLatLng);
+    await waitForMapIdle(map);
 
-    google.maps.event.addListenerOnce(map, 'idle', () => {
-        let currentZoom = map.getZoom();
-        const zoomInterval = setInterval(() => {
-            currentZoom += zoomStep;
-            if (currentZoom >= endZoom) {
-                clearInterval(zoomInterval);
-                map.setZoom(endZoom);
-                handleMapClick(userLatLng);
-                findMyAddressBtn.disabled = false;
-                findMyAddressBtn.innerHTML = '<img src="/assets/geolocate.svg" alt="Find My Location"><span>Find My 6D Address</span>';
-            } else {
-                map.setZoom(currentZoom);
-            }
-        }, intervalTime);
-    });
+    // Step 2: First step of the zoom-in.
+    map.setZoom(14);
+    await waitForMapIdle(map);
+
+    // Step 3: Final zoom-in.
+    map.setZoom(18);
+    await waitForMapIdle(map);
+
+    // Step 4: Now that the animation is fully complete, generate the address.
+    await handleMapClick(userLatLng);
 }
 
 async function handleGeolocate() {
@@ -115,14 +97,20 @@ async function handleGeolocate() {
     findMyAddressBtn.innerHTML = '<div class="spinner"></div>';
     accuracyWarning.classList.add('hidden');
 
-    const successCallback = (position) => {
+    const successCallback = async (position) => {
         const accuracy = position.coords.accuracy;
         if (accuracy > 50) {
             accuracyMessage.textContent = `Poor GPS accuracy: ${Math.round(accuracy)}m`;
             accuracyWarning.classList.remove('hidden');
         }
         const userLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-        animateMapToLocation(userLatLng);
+        
+        // Await the entire animation sequence to complete.
+        await animateMapToLocation(userLatLng);
+
+        // Restore the button only after the animation and geocoding are done.
+        findMyAddressBtn.disabled = false;
+        findMyAddressBtn.innerHTML = '<img src="/assets/geolocate.svg" alt="Find My Location"><span>Find My 6D Address</span>';
     };
 
     const errorCallback = (error) => {
@@ -142,6 +130,7 @@ async function handleGeolocate() {
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 }
+// --- END OF FIX ---
 
 // --- Initialization ---
 function initApp() {
