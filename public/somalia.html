@@ -14,11 +14,22 @@
         <img src="/assets/logo-somalia.png" alt="6D Address Somalia Logo">
     </div>
 
+    <button id="recenter-btn" class="control-button hidden" title="Take me back to my selected location">
+        <svg xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><circle cx="12" cy="12" r="8"></circle><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line></svg>
+    </button>
+
     <div id="info-panel">
-        <button id="find-my-address-btn" class="find-address-btn" title="Loading map data..." disabled>
+        <button id="find-my-address-btn" class="find-address-btn">
             <img src="/assets/geolocate.svg" alt="Find My Location">
             <span>Find My 6D Address</span>
         </button>
+        <div id="address-content" class="hidden">
+            <div id="code-display"></div>
+            <div id="address-display">
+                <div id="line1-display"></div>
+                <div id="line2-display"></div>
+            </div>
+        </div>
     </div>
 
     <div id="registration-sidebar" class="sidebar hidden">
@@ -27,43 +38,21 @@
         </div>
         <form id="registration-form" novalidate>
             <div id="step1">
-                <div class="form-group">
-                    <label for="six_d_code">6D Address</label>
-                    <input type="text" id="six_d_code" name="six_d_code" readonly>
-                </div>
-                <div class="form-group">
-                    <label for="full_name">Full Name</label>
-                    <input type="text" id="full_name" name="full_name" required placeholder="Enter your full name">
-                </div>
-                <div class="form-group">
-                    <label for="phone_number">Phone Number</label>
-                    <input type="tel" id="phone_number" name="phone_number" required placeholder="e.g., 61XXXXXXX">
-                </div>
-                <div class="form-group">
-                    <label for="region">Region</label>
-                    <select id="region" name="region" required></select>
-                </div>
-                <div class="form-group">
-                    <label for="district">District</label>
-                    <select id="district" name="district" required disabled></select>
-                </div>
+                <div class="form-group"><label for="six_d_code">6D Address</label><input type="text" id="six_d_code" name="six_d_code" readonly></div>
+                <div class="form-group"><label for="full_name">Full Name</label><input type="text" id="full_name" name="full_name" required placeholder="Enter your full name"></div>
+                <div class="form-group"><label for="phone_number">Phone Number</label><input type="tel" id="phone_number" name="phone_number" required placeholder="e.g., 61XXXXXXX"></div>
+                <div class="form-group"><label for="region">Region</label><select id="region" name="region" required></select></div>
+                <div class="form-group"><label for="district">District</label><select id="district" name="district" required disabled></select></div>
                 <button type="button" id="send-otp-btn" disabled>Send Verification Code</button>
             </div>
             <div id="step2" class="hidden">
                 <p class="otp-prompt">Enter the 6-digit code sent to <strong id="otp-phone-display"></strong>.</p>
-                <div class="form-group">
-                    <label for="otp">Verification Code</label>
-                    <input type="text" id="otp" name="otp" required maxlength="6" inputmode="numeric" pattern="\d{6}">
-                </div>
+                <div class="form-group"><label for="otp">Verification Code</label><input type="text" id="otp" name="otp" required maxlength="6" inputmode="numeric" pattern="\d{6}"></div>
                 <button type="button" id="verify-btn">Verify & Complete Registration</button>
             </div>
             <div id="form-message" class="form-message"></div>
         </form>
     </div>
-
-    <button id="find-my-location-btn" class="control-button" title="Loading map data..." disabled>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><line x1="21" y1="12" x2="23" y2="12"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line></svg>
-    </button>
     
     <script type="module" src="/js/somalia-map.js"></script>
 </body>
