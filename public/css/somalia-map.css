@@ -19,62 +19,7 @@
     display: block;
 }
 
-#info-panel {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-    background-color: rgba(255, 255, 255, 0.9);
-    padding: 15px 25px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    text-align: center;
-    min-width: 300px;
-}
-
-.find-address-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #333;
-    padding: 5px 10px;
-}
-
-.find-address-btn img {
-    width: 24px;
-    height: 24px;
-    margin-right: 10px;
-}
-
-#code-display {
-    font-size: 1.5rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-    margin-bottom: 5px;
-}
-
-#address-display {
-    text-align: center;
-}
-
-#line1-display {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #333;
-}
-
-#line2-display {
-    font-size: 0.9rem;
-    color: #555;
-}
+/* NOTE: All styles for #info-panel and its children have been removed as requested. */
 
 /* Sidebar styles */
 .sidebar {
