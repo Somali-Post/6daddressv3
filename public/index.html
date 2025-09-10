@@ -3,40 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>6D Address - Global Demonstrator</title>
+    <title>6D Address - Somalia Registration</title>
     <link rel="stylesheet" href="/css/shared.css">
-    <link rel="stylesheet" href="/css/global-map.css">
+    <link rel="stylesheet" href="/css/somalia-map.css">
 </head>
 <body>
     <div id="map"></div>
 
     <div id="logo">
-        <img src="/assets/logo.png" alt="6D Address Logo">
+        <img src="/assets/logo-somalia.png" alt="6D Address Somalia Logo">
     </div>
 
-    <!-- The old geolocate button is correctly removed -->
-    
-    <div id="accuracy-warning" class="warning-bubble hidden">
-        <span id="accuracy-message"></span>
-        <button id="accuracy-retry-btn">Retry</button>
-    </div>
+    <!-- This is now the "recenter" button, hidden by default -->
+    <button id="recenter-btn" class="control-button hidden" title="Take me back to my selected location">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><circle cx="12" cy="12" r="8"></circle><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line></svg>
+    </button>
 
-    <div id="info-panel">
-        <button id="find-my-address-btn" class="find-address-btn">
-            <img src="/assets/geolocate.svg" alt="Find My Location">
-            <span>Find My 6D Address</span>
-        </button>
+    <!-- The conflicting info-panel has been completely REMOVED -->
 
-        <div id="address-content" class="hidden">
-            <div id="code-display"></div>
-            <div id="address-display">
-                <div id="line1-display"></div>
-                <div id="line2-display"></div>
-                <div id="line3-display"></div>
-            </div>
+    <div id="registration-sidebar" class="sidebar hidden">
+        <div class="sidebar-header">
+            <img src="/assets/logo-somalia.png" alt="6D Address Somalia Logo">
         </div>
+        <form id="registration-form" novalidate>
+            <div id="step1">
+                <div class="form-group"><label for="six_d_code">6D Address</label><input type="text" id="six_d_code" name="six_d_code" readonly></div>
+                <div class="form-group"><label for="full_name">Full Name</label><input type="text" id="full_name" name="full_name" required placeholder="Enter your full name"></div>
+                <div class="form-group"><label for="phone_number">Phone Number</label><input type="tel" id="phone_number" name="phone_number" required placeholder="e.g., 61XXXXXXX"></div>
+                <div class="form-group"><label for="region">Region</label><select id="region" name="region" required></select></div>
+                <div class="form-group"><label for="district">District</label><select id="district" name="district" required disabled></select></div>
+                <button type="button" id="send-otp-btn" disabled>Send Verification Code</button>
+            </div>
+            <div id="step2" class="hidden">
+                <p class="otp-prompt">Enter the 6-digit code sent to <strong id="otp-phone-display"></strong>.</p>
+                <div class="form-group"><label for="otp">Verification Code</label><input type="text" id="otp" name="otp" required maxlength="6" inputmode="numeric" pattern="\d{6}"></div>
+                <button type="button" id="verify-btn">Verify & Complete Registration</button>
+            </div>
+            <div id="form-message" class="form-message"></div>
+        </form>
     </div>
     
-    <script type="module" src="/js/global-map.js"></script>
+    <script type="module" src="/js/somalia-map.js"></script>
 </body>
 </html>
