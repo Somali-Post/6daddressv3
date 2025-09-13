@@ -7,6 +7,7 @@ let somaliaPolygon;
 let lastSelectedLatLng = null;
 let drawnObjects = { boxes: [], grid: [] };
 
+// This object holds references to all the DOM elements we'll interact with.
 const ui = {
     infoPanel: document.getElementById('info-panel'),
     infoPanelDefault: document.getElementById('info-panel-default'),
@@ -23,29 +24,37 @@ const ui = {
     sidebarToggleBtn: document.getElementById('sidebar-toggle-btn'),
     welcomeView: document.getElementById('sidebar-welcome-view'),
     loginBtn: document.getElementById('login-btn'),
-    // Add other sidebar views and form elements here as we build them
+    modal: document.getElementById('confirmation-modal'),
+    modalConfirmBtn: document.getElementById('modal-confirm-btn'),
+    modalCancelBtn: document.getElementById('modal-cancel-btn')
 };
 
 // --- Main Initialization ---
+// This function is the entry point, called by the Google Maps script.
 function initMap() {
     map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: 2.043, lng: 45.333 },
         zoom: 14,
         disableDefaultUI: true,
         zoomControl: true,
-        // Add a Map ID here later to use your custom "Silver" style
+        // You can add your custom Map ID here later for styling
+        // mapId: 'YOUR_CUSTOM_MAP_ID'
     });
     geocoder = new google.maps.Geocoder();
     
     initializeUI();
     loadSomaliaBoundary();
+
+    // Add map click listener
+    map.addListener('click', handleMapClick);
 }
 
 function initializeUI() {
-    // Event Listeners
     ui.findMyAddressBtn.addEventListener('click', handleGeolocate);
-    ui.sidebarToggleBtn.addEventListener('click', () => ui.sidebar.classList.toggle('closed'));
-    map.addListener('dragstart', () => setInfoPanelState('default')); // Reset panel on map drag
+    ui.sidebarToggleBtn.addEventListener('click', () => {
+        ui.sidebar.classList.toggle('closed');
+    });
+    map.addListener('dragstart', () => setInfoPanelState('default'));
     
     // TODO: Add listeners for other buttons (copy, share, recenter, register, login)
 }
@@ -70,22 +79,21 @@ function setInfoPanelState(state, data = {}) {
 // --- Map & Geocoding Logic ---
 async function loadSomaliaBoundary() {
     try {
-        const response = await fetch('../data/somalia.geojson'); // Relative path
+        const response = await fetch('../data/somalia.geojson');
+        if (!response.ok) throw new Error('Network response was not ok.');
         const geoJson = await response.json();
         const coordinates = geoJson.features[0].geometry.coordinates[0].map(c => ({ lat: c[1], lng: c[0] }));
         somaliaPolygon = new google.maps.Polygon({ paths: coordinates });
-        console.log("Somalia boundary loaded.");
+        console.log("Somalia boundary loaded successfully.");
     } catch (error) {
         console.error("Failed to load Somalia boundary:", error);
+        alert("Critical Error: Could not load country boundary data. The app may not function correctly.");
     }
 }
 
 function handleGeolocate() {
-    // TODO: Implement geolocation logic
-    // 1. Check if location is inside somaliaPolygon
-    // 2. If yes, pan map and call handleMapClick
-    // 3. If no, show error in info panel
     console.log("Find My Address clicked");
+    // TODO: Implement geolocation logic
 }
 
 function handleMapClick(event) {
@@ -94,8 +102,7 @@ function handleMapClick(event) {
         lastSelectedLatLng = clickedLatLng;
         processLocation(clickedLatLng);
     } else {
-        // TODO: Show "Please click inside Somalia" error in info panel
-        console.log("Clicked outside Somalia");
+        alert("Please click inside Somalia to generate a 6D Address.");
     }
 }
 
@@ -113,19 +120,45 @@ async function processLocation(latLng) {
 }
 
 async function getAddressForLocation(latLng) {
-    // This function will contain the geocoding logic
-    // For now, returning placeholder data
     const { code6D, localitySuffix } = generate6DCode(latLng.lat(), latLng.lng());
-    return { 
-        code6D, 
-        localitySuffix, 
-        address: { district: 'Hodan', region: 'Banaadir' } 
-    };
+    
+    // Placeholder for real geocoding
+    const address = await new Promise(resolve => {
+        setTimeout(() => resolve({ district: 'Hodan', region: 'Banaadir' }), 500);
+    });
+
+    return { code6D, localitySuffix, address };
 }
 
 // --- Drawing Logic ---
 function drawAddressBoxes(latLng) {
-    // ... (This function remains the same as our global map version)
+    const lat = latLng.lat();
+    const lon = latLng.lng();
+    const boxStyles = {
+        '2d': { color: '#ff0000', zIndex: 1, scale: 100, fillOpacity: 0.0 },
+        '4d': { color: '#28a745', zIndex: 2, scale: 1000, fillOpacity: 0.0 },
+        '6d': { color: '#007bff', zIndex: 3, scale: 10000, fillOpacity: 0.25 }
+    };
+    for (const key in boxStyles) {
+        const style = boxStyles[key];
+        const scale = style.scale;
+        const cellSize = 1 / scale;
+        const swLat = Math.floor(lat * scale) / scale;
+        const swLng = Math.floor(lon * scale) / scale;
+        const bounds = { south: swLat, west: swLng, north: swLat + cellSize, east: swLng + cellSize };
+        const rect = new google.maps.Rectangle({
+            strokeColor: style.color,
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: style.color,
+            fillOpacity: style.fillOpacity,
+            map: map,
+            bounds: bounds,
+            zIndex: style.zIndex,
+            clickable: false
+        });
+        drawnObjects.boxes.push(rect);
+    }
 }
 
 function clearMapObjects(type) {
@@ -145,4 +178,5 @@ function generate6DCode(lat, lon) {
 }
 
 // --- Global Initialization ---
+// This makes the initMap function available to be called by the Google Maps script
 window.initMap = initMap;
