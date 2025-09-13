@@ -153,8 +153,11 @@ function findLocationLocally(latLng) {
 
 async function getAddressForLocation(latLng) {
     const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
+    
+    // Step 1: Try to find the address with our fast, local data first.
     let address = findLocationLocally(latLng);
 
+    // Step 2: If, and ONLY IF, the local search fails, then use Google as a fallback.
     if (!address) {
         console.warn("Local geocode failed. Falling back to Google API.");
         try {
@@ -162,6 +165,8 @@ async function getAddressForLocation(latLng) {
             if (response.results && response.results[0]) {
                 const components = response.results[0].address_components;
                 const getComponent = (type) => components.find(c => c.types.includes(type))?.long_name || null;
+                
+                // Construct the address object from Google's data
                 address = {
                     region: getComponent('administrative_area_level_1') || 'N/A',
                     district: getComponent('administrative_area_level_2') || getComponent('locality') || 'N/A'
@@ -171,11 +176,12 @@ async function getAddressForLocation(latLng) {
             console.error("Google Geocoding fallback failed:", error);
         }
     }
+    
+    // Ensure we always have a valid address object to return.
     address = address || { region: 'N/A', district: 'N/A' };
+    
     return { code6D, localitySuffix, address };
 }
-// --- END OF FIX ---
-
 // --- Event Handlers ---
 async function handleLocationFound(latLng) {
     lastSelectedLatLng = latLng;
