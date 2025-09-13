@@ -5,7 +5,6 @@ import { GOOGLE_MAPS_API_KEY } from './config.js';
 // --- Module-level variables ---
 let map, geocoder, somaliaPolygon;
 let lastSelectedLatLng = null;
-let districtFeatures = [];
 
 // --- DOM Element References ---
 let findMyAddressBtn, addressContent, recenterBtn;
@@ -37,49 +36,53 @@ function updateInfoPanel(code, address, suffix) {
 }
 
 // --- Geocoding Logic ---
-function findLocationLocally(latLng) {
-    for (const feature of districtFeatures) {
-        if (google.maps.geometry.poly.containsLocation(latLng, feature.polygon)) {
-            return {
-                region: feature.properties.OPZ1_EN || 'N/A',
-                district: feature.properties.ADM2_EN || 'N/A'
-            };
-        }
-    }
-    return null;
-}
-
 async function getAddressForLocation(latLng) {
     const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
-    let address = findLocationLocally(latLng);
-    if (!address) {
-        console.warn("Local geocode failed. Falling back to Google API.");
-        try {
-            const response = await geocoder.geocode({ location: latLng });
-            if (response.results && response.results[0]) {
-                const components = response.results[0].address_components;
-                const getComponent = (type) => components.find(c => c.types.includes(type))?.long_name || null;
-                address = {
-                    region: getComponent('administrative_area_level_1') || 'N/A',
-                    district: getComponent('administrative_area_level_2') || getComponent('locality') || 'N/A'
-                };
-            }
-        } catch (error) { console.error("Google Geocoding fallback failed:", error); }
-    }
-    address = address || { region: 'N/A', district: 'N/A' };
-    return { code6D, localitySuffix, address };
+    // This function now ONLY uses Google as a fallback. The primary logic is in the data layer click handler.
+    try {
+        const response = await geocoder.geocode({ location: latLng });
+        if (response.results && response.results[0]) {
+            const components = response.results[0].address_components;
+            const getComponent = (type) => components.find(c => c.types.includes(type))?.long_name || null;
+            const address = {
+                region: getComponent('administrative_area_level_1') || 'N/A',
+                district: getComponent('administrative_area_level_2') || getComponent('locality') || 'N/A'
+            };
+            return { code6D, localitySuffix, address };
+        }
+    } catch (error) { console.error("Google Geocoding fallback failed:", error); }
+    return { code6D, localitySuffix, address: { region: 'N/A', district: 'N/A' } };
 }
 
 // --- Event Handlers ---
+async function processLocation(latLng) {
+    lastSelectedLatLng = latLng;
+    recenterBtn.classList.remove('hidden');
+    MapCore.drawAddressBoxes(map, latLng);
+    showAddressDisplay(true);
+    // The actual geocoding will be triggered by the click handlers below
+}
+
+// --- FIX APPLIED: New Event Handler for the Data Layer ---
+async function handleDataLayerClick(event) {
+    await processLocation(event.latLng);
+    const { code6D, localitySuffix } = MapCore.generate6DCode(event.latLng.lat(), event.latLng.lng());
+    const address = {
+        region: event.feature.getProperty('OPZ1_EN') || 'N/A',
+        district: event.feature.getProperty('ADM2_EN') || 'N/A'
+    };
+    console.log("Local geocode successful:", address);
+    updateInfoPanel(code6D, address, localitySuffix);
+}
+
 async function onMapClick(event) {
     if (!somaliaPolygon || !google.maps.geometry.poly.containsLocation(event.latLng, somaliaPolygon)) {
         showFindButton();
         return;
     }
-    lastSelectedLatLng = event.latLng;
-    recenterBtn.classList.remove('hidden');
-    MapCore.drawAddressBoxes(map, event.latLng);
-    showAddressDisplay(true);
+    // This function now acts as the FALLBACK if the data layer click doesn't fire.
+    console.warn("Data layer click did not fire. Falling back to Google API.");
+    await processLocation(event.latLng);
     const { code6D, localitySuffix, address } = await getAddressForLocation(event.latLng);
     updateInfoPanel(code6D, address, localitySuffix);
 }
@@ -96,7 +99,8 @@ async function handleGeolocate() {
         const userLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
         map.setCenter(userLatLng);
         map.setZoom(18);
-        await onMapClick({ latLng: userLatLng });
+        // We simulate a map click to trigger the correct handler (data layer or fallback)
+        google.maps.event.trigger(map, 'click', { latLng: userLatLng });
     };
     const errorCallback = (error) => { /* ... */ };
     const finalCallback = () => {
@@ -104,57 +108,30 @@ async function handleGeolocate() {
         findMyAddressBtn.innerHTML = '<img src="/assets/geolocate.svg" alt="Find My Location"><span>Find My 6D Address</span>';
     };
     navigator.geolocation.getCurrentPosition(
-        (pos) => { successCallback(pos).finally(finalCallback); },
+        (pos) => { successCallback(pos); finalCallback(); },
         (err) => { errorCallback(err); finalCallback(); },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 }
 
 // --- Initialization ---
-// --- FIX APPLIED: Using Google's Robust GeoJSON Loader ---
-/**
- * Loads the district GeoJSON using the powerful built-in Google Maps data layer.
- * This is simpler and more reliable than manual parsing.
- */
 async function loadDistrictData() {
-    return new Promise((resolve, reject) => {
-        try {
-            // Use the map's data layer to load the GeoJSON
-            map.data.loadGeoJson('/data/somalia_districts.geojson', null, (features) => {
-                // This callback fires when the data is loaded and parsed by Google.
-                const loadedFeatures = [];
-                features.forEach(feature => {
-                    // We need to manually create our own polygon objects for the containsLocation check
-                    const geometry = feature.getGeometry();
-                    if (geometry.getType() === 'Polygon') {
-                        const paths = geometry.getArray().map(ring => ring.getArray());
-                        const polygon = new google.maps.Polygon({ paths: paths });
-                        loadedFeatures.push({ properties: feature.getProperty.bind(feature), polygon: polygon });
-                    }
-                    // Note: This simplified version doesn't handle MultiPolygons for brevity,
-                    // but the Google loader handles them correctly for drawing.
-                });
-                
-                // A helper to get properties, since the API is different
-                districtFeatures = features.map(feature => {
-                    const geometry = feature.getGeometry();
-                    const paths = geometry.getArray().map(ring => ring.getArray());
-                    const polygon = new google.maps.Polygon({ paths: paths });
-                    const properties = {};
-                    feature.forEachProperty((value, key) => { properties[key] = value; });
-                    return { properties, polygon };
-                });
-
-                console.log(`Successfully processed ${districtFeatures.length} district polygons using map.data layer.`);
-                resolve();
-            });
-        } catch (error) {
-            console.error("Failed to load or process district data:", error);
-            reject(error);
-        }
+    return new Promise((resolve) => {
+        // Use the map's data layer to robustly load and parse the GeoJSON
+        map.data.loadGeoJson('/data/somalia_districts.geojson', null, () => {
+            console.log("Successfully loaded and parsed somalia_districts.geojson via map.data layer.");
+            resolve();
+        });
+        // Style the district boundaries so they are visible
+        map.data.setStyle({
+            strokeColor: '#4A90E2',
+            strokeOpacity: 0.6,
+            strokeWeight: 1.5,
+            fillOpacity: 0.0,
+            clickable: true // Make the features clickable
+        });
     });
 }
-// --- END OF FIX ---
 
 async function loadSomaliaBoundary() {
     try {
@@ -180,7 +157,11 @@ async function initApp() {
     
     await Promise.all([loadSomaliaBoundary(), loadDistrictData()]);
     
+    // The data layer click is the PRIMARY handler
+    map.data.addListener('click', handleDataLayerClick);
+    // The map click is the FALLBACK handler
     map.addListener('click', onMapClick);
+
     findMyAddressBtn.addEventListener('click', handleGeolocate);
     recenterBtn.addEventListener('click', handleRecenter);
     
