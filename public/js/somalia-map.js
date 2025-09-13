@@ -1,6 +1,6 @@
 import * as MapCore from './map-core.js';
 import { loadGoogleMapsAPI, debounce } from './utils.js';
-import { GOOGLE_MAPS_API_KEY } from './config.js';
+import { GOOGLE_MAPS_API_KEY, somaliRegions } from './config.js';
 
 // --- Module-level variables ---
 let map, geocoder, somaliaPolygon;
@@ -20,32 +20,38 @@ function showAddressDisplay(isLoading = false) {
         document.getElementById('line2-display').textContent = '';
     }
 }
-
 function showFindButton() {
     findMyAddressBtn.classList.remove('hidden');
     addressContent.classList.add('hidden');
 }
-
 function updateInfoPanel(code, address, suffix) {
     showAddressDisplay();
     const codeDisplay = document.getElementById('code-display');
     const line1Display = document.getElementById('line1-display');
     const line2Display = document.getElementById('line2-display');
     codeDisplay.textContent = code;
-    line1Display.textContent = address.region;
-    line2Display.textContent = `${address.district} ${suffix}`.trim();
+    line1Display.textContent = address.district;
+    line2Display.textContent = `${address.region} ${suffix}`.trim();
 }
 
 // --- Geocoding Logic ---
 function findLocationLocally(latLng) {
+    console.log(`[Debug] Starting local search for Lat: ${latLng.lat()}, Lng: ${latLng.lng()}`);
     for (const feature of districtFeatures) {
+        // --- ADDED: Diagnostic Logging ---
+        const districtName = feature.properties.ADM2_EN || '[Unknown District]';
+        console.log(`[Debug] ...checking against polygon for: ${districtName}`);
+        
         if (google.maps.geometry.poly.containsLocation(latLng, feature.polygon)) {
+            console.log(`[Debug] SUCCESS! Match found in: ${districtName}`);
             return {
-                region: feature.properties.YOUR_REGION_PROPERTY_NAME || 'N/A',
-                district: feature.properties.YOUR_DISTRICT_PROPERTY_NAME || 'N/A'
+                region: feature.properties.OPZ1_EN || 'N/A',
+                district: feature.properties.ADM2_EN || 'N/A'
             };
         }
     }
+    // --- ADDED: Diagnostic Logging ---
+    console.warn('[Debug] Local search complete. No match found.');
     return null;
 }
 
@@ -85,11 +91,8 @@ async function onMapClick(event) {
 }
 
 function handleRecenter() {
-    if (lastSelectedLatLng) {
-        map.panTo(lastSelectedLatLng);
-    }
+    if (lastSelectedLatLng) { map.panTo(lastSelectedLatLng); }
 }
-
 async function handleGeolocate() {
     if (!navigator.geolocation) { alert("Geolocation is not supported by your browser."); return; }
     findMyAddressBtn.disabled = true;
@@ -117,17 +120,33 @@ async function loadDistrictData() {
     try {
         const response = await fetch('/data/somalia_districts.geojson');
         const geoJson = await response.json();
+        console.log(`[Debug] Loaded somalia_districts.geojson. Found ${geoJson.features.length} features.`);
+
+        const loadedFeatures = [];
         geoJson.features.forEach(feature => {
-            if (!feature?.geometry?.coordinates) return;
+            if (!feature?.geometry?.coordinates) {
+                console.warn('[Debug] Skipping invalid feature:', feature);
+                return;
+            }
             const process = (coords) => {
-                const paths = coords[0].map(c => ({ lat: c[1], lng: c[0] }));
-                const polygon = new google.maps.Polygon({ paths });
-                districtFeatures.push({ properties: feature.properties, polygon });
+                // A valid polygon ring must have at least 4 points (first and last are the same)
+                if (coords[0] && coords[0].length > 3) {
+                    const paths = coords[0].map(c => ({ lat: c[1], lng: c[0] }));
+                    const polygon = new google.maps.Polygon({ paths });
+                    loadedFeatures.push({ properties: feature.properties, polygon });
+                }
             };
-            if (feature.geometry.type === 'Polygon') process([feature.geometry.coordinates]);
-            else if (feature.geometry.type === 'MultiPolygon') process(feature.geometry.coordinates);
+            if (feature.geometry.type === 'Polygon') {
+                process(feature.geometry.coordinates);
+            } else if (feature.geometry.type === 'MultiPolygon') {
+                feature.geometry.coordinates.forEach(polyCoords => process(polyCoords));
+            }
         });
-    } catch (error) { console.error("Failed to load district data:", error); }
+        districtFeatures = loadedFeatures; // Assign only after successful processing
+        console.log(`[Debug] Successfully processed ${districtFeatures.length} district polygons.`);
+    } catch (error) {
+        console.error("Failed to load or process district data:", error);
+    }
 }
 
 async function loadSomaliaBoundary() {
@@ -162,22 +181,13 @@ async function initApp() {
     MapCore.updateDynamicGrid(map);
 }
 
-// --- FIX APPLIED: Robust Initialization Sequence ---
 async function main() {
     try {
-        // Step 1: Wait for the Google Maps API to load
+        window.initMap = initApp;
         await loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY, ['geometry']);
-        
-        // Step 2: Now that the API is ready, call initApp to build the application
-        await initApp();
     } catch (error) {
-        console.error("Failed to initialize map:", error);
-        const mapDiv = document.getElementById('map');
-        if (mapDiv) {
-            mapDiv.innerText = 'Error: Could not load the map. Please check the console for details.';
-        }
+        document.getElementById('map').innerText = 'Error: Could not load the map.';
     }
 }
 
 main();
-// --- END OF FIX ---
