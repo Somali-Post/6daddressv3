@@ -176,7 +176,26 @@ function generate6DCode(lat, lon) {
     const code6D = `${lat_d2}${lon_d2}-${lat_d3}${lon_d3}-${lat_d4}${lon_d4}`; const localitySuffix = `${lat_d1}${lon_d1}`;
     return { code6D, localitySuffix };
 }
+function loadGoogleMapsAPI() {
+    // Check if the API key was successfully injected by inject-env.js
+    if (!window.GOOGLE_MAPS_API_KEY) {
+        console.error("CRITICAL ERROR: Google Maps API Key is not available.");
+        alert("Could not load map: Configuration error.");
+        return;
+    }
 
-// --- Global Initialization ---
-// This makes the initMap function available to be called by the Google Maps script
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${window.GOOGLE_MAPS_API_KEY}&callback=initMap&v=weekly&libraries=geometry`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+}
+
+// Make initMap globally available for the callback
 window.initMap = initMap;
+
+// This is the final step that kicks everything off.
+// We wait for the DOM to be ready, then we load the Google Maps API.
+document.addEventListener('DOMContentLoaded', () => {
+    loadGoogleMapsAPI();
+});
