@@ -134,7 +134,7 @@ async function loadSomaliaBoundary() {
     try {
         const response = await fetch('/data/somalia.geojson');
         const geoJson = await response.json();
-        const coordinates = geo.features[0].geometry.coordinates[0].map(c => ({ lat: c[1], lng: c[0] }));
+        const coordinates = geoJson.features[0].geometry.coordinates[0].map(c => ({ lat: c[1], lng: c[0] }));
         somaliaPolygon = new google.maps.Polygon({ paths: coordinates });
         findMyAddressBtn.disabled = false;
     } catch (error) {
