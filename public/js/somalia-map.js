@@ -14,7 +14,6 @@ let findMyAddressBtn, addressContent, recenterBtn;
 function showAddressDisplay(isLoading = false) {
     findMyAddressBtn.classList.add('hidden');
     addressContent.classList.remove('hidden');
-
     if (isLoading) {
         document.getElementById('code-display').textContent = 'Locating...';
         document.getElementById('line1-display').textContent = '';
@@ -32,7 +31,6 @@ function updateInfoPanel(code, address, suffix) {
     const codeDisplay = document.getElementById('code-display');
     const line1Display = document.getElementById('line1-display');
     const line2Display = document.getElementById('line2-display');
-    
     codeDisplay.textContent = code;
     line1Display.textContent = address.region;
     line2Display.textContent = `${address.district} ${suffix}`.trim();
@@ -54,7 +52,6 @@ function findLocationLocally(latLng) {
 async function getAddressForLocation(latLng) {
     const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
     let address = findLocationLocally(latLng);
-
     if (!address) {
         console.warn("Local geocode failed. Falling back to Google API.");
         try {
@@ -67,9 +64,7 @@ async function getAddressForLocation(latLng) {
                     district: getComponent('administrative_area_level_2') || getComponent('locality') || 'N/A'
                 };
             }
-        } catch (error) {
-            console.error("Google Geocoding fallback failed:", error);
-        }
+        } catch (error) { console.error("Google Geocoding fallback failed:", error); }
     }
     address = address || { region: 'N/A', district: 'N/A' };
     return { code6D, localitySuffix, address };
@@ -78,13 +73,13 @@ async function getAddressForLocation(latLng) {
 // --- Event Handlers ---
 async function onMapClick(event) {
     if (!somaliaPolygon || !google.maps.geometry.poly.containsLocation(event.latLng, somaliaPolygon)) {
-        showFindButton(); // Reset panel if click is outside
+        showFindButton();
         return;
     }
     lastSelectedLatLng = event.latLng;
     recenterBtn.classList.remove('hidden');
     MapCore.drawAddressBoxes(map, event.latLng);
-    showAddressDisplay(true); // Show panel with loading state
+    showAddressDisplay(true);
     const { code6D, localitySuffix, address } = await getAddressForLocation(event.latLng);
     updateInfoPanel(code6D, address, localitySuffix);
 }
@@ -96,22 +91,16 @@ function handleRecenter() {
 }
 
 async function handleGeolocate() {
-    if (!navigator.geolocation) {
-        alert("Geolocation is not supported by your browser.");
-        return;
-    }
+    if (!navigator.geolocation) { alert("Geolocation is not supported by your browser."); return; }
     findMyAddressBtn.disabled = true;
     findMyAddressBtn.innerHTML = '<div class="spinner"></div>';
-
     const successCallback = async (position) => {
         const userLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
         map.setCenter(userLatLng);
         map.setZoom(18);
-        onMapClick({ latLng: userLatLng });
+        await onMapClick({ latLng: userLatLng });
     };
-    const errorCallback = (error) => {
-        // Handle errors...
-    };
+    const errorCallback = (error) => { /* ... */ };
     const finalCallback = () => {
         findMyAddressBtn.disabled = false;
         findMyAddressBtn.innerHTML = '<img src="/assets/geolocate.svg" alt="Find My Location"><span>Find My 6D Address</span>';
@@ -173,13 +162,22 @@ async function initApp() {
     MapCore.updateDynamicGrid(map);
 }
 
+// --- FIX APPLIED: Robust Initialization Sequence ---
 async function main() {
     try {
-        window.initMap = initApp; // Use global callback
+        // Step 1: Wait for the Google Maps API to load
         await loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY, ['geometry']);
+        
+        // Step 2: Now that the API is ready, call initApp to build the application
+        await initApp();
     } catch (error) {
-        document.getElementById('map').innerText = 'Error: Could not load the map.';
+        console.error("Failed to initialize map:", error);
+        const mapDiv = document.getElementById('map');
+        if (mapDiv) {
+            mapDiv.innerText = 'Error: Could not load the map. Please check the console for details.';
+        }
     }
 }
 
 main();
+// --- END OF FIX ---
