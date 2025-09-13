@@ -41,8 +41,8 @@ function findLocationLocally(latLng) {
     for (const feature of districtFeatures) {
         if (google.maps.geometry.poly.containsLocation(latLng, feature.polygon)) {
             return {
-                region: feature.properties.OPZ1_EN || 'N/A',
-                district: feature.properties.ADM2_EN || 'N/A'
+                region: feature.properties.YOUR_REGION_PROPERTY_NAME || 'N/A',
+                district: feature.properties.YOUR_DISTRICT_PROPERTY_NAME || 'N/A'
             };
         }
     }
