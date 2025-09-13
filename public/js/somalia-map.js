@@ -1,201 +1,185 @@
-// --- Somalia Map Application V2 ---
+import * as MapCore from './map-core.js';
+import { loadGoogleMapsAPI, debounce } from './utils.js';
+import { GOOGLE_MAPS_API_KEY } from './config.js';
 
-// --- Global State & Element References ---
-let map;
-let geocoder;
-let somaliaPolygon;
+// --- Module-level variables ---
+let map, geocoder, somaliaPolygon;
 let lastSelectedLatLng = null;
-let drawnObjects = { boxes: [], grid: [] };
+let districtFeatures = [];
 
-// This object holds references to all the DOM elements we'll interact with.
-const ui = {
-    infoPanel: document.getElementById('info-panel'),
-    infoPanelDefault: document.getElementById('info-panel-default'),
-    infoPanelClicked: document.getElementById('info-panel-clicked'),
-    findMyAddressBtn: document.getElementById('find-my-address-btn'),
-    infoCode: document.getElementById('info-code-display'),
-    infoDistrict: document.getElementById('info-district-display'),
-    infoRegion: document.getElementById('info-region-display'),
-    registerBtn: document.getElementById('register-btn'),
-    copyBtn: document.getElementById('copy-btn'),
-    shareBtn: document.getElementById('share-btn'),
-    recenterBtn: document.getElementById('recenter-btn'),
-    sidebar: document.getElementById('registration-sidebar'),
-    sidebarToggleBtn: document.getElementById('sidebar-toggle-btn'),
-    welcomeView: document.getElementById('sidebar-welcome-view'),
-    loginBtn: document.getElementById('login-btn'),
-    modal: document.getElementById('confirmation-modal'),
-    modalConfirmBtn: document.getElementById('modal-confirm-btn'),
-    modalCancelBtn: document.getElementById('modal-cancel-btn')
-};
+// --- DOM Element References ---
+let findMyAddressBtn, addressContent, recenterBtn;
 
-// --- Main Initialization ---
-// This function is the entry point, called by the Google Maps script.
-function initMap() {
-    map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 2.043, lng: 45.333 },
-        zoom: 14,
-        disableDefaultUI: true,
-        zoomControl: true,
-        // You can add your custom Map ID here later for styling
-        // mapId: 'YOUR_CUSTOM_MAP_ID'
-    });
-    geocoder = new google.maps.Geocoder();
-    
-    initializeUI();
-    loadSomaliaBoundary();
+// --- UI State Management ---
+function showAddressDisplay(isLoading = false) {
+    findMyAddressBtn.classList.add('hidden');
+    addressContent.classList.remove('hidden');
 
-    // Add map click listener
-    map.addListener('click', handleMapClick);
-}
-
-function initializeUI() {
-    ui.findMyAddressBtn.addEventListener('click', handleGeolocate);
-    ui.sidebarToggleBtn.addEventListener('click', () => {
-        ui.sidebar.classList.toggle('closed');
-    });
-    map.addListener('dragstart', () => setInfoPanelState('default'));
-    
-    // TODO: Add listeners for other buttons (copy, share, recenter, register, login)
-}
-
-// --- State Management ---
-function setInfoPanelState(state, data = {}) {
-    if (state === 'default') {
-        ui.infoPanelDefault.classList.remove('hidden');
-        ui.infoPanelClicked.classList.add('hidden');
-    } else if (state === 'clicked') {
-        const { code, address, suffix } = data;
-        const codeParts = code.split('-');
-        ui.infoCode.innerHTML = `<span class="code-part-1">${codeParts[0]}</span>-<span class="code-part-2">${codeParts[1]}</span>-<span class="code-part-3">${codeParts[2]}</span>`;
-        ui.infoDistrict.textContent = address.district;
-        ui.infoRegion.textContent = `${address.region} ${suffix}`;
-        
-        ui.infoPanelDefault.classList.add('hidden');
-        ui.infoPanelClicked.classList.remove('hidden');
+    if (isLoading) {
+        document.getElementById('code-display').textContent = 'Locating...';
+        document.getElementById('line1-display').textContent = '';
+        document.getElementById('line2-display').textContent = '';
     }
 }
 
-// --- Map & Geocoding Logic ---
-async function loadSomaliaBoundary() {
-    try {
-        const response = await fetch('../data/somalia.geojson');
-        if (!response.ok) throw new Error('Network response was not ok.');
-        const geoJson = await response.json();
-        const coordinates = geoJson.features[0].geometry.coordinates[0].map(c => ({ lat: c[1], lng: c[0] }));
-        somaliaPolygon = new google.maps.Polygon({ paths: coordinates });
-        console.log("Somalia boundary loaded successfully.");
-    } catch (error) {
-        console.error("Failed to load Somalia boundary:", error);
-        alert("Critical Error: Could not load country boundary data. The app may not function correctly.");
-    }
+function showFindButton() {
+    findMyAddressBtn.classList.remove('hidden');
+    addressContent.classList.add('hidden');
 }
 
-function handleGeolocate() {
-    console.log("Find My Address clicked");
-    // TODO: Implement geolocation logic
-}
-
-function handleMapClick(event) {
-    const clickedLatLng = event.latLng;
-    if (somaliaPolygon && google.maps.geometry.poly.containsLocation(clickedLatLng, somaliaPolygon)) {
-        lastSelectedLatLng = clickedLatLng;
-        processLocation(clickedLatLng);
-    } else {
-        alert("Please click inside Somalia to generate a 6D Address.");
-    }
-}
-
-async function processLocation(latLng) {
-    clearMapObjects('boxes');
-    drawAddressBoxes(latLng);
+function updateInfoPanel(code, address, suffix) {
+    showAddressDisplay();
+    const codeDisplay = document.getElementById('code-display');
+    const line1Display = document.getElementById('line1-display');
+    const line2Display = document.getElementById('line2-display');
     
-    const { code6D, localitySuffix, address } = await getAddressForLocation(latLng);
-    
-    setInfoPanelState('clicked', {
-        code: code6D,
-        address: address,
-        suffix: localitySuffix
-    });
+    codeDisplay.textContent = code;
+    line1Display.textContent = address.region;
+    line2Display.textContent = `${address.district} ${suffix}`.trim();
+}
+
+// --- Geocoding Logic ---
+function findLocationLocally(latLng) {
+    for (const feature of districtFeatures) {
+        if (google.maps.geometry.poly.containsLocation(latLng, feature.polygon)) {
+            return {
+                region: feature.properties.ADM1_EN || 'N/A',
+                district: feature.properties.ADM2_EN || 'N/A'
+            };
+        }
+    }
+    return null;
 }
 
 async function getAddressForLocation(latLng) {
-    const { code6D, localitySuffix } = generate6DCode(latLng.lat(), latLng.lng());
-    
-    // Placeholder for real geocoding
-    const address = await new Promise(resolve => {
-        setTimeout(() => resolve({ district: 'Hodan', region: 'Banaadir' }), 500);
-    });
+    const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
+    let address = findLocationLocally(latLng);
 
+    if (!address) {
+        console.warn("Local geocode failed. Falling back to Google API.");
+        try {
+            const response = await geocoder.geocode({ location: latLng });
+            if (response.results && response.results[0]) {
+                const components = response.results[0].address_components;
+                const getComponent = (type) => components.find(c => c.types.includes(type))?.long_name || null;
+                address = {
+                    region: getComponent('administrative_area_level_1') || 'N/A',
+                    district: getComponent('administrative_area_level_2') || getComponent('locality') || 'N/A'
+                };
+            }
+        } catch (error) {
+            console.error("Google Geocoding fallback failed:", error);
+        }
+    }
+    address = address || { region: 'N/A', district: 'N/A' };
     return { code6D, localitySuffix, address };
 }
 
-// --- Drawing Logic ---
-function drawAddressBoxes(latLng) {
-    const lat = latLng.lat();
-    const lon = latLng.lng();
-    const boxStyles = {
-        '2d': { color: '#ff0000', zIndex: 1, scale: 100, fillOpacity: 0.0 },
-        '4d': { color: '#28a745', zIndex: 2, scale: 1000, fillOpacity: 0.0 },
-        '6d': { color: '#007bff', zIndex: 3, scale: 10000, fillOpacity: 0.25 }
-    };
-    for (const key in boxStyles) {
-        const style = boxStyles[key];
-        const scale = style.scale;
-        const cellSize = 1 / scale;
-        const swLat = Math.floor(lat * scale) / scale;
-        const swLng = Math.floor(lon * scale) / scale;
-        const bounds = { south: swLat, west: swLng, north: swLat + cellSize, east: swLng + cellSize };
-        const rect = new google.maps.Rectangle({
-            strokeColor: style.color,
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
-            fillColor: style.color,
-            fillOpacity: style.fillOpacity,
-            map: map,
-            bounds: bounds,
-            zIndex: style.zIndex,
-            clickable: false
-        });
-        drawnObjects.boxes.push(rect);
-    }
-}
-
-function clearMapObjects(type) {
-    if (type === 'boxes') {
-        drawnObjects.boxes.forEach(box => box.setMap(null));
-        drawnObjects.boxes = [];
-    }
-}
-
-// --- Utility & 6D Code Logic ---
-function generate6DCode(lat, lon) {
-    const absLat = Math.abs(lat); const absLon = Math.abs(lon);
-    const lat_d1 = Math.floor(absLat * 10) % 10; const lat_d2 = Math.floor(absLat * 100) % 10; const lat_d3 = Math.floor(absLat * 1000) % 10; const lat_d4 = Math.floor(absLat * 10000) % 10;
-    const lon_d1 = Math.floor(absLon * 10) % 10; const lon_d2 = Math.floor(absLon * 100) % 10; const lon_d3 = Math.floor(absLon * 1000) % 10; const lon_d4 = Math.floor(absLon * 10000) % 10;
-    const code6D = `${lat_d2}${lon_d2}-${lat_d3}${lon_d3}-${lat_d4}${lon_d4}`; const localitySuffix = `${lat_d1}${lon_d1}`;
-    return { code6D, localitySuffix };
-}
-function loadGoogleMapsAPI() {
-    // Check if the API key was successfully injected by inject-env.js
-    if (!window.GOOGLE_MAPS_API_KEY) {
-        console.error("CRITICAL ERROR: Google Maps API Key is not available.");
-        alert("Could not load map: Configuration error.");
+// --- Event Handlers ---
+async function onMapClick(event) {
+    if (!somaliaPolygon || !google.maps.geometry.poly.containsLocation(event.latLng, somaliaPolygon)) {
+        showFindButton(); // Reset panel if click is outside
         return;
     }
-
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${window.GOOGLE_MAPS_API_KEY}&callback=initMap&v=weekly&libraries=geometry`;
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
+    lastSelectedLatLng = event.latLng;
+    recenterBtn.classList.remove('hidden');
+    MapCore.drawAddressBoxes(map, event.latLng);
+    showAddressDisplay(true); // Show panel with loading state
+    const { code6D, localitySuffix, address } = await getAddressForLocation(event.latLng);
+    updateInfoPanel(code6D, address, localitySuffix);
 }
 
-// Make initMap globally available for the callback
-window.initMap = initMap;
+function handleRecenter() {
+    if (lastSelectedLatLng) {
+        map.panTo(lastSelectedLatLng);
+    }
+}
 
-// This is the final step that kicks everything off.
-// We wait for the DOM to be ready, then we load the Google Maps API.
-document.addEventListener('DOMContentLoaded', () => {
-    loadGoogleMapsAPI();
-});
+async function handleGeolocate() {
+    if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+    }
+    findMyAddressBtn.disabled = true;
+    findMyAddressBtn.innerHTML = '<div class="spinner"></div>';
+
+    const successCallback = async (position) => {
+        const userLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+        map.setCenter(userLatLng);
+        map.setZoom(18);
+        onMapClick({ latLng: userLatLng });
+    };
+    const errorCallback = (error) => {
+        // Handle errors...
+    };
+    const finalCallback = () => {
+        findMyAddressBtn.disabled = false;
+        findMyAddressBtn.innerHTML = '<img src="/assets/geolocate.svg" alt="Find My Location"><span>Find My 6D Address</span>';
+    };
+    navigator.geolocation.getCurrentPosition(
+        (pos) => { successCallback(pos).finally(finalCallback); },
+        (err) => { errorCallback(err); finalCallback(); },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
+
+// --- Initialization ---
+async function loadDistrictData() {
+    try {
+        const response = await fetch('/data/somalia_districts.geojson');
+        const geoJson = await response.json();
+        geoJson.features.forEach(feature => {
+            if (!feature?.geometry?.coordinates) return;
+            const process = (coords) => {
+                const paths = coords[0].map(c => ({ lat: c[1], lng: c[0] }));
+                const polygon = new google.maps.Polygon({ paths });
+                districtFeatures.push({ properties: feature.properties, polygon });
+            };
+            if (feature.geometry.type === 'Polygon') process([feature.geometry.coordinates]);
+            else if (feature.geometry.type === 'MultiPolygon') process(feature.geometry.coordinates);
+        });
+    } catch (error) { console.error("Failed to load district data:", error); }
+}
+
+async function loadSomaliaBoundary() {
+    try {
+        const response = await fetch('/data/somalia.geojson');
+        const geoJson = await response.json();
+        const coordinates = geoJson.features[0].geometry.coordinates[0].map(c => ({ lat: c[1], lng: c[0] }));
+        somaliaPolygon = new google.maps.Polygon({ paths: coordinates });
+        findMyAddressBtn.disabled = false;
+    } catch (error) {
+        alert("Error: Could not load country boundary.");
+    }
+}
+
+async function initApp() {
+    findMyAddressBtn = document.getElementById('find-my-address-btn');
+    addressContent = document.getElementById('address-content');
+    recenterBtn = document.getElementById('recenter-btn');
+    
+    const mapElement = document.getElementById('map');
+    map = MapCore.initializeBaseMap(mapElement, { center: { lat: 2.0469, lng: 45.3182 }, zoom: 13 });
+    geocoder = new google.maps.Geocoder();
+    
+    await Promise.all([loadSomaliaBoundary(), loadDistrictData()]);
+    
+    map.addListener('click', onMapClick);
+    findMyAddressBtn.addEventListener('click', handleGeolocate);
+    recenterBtn.addEventListener('click', handleRecenter);
+    
+    const debouncedUpdateGrid = debounce(() => MapCore.updateDynamicGrid(map), 250);
+    map.addListener('idle', debouncedUpdateGrid);
+    MapCore.updateDynamicGrid(map);
+}
+
+async function main() {
+    try {
+        window.initMap = initApp; // Use global callback
+        await loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY, ['geometry']);
+    } catch (error) {
+        document.getElementById('map').innerText = 'Error: Could not load the map.';
+    }
+}
+
+main();
