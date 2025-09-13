@@ -31,9 +31,15 @@ function updateInfoPanel(code, address, suffix) {
     const codeDisplay = document.getElementById('code-display');
     const line1Display = document.getElementById('line1-display');
     const line2Display = document.getElementById('line2-display');
+    
+    // Line 1 of Display: The 6D Code
     codeDisplay.textContent = code;
-    line1Display.textContent = address.region;
-    line2Display.textContent = `${address.district} ${suffix}`.trim();
+    
+    // Line 2 of Display: The District (most specific)
+    line1Display.textContent = address.district;
+    
+    // Line 3 of Display: The Region + Suffix (broader area)
+    line2Display.textContent = `${address.region} ${suffix}`.trim();
 }
 
 // --- Geocoding Logic ---
