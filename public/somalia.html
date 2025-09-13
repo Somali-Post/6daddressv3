@@ -1,59 +1,73 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>6D Address - Somalia Registration</title>
-    <link rel="stylesheet" href="/css/shared.css">
-    <link rel="stylesheet" href="/css/somalia-map.css">
-</head>
 <body>
     <div id="map"></div>
 
-    <div id="logo">
-        <img src="/assets/logo-somalia.png" alt="6D Address Somalia Logo">
-    </div>
-
-    <button id="recenter-btn" class="control-button hidden" title="Take me back to my selected location">
-        <svg xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><circle cx="12" cy="12" r="8"></circle><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line></svg>
-    </button>
-
-    <div id="info-panel">
-        <button id="find-my-address-btn" class="find-address-btn">
-            <img src="/assets/geolocate.svg" alt="Find My Location">
-            <span>Find My 6D Address</span>
-        </button>
-        <div id="address-content" class="hidden">
-            <div id="code-display"></div>
-            <div id="address-display">
-                <div id="line1-display"></div>
-                <div id="line2-display"></div>
+    <!-- FR-2: The Info Panel (The Action Center) -->
+    <div id="info-panel" class="glass-panel">
+        <!-- FR-2.1 (Default State) -->
+        <div id="info-panel-default">
+            <button id="find-my-address-btn">
+                <img src="../assets/geolocate.svg" alt="Find My Location">
+                <span>Find My 6D Address</span>
+            </button>
+        </div>
+        <!-- FR-2.3 (Clicked State) - Initially hidden -->
+        <div id="info-panel-clicked" class="hidden">
+            <div class="info-panel-address">
+                <div class="code" id="info-code-display"></div>
+                <div class="district" id="info-district-display"></div>
+                <div class="region" id="info-region-display"></div>
+            </div>
+            <div class="info-panel-actions">
+                <button id="register-btn">Register This Address</button>
+                <div class="utility-buttons">
+                    <button id="copy-btn" title="Copy Code">Copy</button>
+                    <button id="share-btn" title="Share">Share</button>
+                    <button id="recenter-btn" title="Recenter Map">Recenter</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="registration-sidebar" class="sidebar hidden">
-        <div class="sidebar-header">
-            <img src="/assets/logo-somalia.png" alt="6D Address Somalia Logo">
+    <!-- FR-3: The Sidebar (The Application Hub) -->
+    <aside id="registration-sidebar" class="glass-panel">
+        <button id="sidebar-toggle-btn" title="Toggle Sidebar">&equiv;</button>
+        
+        <!-- FR-3.1 (Default State - Welcome View) -->
+        <div id="sidebar-welcome-view" class="sidebar-view">
+            <div class="sidebar-header">
+                <img src="assets/logo-somalia.png" alt="6D Address Somalia Logo">
+                <h2>6D Soomaaliya</h2>
+            </div>
+            <div class="sidebar-content">
+                <h3>Welcome to 6D Address</h3>
+                <p>Your new digital address is just a few clicks away. Use the "Find My 6D Address" button or click on the map to begin.</p>
+                <div class="sidebar-actions">
+                    <div class="lang-switcher">
+                        <button class="lang-btn active" data-lang="so">So</button>
+                        <button class="lang-btn" data-lang="en">En</button>
+                        <button class="lang-btn" data-lang="ar">Ar</button>
+                    </div>
+                    <button id="login-btn">Login</button>
+                </div>
+            </div>
         </div>
-        <form id="registration-form" novalidate>
-            <div id="step1">
-                <div class="form-group"><label for="six_d_code">6D Address</label><input type="text" id="six_d_code" name="six_d_code" readonly></div>
-                <div class="form-group"><label for="full_name">Full Name</label><input type="text" id="full_name" name="full_name" required placeholder="Enter your full name"></div>
-                <div class="form-group"><label for="phone_number">Phone Number</label><input type="tel" id="phone_number" name="phone_number" required placeholder="e.g., 61XXXXXXX"></div>
-                <div class="form-group"><label for="region">Region</label><select id="region" name="region" required></select></div>
-                <div class="form-group"><label for="district">District</label><select id="district" name="district" required disabled></select></div>
-                <button type="button" id="send-otp-btn" disabled>Send Verification Code</button>
+
+        <!-- Other sidebar views (Login, Register, Dashboard) will be added here later -->
+
+    </aside>
+
+    <!-- FR-3.5: The Confirmation Modal (Initially hidden) -->
+    <div id="confirmation-modal" class="modal-overlay hidden">
+        <div class="modal-content glass-panel">
+            <h3>Confirm Your Location</h3>
+            <p>Are you sure this is your home location?</p>
+            <div class="modal-buttons">
+                <button id="modal-cancel-btn" class="modal-button cancel">Cancel</button>
+                <button id="modal-confirm-btn" class="modal-button confirm">Yes, I'm Sure</button>
             </div>
-            <div id="step2" class="hidden">
-                <p class="otp-prompt">Enter the 6-digit code sent to <strong id="otp-phone-display"></strong>.</p>
-                <div class="form-group"><label for="otp">Verification Code</label><input type="text" id="otp" name="otp" required maxlength="6" inputmode="numeric" pattern="\d{6}"></div>
-                <button type="button" id="verify-btn">Verify & Complete Registration</button>
-            </div>
-            <div id="form-message" class="form-message"></div>
-        </form>
+        </div>
     </div>
-    
-    <script type="module" src="/js/somalia-map.js"></script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap&v=weekly&libraries=geometry" async defer></script>
+    <script type="module" src="../js/somalia-map.js"></script>
 </body>
-</html>
