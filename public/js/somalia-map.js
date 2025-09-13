@@ -1,6 +1,6 @@
 import * as MapCore from './map-core.js';
 import { loadGoogleMapsAPI, debounce } from './utils.js';
-import { GOOGLE_MAPS_API_KEY, somaliRegions } from './config.js';
+import { GOOGLE_MAPS_API_KEY } from './config.js';
 
 // --- Module-level variables ---
 let map, geocoder, somaliaPolygon;
@@ -111,32 +111,47 @@ async function handleGeolocate() {
 }
 
 // --- Initialization ---
+// --- FIX APPLIED: Correct and Robust GeoJSON Parser ---
 async function loadDistrictData() {
     try {
         const response = await fetch('/data/somalia_districts.geojson');
         const geoJson = await response.json();
         const loadedFeatures = [];
+
         geoJson.features.forEach(feature => {
             if (!feature?.geometry?.coordinates) return;
-            const process = (coords) => {
-                if (coords[0] && coords[0].length > 3) {
-                    const paths = coords[0].map(c => ({ lat: c[1], lng: c[0] }));
-                    const polygon = new google.maps.Polygon({ paths });
-                    loadedFeatures.push({ properties: feature.properties, polygon });
-                }
-            };
-            if (feature.geometry.type === 'Polygon') {
-                process(feature.geometry.coordinates);
-            } else if (feature.geometry.type === 'MultiPolygon') {
-                feature.geometry.coordinates.forEach(polyCoords => process(polyCoords));
+
+            const properties = feature.properties;
+            const geometryType = feature.geometry.type;
+            const coordinates = feature.geometry.coordinates;
+            let polygonsToProcess = [];
+
+            if (geometryType === 'Polygon') {
+                // For a Polygon, the coordinates array is the polygon itself
+                polygonsToProcess.push(coordinates);
+            } else if (geometryType === 'MultiPolygon') {
+                // For a MultiPolygon, the coordinates array contains multiple polygons
+                polygonsToProcess = coordinates;
             }
+
+            polygonsToProcess.forEach(polyCoords => {
+                // The first element of a polygon's coordinates is the outer ring
+                const pathCoords = polyCoords[0];
+                if (pathCoords && pathCoords.length > 3) {
+                    const paths = pathCoords.map(c => ({ lat: c[1], lng: c[0] }));
+                    const polygon = new google.maps.Polygon({ paths });
+                    loadedFeatures.push({ properties, polygon });
+                }
+            });
         });
+        
         districtFeatures = loadedFeatures;
         console.log(`Successfully processed ${districtFeatures.length} district polygons.`);
     } catch (error) {
         console.error("Failed to load or process district data:", error);
     }
 }
+// --- END OF FIX ---
 
 async function loadSomaliaBoundary() {
     try {
@@ -171,13 +186,9 @@ async function initApp() {
     MapCore.updateDynamicGrid(map);
 }
 
-// --- FIX APPLIED: Restored Robust Initialization Sequence ---
 async function main() {
     try {
-        // Step 1: Wait for the Google Maps API to load
         await loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY, ['geometry']);
-        
-        // Step 2: Now that the API is ready, call initApp to build the application
         await initApp();
     } catch (error) {
         console.error("Failed to initialize map:", error);
@@ -189,4 +200,3 @@ async function main() {
 }
 
 main();
-// --- END OF FIX ---
