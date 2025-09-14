@@ -1,7 +1,7 @@
-// MODIFIED: This is the correct way to import a UMD module like Turf.js from a CDN
+// Import the entire module namespace from the CDN.
 import * as turf from 'https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js';
 
-// Import all necessary functions and variables from our shared local modules.
+// Import all necessary functions and variables from local shared modules.
 import { GOOGLE_MAPS_API_KEY, somaliRegions } from './config.js';
 import * as Utils from './utils.js';
 import * as MapCore from './map-core.js';
@@ -110,8 +110,7 @@ import * as MapCore from './map-core.js';
     }
 
     function handleRegionChange() {
-        const selectedRegion = DOM.regRegionSelect.value;
-        populateDistrictDropdown(selectedRegion);
+        populateDistrictDropdown(DOM.regRegionSelect.value);
         validateForm();
     }
 
@@ -130,8 +129,9 @@ import * as MapCore from './map-core.js';
     }
 
     function processLocation(lat, lng) {
-        const point = turf.point([lng, lat]);
-        if (!turf.booleanPointInPolygon(point, somaliaBoundary.features[0].geometry)) {
+        // CRITICAL FIX: Access Turf functions through the 'default' property of the imported module.
+        const point = turf.default.point([lng, lat]);
+        if (!turf.default.booleanPointInPolygon(point, somaliaBoundary.features[0].geometry)) {
             console.log("Clicked outside Somalia boundary.");
             return;
         }
@@ -143,7 +143,8 @@ import * as MapCore from './map-core.js';
         }
 
         const { code6D, localitySuffix } = MapCore.generate6DCode(lat, lng);
-        currentAddress = { sixDCode: code6D, localitySuffix: localitySuffix, lat, lng, ...locationData };
+        currentAddress = { sixDCode: code6D, localitySuffix, lat, lng, ...locationData };
+
         updateSidebarToRegistration(currentAddress);
         MapCore.drawAddressBoxes(map, new google.maps.LatLng(lat, lng));
         map.panTo({ lat, lng });
@@ -151,7 +152,8 @@ import * as MapCore from './map-core.js';
 
     function getAuthoritativeLocation(point) {
         for (const feature of districtsGeoJson.features) {
-            if (turf.booleanPointInPolygon(point, feature.geometry)) {
+            // CRITICAL FIX: Access Turf functions through the 'default' property.
+            if (turf.default.booleanPointInPolygon(point, feature.geometry)) {
                 return {
                     district: feature.properties.DISTRICT,
                     region: feature.properties.REGION,
