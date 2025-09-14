@@ -1,3 +1,8 @@
+// CRITICAL FIX: Import all necessary functions and variables from shared modules.
+import { GOOGLE_MAPS_API_KEY, somaliRegions } from './config.js';
+import * as Utils from './utils.js';
+import * as MapCore from './map-core.js';
+
 (function() {
     'use strict';
 
@@ -38,6 +43,7 @@
     async function init() {
         try {
             // 1. Load Google Maps API and GeoJSON data concurrently
+            // FIX: Now correctly calls the imported Utils.loadGoogleMapsAPI
             const [_, somaliaData, districtsData] = await Promise.all([
                 Utils.loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY),
                 fetch('data/somalia.geojson').then(res => res.json()),
@@ -48,11 +54,10 @@
             districtsGeoJson = districtsData;
 
             // 2. Initialize the map using the core module
-            map = MapCore.initializeMap(DOM.mapContainer, {
+            // FIX: Now correctly calls the imported MapCore.initializeBaseMap
+            map = MapCore.initializeBaseMap(DOM.mapContainer, {
                 center: { lat: 2.0469, lng: 45.3182 }, // Mogadishu
                 zoom: 13,
-                disableDefaultUI: true,
-                zoomControl: true,
             });
 
             // 3. Populate UI elements and attach event listeners
@@ -74,6 +79,8 @@
      */
     function addEventListeners() {
         map.addListener('click', handleMapClick);
+        map.addListener('zoom_changed', () => MapCore.updateDynamicGrid(map));
+        map.addListener('idle', () => MapCore.updateDynamicGrid(map));
         DOM.findMyLocationBtn.addEventListener('click', handleFindMyLocation);
         DOM.regRegionSelect.addEventListener('change', handleRegionChange);
         [DOM.regPhoneInput, DOM.regNameInput, DOM.regDistrictSelect].forEach(el => {
@@ -100,7 +107,7 @@
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const { latitude, longitude } = position.coords;
-                MapCore.animateToLocation(map, { lat: latitude, lng: longitude }, () => {
+                animateToLocation(map, { lat: latitude, lng: longitude }, () => {
                     processLocation(latitude, longitude);
                 });
                 DOM.findMyLocationBtn.disabled = false;
@@ -130,56 +137,41 @@
 
     function handleRegistrationConfirm() {
         console.log("Registration confirmed. Sending data to backend...", currentAddress);
-        // In a real application, this is where you would call the backend API.
-        // For now, we'll just log and close the modal.
         toggleModal(false);
         alert("Registration Successful! (Mocked)");
     }
 
     // --- Core Logic ---
 
-    /**
-     * Processes a latitude/longitude coordinate.
-     * Follows TR-5: Authoritative data first.
-     * @param {number} lat - Latitude
-     * @param {number} lng - Longitude
-     */
     function processLocation(lat, lng) {
         const point = turf.point([lng, lat]);
-
-        // 1. Boundary Check (FR-1, No Map Masking)
         if (!turf.booleanPointInPolygon(point, somaliaBoundary.features[0].geometry)) {
             console.log("Clicked outside Somalia boundary.");
             return;
         }
 
-        // 2. Authoritative Geocoding (TR-5)
         const locationData = getAuthoritativeLocation(point);
         if (!locationData) {
             console.warn("Could not determine district for the selected point.");
             return;
         }
 
-        // 3. Generate 6D Code
-        const sixDCode = MapCore.generate6DCode(lat, lng);
+        const { code6D, localitySuffix } = MapCore.generate6DCode(lat, lng);
 
         currentAddress = {
-            sixDCode,
+            sixDCode: code6D,
+            localitySuffix: localitySuffix,
             lat,
             lng,
             ...locationData
         };
 
-        // 4. Update UI
         updateSidebarToRegistration(currentAddress);
-        MapCore.drawAddressBox(map, lat, lng);
+        // FIX: Now correctly calls the imported MapCore.drawAddressBoxes
+        MapCore.drawAddressBoxes(map, new google.maps.LatLng(lat, lng));
+        map.panTo({ lat, lng });
     }
 
-    /**
-     * Finds the district and region for a point using local GeoJSON data.
-     * @param {Object} point - A Turf.js point object.
-     * @returns {Object|null} An object with district and region, or null if not found.
-     */
     function getAuthoritativeLocation(point) {
         for (const feature of districtsGeoJson.features) {
             if (turf.booleanPointInPolygon(point, feature.geometry)) {
@@ -189,21 +181,16 @@
                 };
             }
         }
-        return null; // Fallback if not found
+        return null;
     }
 
-    // --- UI Update Functions ---
+    // --- UI Update & Helper Functions ---
 
     function updateSidebarToRegistration(data) {
         DOM.reg6dCodeInput.value = data.sixDCode;
-        
-        // Set region and trigger district population
         DOM.regRegionSelect.value = data.region;
         populateDistrictDropdown(data.region);
-        
-        // Set district
         DOM.regDistrictSelect.value = data.district;
-
         DOM.welcomeView.classList.remove('active');
         DOM.registrationView.classList.add('active');
         validateForm();
@@ -211,32 +198,31 @@
     
     function populateRegionDropdown() {
         DOM.regRegionSelect.innerHTML = '<option value="" disabled selected>Select a Region</option>';
-        SOMALIA_CONFIG.regions.forEach(region => {
+        // FIX: Now correctly iterates over the imported somaliRegions object
+        for (const regionName of Object.keys(somaliRegions)) {
             const option = document.createElement('option');
-            option.value = region.name;
-            option.textContent = region.name;
+            option.value = regionName;
+            option.textContent = regionName;
             DOM.regRegionSelect.appendChild(option);
-        });
+        }
     }
 
     function populateDistrictDropdown(regionName) {
-        const region = SOMALIA_CONFIG.regions.find(r => r.name === regionName);
+        // FIX: Now correctly retrieves districts from the imported somaliRegions object
+        const districts = somaliRegions[regionName] || [];
         DOM.regDistrictSelect.innerHTML = '<option value="" disabled selected>Select a District</option>';
-        if (region) {
-            region.districts.forEach(district => {
-                const option = document.createElement('option');
-                option.value = district;
-                option.textContent = district;
-                DOM.regDistrictSelect.appendChild(option);
-            });
-        }
+        districts.forEach(district => {
+            const option = document.createElement('option');
+            option.value = district;
+            option.textContent = district;
+            DOM.regDistrictSelect.appendChild(option);
+        });
     }
 
     function validateForm() {
         const isPhoneValid = DOM.regPhoneInput.checkValidity();
         const isNameValid = DOM.regNameInput.checkValidity();
         const isDistrictSelected = !!DOM.regDistrictSelect.value;
-        
         DOM.registerBtn.disabled = !(isPhoneValid && isNameValid && isDistrictSelected);
     }
 
@@ -245,18 +231,26 @@
         DOM.confirmLocation.textContent = `${currentAddress.district}, ${currentAddress.region}`;
         DOM.confirmName.textContent = DOM.regNameInput.value;
         DOM.confirmPhone.textContent = `+252 ${DOM.regPhoneInput.value}`;
-
-        // Also update the currentAddress object with form data
         currentAddress.fullName = DOM.regNameInput.value;
         currentAddress.phoneNumber = DOM.regPhoneInput.value;
     }
 
     function toggleModal(show) {
-        if (show) {
-            DOM.modal.classList.add('visible');
-        } else {
-            DOM.modal.classList.remove('visible');
-        }
+        DOM.modal.classList.toggle('visible', show);
+    }
+
+    /**
+     * Implements the "swoop" animation as per TR-4.
+     */
+    function animateToLocation(map, latLng, onComplete) {
+        map.panTo(latLng);
+        map.setZoom(15);
+        google.maps.event.addListenerOnce(map, 'idle', () => {
+            map.setZoom(18);
+            if (onComplete) {
+                 google.maps.event.addListenerOnce(map, 'idle', onComplete);
+            }
+        });
     }
 
     // --- Application Entry Point ---
