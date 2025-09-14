@@ -15,48 +15,90 @@
         <p>Initializing Secure Map...</p>
     </div>
 
-    <!-- The sidebar is still here, but we are ignoring it for this task -->
+    <!-- NEW: Recenter button, hidden by default -->
+    <button id="recenter-btn" class="map-control" title="Recenter Map">
+        <span class="icon-recenter"></span>
+    </button>
+
     <aside id="sidebar">
+        <!-- State 1: Welcome / Initial View -->
         <div id="welcome-view" class="sidebar-view active">
             <div class="sidebar-header">
                 <img src="assets/logo-somalia.png" alt="6D Address Somalia Logo" class="logo">
                 <h2>Welcome to 6D Address</h2>
             </div>
             <div class="sidebar-content">
-                <p>Find your address on the map to begin registration.</p>
+                <p>Your official digital address is just a click away.</p>
+                <h4>How it works:</h4>
+                <ol>
+                    <li>Use the "Find My 6D Address" button at the bottom of the screen.</li>
+                    <li>Alternatively, click anywhere on the map of Somalia.</li>
+                    <li>Confirm your address details and register.</li>
+                </ol>
             </div>
         </div>
+
+        <!-- State 2: Registration Form View -->
         <div id="registration-view" class="sidebar-view">
-            <!-- Registration form content will be handled in a later phase -->
+            <div class="sidebar-header">
+                <img src="assets/logo-somalia.png" alt="6D Address Somalia Logo" class="logo">
+                <h2>Register Your Address</h2>
+            </div>
+            <div class="sidebar-content">
+                <p class="form-intro">Confirm your location details and complete the form below.</p>
+                
+                <form id="registration-form" novalidate>
+                    <!-- Form fields remain the same -->
+                    <div class="form-group readonly"><label for="reg-6d-code">6D Address Code</label><input type="text" id="reg-6d-code" name="six_d_code" readonly></div>
+                    <div class="form-group"><label for="reg-region">Region</label><select id="reg-region" name="region" required></select></div>
+                    <div class="form-group"><label for="reg-district">District</label><select id="reg-district" name="district" required></select></div>
+                    <hr class="form-divider">
+                    <div class="form-group"><label for="reg-phone">Phone Number (e.g. 61xxxxxxx)</label><div class="phone-input-wrapper"><span>+252</span><input type="tel" id="reg-phone" name="phone_number" placeholder="61xxxxxxx" required pattern="^[6-9]\d{7}$"></div></div>
+                    <div class="form-group"><label for="reg-name">Full Name</label><input type="text" id="reg-name" name="full_name" placeholder="Your full name" required minlength="3"></div>
+                    <button type="submit" id="register-btn" class="btn btn-primary" disabled>Register</button>
+                </form>
+            </div>
         </div>
     </aside>
 
-    <!-- NEW: The Info Panel at the bottom of the screen -->
+    <!-- NEW: The Info Panel, our primary action center -->
     <div id="info-panel">
-        <!-- Initial State: Find My Address Button -->
-        <div id="info-panel-initial" class="info-panel-view active">
-            <button id="find-my-location-btn" class="btn btn-primary" disabled>
+        <!-- Initial State -->
+        <div id="info-initial-view">
+            <button id="find-my-location-btn" class="btn btn-primary btn-large" disabled>
                 <span class="icon-location"></span> Find My 6D Address
             </button>
         </div>
-
-        <!-- Address Display State -->
-        <div id="info-panel-address" class="info-panel-view">
+        <!-- Address Display State (hidden by default) -->
+        <div id="info-address-view">
             <div class="address-details">
-                <p id="info-panel-code">XX-XX-XX</p>
-                <p id="info-panel-district">District</p>
-                <p id="info-panel-region">Region</p>
+                <p id="info-6d-code">XX-XX-XX</p>
+                <p id="info-district">District</p>
+                <p id="info-region">Region XX</p>
             </div>
             <div class="address-actions">
-                <button id="copy-btn" class="btn btn-secondary"><span class="icon-copy"></span> Copy Code</button>
-                <button id="share-btn" class="btn btn-secondary"><span class="icon-share"></span> Share</button>
+                <button id="copy-btn" class="btn btn-secondary">Copy Code</button>
+                <button id="share-btn" class="btn btn-secondary">Share</button>
             </div>
         </div>
     </div>
 
-    <!-- Confirmation Modal (we will use this later) -->
+    <!-- Confirmation Modal (no changes) -->
     <div id="confirmation-modal" class="modal-overlay">
-        <!-- Modal content -->
+        <div class="modal-content">
+            <h3>Confirm Registration</h3>
+            <p>Please review your details before confirming.</p>
+            <div class="confirmation-details">
+                <div class="detail-item"><span>6D Code:</span> <strong id="confirm-6d-code"></strong></div>
+                <div class="detail-item"><span>Location:</span> <strong id="confirm-location"></strong></div>
+                <div class="detail-item"><span>Full Name:</span> <strong id="confirm-name"></strong></div>
+                <div class="detail-item"><span>Phone:</span> <strong id="confirm-phone"></strong></div>
+            </div>
+            <div class="modal-actions">
+                <button id="modal-cancel-btn" class="btn btn-secondary">Cancel</button>
+                <button id="modal-confirm-btn" class="btn btn-primary">Confirm & Proceed</button>
+            </div>
+        </div>
     </div>
 
     <script id="google-maps-script" async></script>
