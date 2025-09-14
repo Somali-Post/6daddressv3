@@ -9,24 +9,15 @@ import * as MapCore from './map-core.js';
     const DOM = {
         loader: document.getElementById('loader'),
         mapContainer: document.getElementById('map'),
-        sidebar: document.getElementById('sidebar'),
-        welcomeView: document.getElementById('welcome-view'),
-        registrationView: document.getElementById('registration-view'),
+        // NEW: Selectors for the Info Panel
+        infoPanelInitial: document.getElementById('info-panel-initial'),
+        infoPanelAddress: document.getElementById('info-panel-address'),
+        infoPanelCode: document.getElementById('info-panel-code'),
+        infoPanelDistrict: document.getElementById('info-panel-district'),
+        infoPanelRegion: document.getElementById('info-panel-region'),
         findMyLocationBtn: document.getElementById('find-my-location-btn'),
-        registrationForm: document.getElementById('registration-form'),
-        reg6dCodeInput: document.getElementById('reg-6d-code'),
-        regRegionSelect: document.getElementById('reg-region'),
-        regDistrictSelect: document.getElementById('reg-district'),
-        regPhoneInput: document.getElementById('reg-phone'),
-        regNameInput: document.getElementById('reg-name'),
-        registerBtn: document.getElementById('register-btn'),
-        modal: document.getElementById('confirmation-modal'),
-        confirm6dCode: document.getElementById('confirm-6d-code'),
-        confirmLocation: document.getElementById('confirm-location'),
-        confirmName: document.getElementById('confirm-name'),
-        confirmPhone: document.getElementById('confirm-phone'),
-        modalCancelBtn: document.getElementById('modal-cancel-btn'),
-        modalConfirmBtn: document.getElementById('modal-confirm-btn'),
+        copyBtn: document.getElementById('copy-btn'),
+        shareBtn: document.getElementById('share-btn'),
     };
 
     // --- Application State ---
@@ -35,9 +26,6 @@ import * as MapCore from './map-core.js';
     let districtPolygons = [];
     let currentAddress = null;
 
-    /**
-     * Main application initialization function.
-     */
     async function init() {
         try {
             const [_, somaliaData, districtsData] = await Promise.all([
@@ -47,14 +35,13 @@ import * as MapCore from './map-core.js';
             ]);
 
             createSomaliaPolygon(somaliaData);
-            createDistrictPolygons(districtsData); // This function is now fixed.
+            createDistrictPolygons(districtsData);
             
             map = MapCore.initializeBaseMap(DOM.mapContainer, {
                 center: { lat: 2.0469, lng: 45.3182 },
                 zoom: 13,
             });
 
-            populateRegionDropdown();
             addEventListeners();
 
             DOM.findMyLocationBtn.disabled = false;
@@ -71,31 +58,15 @@ import * as MapCore from './map-core.js';
         somaliaPolygon = new google.maps.Polygon({ paths: coordinates });
     }
 
-    /**
-     * CRITICAL FIX: This function now correctly handles both 'Polygon' and 'MultiPolygon' 
-     * geometry types found in the GeoJSON file, preventing the initialization crash.
-     */
     function createDistrictPolygons(districtsGeoJson) {
         districtsGeoJson.features.forEach(feature => {
             const geometry = feature.geometry;
             let paths = [];
-
             if (geometry.type === 'Polygon') {
-                // Structure for Polygon: [LinearRing, LinearRing, ...]
-                // A LinearRing is an array of [lng, lat] coordinates.
-                paths = geometry.coordinates.map(linearRing =>
-                    linearRing.map(c => ({ lat: c[1], lng: c[0] }))
-                );
+                paths = geometry.coordinates.map(linearRing => linearRing.map(c => ({ lat: c[1], lng: c[0] })));
             } else if (geometry.type === 'MultiPolygon') {
-                // Structure for MultiPolygon: [[LinearRing, ...], [LinearRing, ...], ...]
-                // We flatten the array of polygons into a single array of paths.
-                paths = geometry.coordinates.flatMap(polygon =>
-                    polygon.map(linearRing =>
-                        linearRing.map(c => ({ lat: c[1], lng: c[0] }))
-                    )
-                );
+                paths = geometry.coordinates.flatMap(polygon => polygon.map(linearRing => linearRing.map(c => ({ lat: c[1], lng: c[0] }))));
             }
-
             if (paths.length > 0) {
                 const districtPolygon = new google.maps.Polygon({ paths: paths });
                 districtPolygons.push({
@@ -109,16 +80,8 @@ import * as MapCore from './map-core.js';
 
     function addEventListeners() {
         map.addListener('click', handleMapClick);
-        map.addListener('zoom_changed', () => MapCore.updateDynamicGrid(map));
-        map.addListener('idle', () => MapCore.updateDynamicGrid(map));
         DOM.findMyLocationBtn.addEventListener('click', handleFindMyLocation);
-        DOM.regRegionSelect.addEventListener('change', handleRegionChange);
-        [DOM.regPhoneInput, DOM.regNameInput, DOM.regDistrictSelect].forEach(el => {
-            el.addEventListener('input', validateForm);
-        });
-        DOM.registrationForm.addEventListener('submit', handleFormSubmit);
-        DOM.modalCancelBtn.addEventListener('click', () => toggleModal(false));
-        DOM.modalConfirmBtn.addEventListener('click', handleRegistrationConfirm);
+        // NOTE: We will add functionality to Copy and Share buttons in the next step.
     }
 
     function handleMapClick(e) {
@@ -165,13 +128,15 @@ import * as MapCore from './map-core.js';
         const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
         currentAddress = {
             sixDCode: code6D,
-            localitySuffix: localitySuffix,
+            localitySuffix,
             lat: latLng.lat(),
             lng: latLng.lng(),
             ...locationData
         };
 
-        updateSidebarToRegistration(currentAddress);
+        // NEW: Update the Info Panel instead of the sidebar
+        updateInfoPanel(currentAddress);
+
         MapCore.drawAddressBoxes(map, latLng);
         map.panTo(latLng);
     }
@@ -179,85 +144,25 @@ import * as MapCore from './map-core.js';
     function getAuthoritativeLocation(latLng) {
         for (const district of districtPolygons) {
             if (google.maps.geometry.poly.containsLocation(latLng, district.polygon)) {
-                return {
-                    district: district.district,
-                    region: district.region,
-                };
+                return { district: district.district, region: district.region };
             }
         }
         return null;
     }
 
-    // --- All other UI and form handling functions remain the same ---
-    
-    function handleRegionChange() {
-        populateDistrictDropdown(DOM.regRegionSelect.value);
-        validateForm();
-    }
+    /**
+     * NEW: This function controls the state of the Info Panel.
+     * @param {object} data The address data to display.
+     */
+    function updateInfoPanel(data) {
+        // Populate the address details
+        DOM.infoPanelCode.textContent = data.sixDCode;
+        DOM.infoPanelDistrict.textContent = data.district;
+        DOM.infoPanelRegion.textContent = `${data.region} ${data.localitySuffix}`;
 
-    function handleFormSubmit(event) {
-        event.preventDefault();
-        if (!DOM.registerBtn.disabled) {
-            populateConfirmationModal();
-            toggleModal(true);
-        }
-    }
-
-    function handleRegistrationConfirm() {
-        console.log("Registration confirmed. Sending data to backend...", currentAddress);
-        toggleModal(false);
-        alert("Registration Successful! (Mocked)");
-    }
-
-    function updateSidebarToRegistration(data) {
-        DOM.reg6dCodeInput.value = data.sixDCode;
-        DOM.regRegionSelect.value = data.region;
-        populateDistrictDropdown(data.region);
-        DOM.regDistrictSelect.value = data.district;
-        DOM.welcomeView.classList.remove('active');
-        DOM.registrationView.classList.add('active');
-        validateForm();
-    }
-
-    function populateRegionDropdown() {
-        DOM.regRegionSelect.innerHTML = '<option value="" disabled selected>Select a Region</option>';
-        for (const regionName of Object.keys(somaliRegions)) {
-            const option = document.createElement('option');
-            option.value = regionName;
-            option.textContent = regionName;
-            DOM.regRegionSelect.appendChild(option);
-        }
-    }
-
-    function populateDistrictDropdown(regionName) {
-        const districts = somaliRegions[regionName] || [];
-        DOM.regDistrictSelect.innerHTML = '<option value="" disabled selected>Select a District</option>';
-        districts.forEach(district => {
-            const option = document.createElement('option');
-            option.value = district;
-            option.textContent = district;
-            DOM.regDistrictSelect.appendChild(option);
-        });
-    }
-
-    function validateForm() {
-        const isPhoneValid = DOM.regPhoneInput.checkValidity();
-        const isNameValid = DOM.regNameInput.checkValidity();
-        const isDistrictSelected = !!DOM.regDistrictSelect.value;
-        DOM.registerBtn.disabled = !(isPhoneValid && isNameValid && isDistrictSelected);
-    }
-
-    function populateConfirmationModal() {
-        DOM.confirm6dCode.textContent = currentAddress.sixDCode;
-        DOM.confirmLocation.textContent = `${currentAddress.district}, ${currentAddress.region}`;
-        DOM.confirmName.textContent = DOM.regNameInput.value;
-        DOM.confirmPhone.textContent = `+252 ${DOM.regPhoneInput.value}`;
-        currentAddress.fullName = DOM.regNameInput.value;
-        currentAddress.phoneNumber = DOM.regPhoneInput.value;
-    }
-
-    function toggleModal(show) {
-        DOM.modal.classList.toggle('visible', show);
+        // Switch the visible panel
+        DOM.infoPanelInitial.classList.remove('active');
+        DOM.infoPanelAddress.classList.add('active');
     }
 
     function animateToLocation(map, latLng, onComplete) {

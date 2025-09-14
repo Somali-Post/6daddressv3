@@ -2,41 +2,68 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>6D Address - Global Demonstrator</title>
-    <link rel="stylesheet" href="/css/shared.css">
-    <link rel="stylesheet" href="/css/global-map.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>6D Address - Somalia Registration</title>
+    <link rel="stylesheet" href="css/shared.css">
+    <link rel="stylesheet" href="css/somalia-map.css">
 </head>
 <body>
+
     <div id="map"></div>
-
-    <div id="logo">
-        <img src="/assets/logo.png" alt="6D Address Logo">
+    <div id="loader" class="visible">
+        <div class="spinner"></div>
+        <p>Initializing Secure Map...</p>
     </div>
 
-    <!-- The old geolocate button is correctly removed -->
-    
-    <div id="accuracy-warning" class="warning-bubble hidden">
-        <span id="accuracy-message"></span>
-        <button id="accuracy-retry-btn">Retry</button>
-    </div>
+    <!-- The sidebar is still here, but we are ignoring it for this task -->
+    <aside id="sidebar">
+        <div id="welcome-view" class="sidebar-view active">
+            <div class="sidebar-header">
+                <img src="assets/logo-somalia.png" alt="6D Address Somalia Logo" class="logo">
+                <h2>Welcome to 6D Address</h2>
+            </div>
+            <div class="sidebar-content">
+                <p>Find your address on the map to begin registration.</p>
+            </div>
+        </div>
+        <div id="registration-view" class="sidebar-view">
+            <!-- Registration form content will be handled in a later phase -->
+        </div>
+    </aside>
 
+    <!-- NEW: The Info Panel at the bottom of the screen -->
     <div id="info-panel">
-        <button id="find-my-address-btn" class="find-address-btn">
-            <img src="/assets/geolocate.svg" alt="Find My Location">
-            <span>Find My 6D Address</span>
-        </button>
+        <!-- Initial State: Find My Address Button -->
+        <div id="info-panel-initial" class="info-panel-view active">
+            <button id="find-my-location-btn" class="btn btn-primary" disabled>
+                <span class="icon-location"></span> Find My 6D Address
+            </button>
+        </div>
 
-        <div id="address-content" class="hidden">
-            <div id="code-display"></div>
-            <div id="address-display">
-                <div id="line1-display"></div>
-                <div id="line2-display"></div>
-                <div id="line3-display"></div>
+        <!-- Address Display State -->
+        <div id="info-panel-address" class="info-panel-view">
+            <div class="address-details">
+                <p id="info-panel-code">XX-XX-XX</p>
+                <p id="info-panel-district">District</p>
+                <p id="info-panel-region">Region</p>
+            </div>
+            <div class="address-actions">
+                <button id="copy-btn" class="btn btn-secondary"><span class="icon-copy"></span> Copy Code</button>
+                <button id="share-btn" class="btn btn-secondary"><span class="icon-share"></span> Share</button>
             </div>
         </div>
     </div>
-    
-    <script type="module" src="/js/global-map.js"></script>
+
+    <!-- Confirmation Modal (we will use this later) -->
+    <div id="confirmation-modal" class="modal-overlay">
+        <!-- Modal content -->
+    </div>
+
+    <script id="google-maps-script" async></script>
+    <script src="js/config.js" type="module"></script>
+    <script src="js/utils.js" type="module"></script>
+    <script src="js/map-core.js" type="module"></script>
+    <script src="js/somalia-map.js" type="module"></script>
+
 </body>
 </html>
