@@ -42,8 +42,6 @@ import * as MapCore from './map-core.js';
      */
     async function init() {
         try {
-            // 1. Load Google Maps API and GeoJSON data concurrently
-            // FIX: Now correctly calls the imported Utils.loadGoogleMapsAPI
             const [_, somaliaData, districtsData] = await Promise.all([
                 Utils.loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY),
                 fetch('data/somalia.geojson').then(res => res.json()),
@@ -53,18 +51,14 @@ import * as MapCore from './map-core.js';
             somaliaBoundary = somaliaData;
             districtsGeoJson = districtsData;
 
-            // 2. Initialize the map using the core module
-            // FIX: Now correctly calls the imported MapCore.initializeBaseMap
             map = MapCore.initializeBaseMap(DOM.mapContainer, {
                 center: { lat: 2.0469, lng: 45.3182 }, // Mogadishu
                 zoom: 13,
             });
 
-            // 3. Populate UI elements and attach event listeners
             populateRegionDropdown();
             addEventListeners();
 
-            // 4. Enable UI now that all data is loaded (TR-2)
             DOM.findMyLocationBtn.disabled = false;
             DOM.loader.classList.remove('visible');
 
@@ -167,19 +161,22 @@ import * as MapCore from './map-core.js';
         };
 
         updateSidebarToRegistration(currentAddress);
-        // FIX: Now correctly calls the imported MapCore.drawAddressBoxes
         MapCore.drawAddressBoxes(map, new google.maps.LatLng(lat, lng));
         map.panTo({ lat, lng });
     }
 
     function getAuthoritativeLocation(point) {
         for (const feature of districtsGeoJson.features) {
-            if (turf.booleanPointInPolygon(point, feature.geometry)) {
+            // --- BUG FIX APPLIED HERE ---
+            // We must check if feature.geometry exists before passing it to Turf.js.
+            // This prevents a crash if the GeoJSON data has a feature with no geometry.
+            if (feature.geometry && turf.booleanPointInPolygon(point, feature.geometry)) {
                 return {
                     district: feature.properties.DISTRICT,
                     region: feature.properties.REGION,
                 };
             }
+            // --- END OF FIX ---
         }
         return null;
     }
@@ -198,7 +195,6 @@ import * as MapCore from './map-core.js';
     
     function populateRegionDropdown() {
         DOM.regRegionSelect.innerHTML = '<option value="" disabled selected>Select a Region</option>';
-        // FIX: Now correctly iterates over the imported somaliRegions object
         for (const regionName of Object.keys(somaliRegions)) {
             const option = document.createElement('option');
             option.value = regionName;
@@ -208,7 +204,6 @@ import * as MapCore from './map-core.js';
     }
 
     function populateDistrictDropdown(regionName) {
-        // FIX: Now correctly retrieves districts from the imported somaliRegions object
         const districts = somaliRegions[regionName] || [];
         DOM.regDistrictSelect.innerHTML = '<option value="" disabled selected>Select a District</option>';
         districts.forEach(district => {
