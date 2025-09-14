@@ -1,14 +1,11 @@
-// Import the entire module namespace from the CDN.
-// --- REPLACE WITH THIS (CORRECT) LINE ---
-import turf from 'https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js';
+// NOTE: All 'import' statements for Turf.js have been removed.
 
-// Import all necessary functions and variables from local shared modules.
 import { GOOGLE_MAPS_API_KEY, somaliRegions } from './config.js';
 import * as Utils from './utils.js';
 import * as MapCore from './map-core.js';
 
 (function() {
-    'use strict';
+    'use a strict';
 
     // --- DOM Element Selectors ---
     const DOM = {
@@ -36,29 +33,35 @@ import * as MapCore from './map-core.js';
 
     // --- Application State ---
     let map;
-    let somaliaBoundary;
-    let districtsGeoJson;
+    let somaliaPolygon; // The google.maps.Polygon object for the country boundary
+    let districtPolygons = []; // Array to hold { district, region, polygon } objects
     let currentAddress = null;
 
+    /**
+     * Main application initialization function.
+     */
     async function init() {
         try {
+            // Step 1: Load Google Maps API, requesting the 'geometry' library.
             const [_, somaliaData, districtsData] = await Promise.all([
-                Utils.loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY),
+                Utils.loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY, ['geometry']),
                 fetch('data/somalia.geojson').then(res => res.json()),
                 fetch('data/somalia_districts.geojson').then(res => res.json())
             ]);
 
-            somaliaBoundary = somaliaData;
-            districtsGeoJson = districtsData;
-
+            // Step 2: Create the polygon objects from the fetched GeoJSON data.
+            createSomaliaPolygon(somaliaData);
+            createDistrictPolygons(districtsData);
+            
             map = MapCore.initializeBaseMap(DOM.mapContainer, {
-                center: { lat: 2.0469, lng: 45.3182 },
+                center: { lat: 2.0469, lng: 45.3182 }, // Mogadishu
                 zoom: 13,
             });
 
             populateRegionDropdown();
             addEventListeners();
 
+            // Enable UI only after all critical data and polygons are ready (TR-2)
             DOM.findMyLocationBtn.disabled = false;
             DOM.loader.classList.remove('visible');
 
@@ -66,6 +69,32 @@ import * as MapCore from './map-core.js';
             console.error("Critical application initialization failed:", error);
             DOM.loader.innerHTML = "<p>Error: Could not load map data. Please refresh.</p>";
         }
+    }
+
+    /**
+     * Converts GeoJSON coordinates to Google Maps LatLng objects and creates the main country polygon.
+     */
+    function createSomaliaPolygon(geoJson) {
+        const coordinates = geoJson.features[0].geometry.coordinates[0].map(c => ({ lat: c[1], lng: c[0] }));
+        somaliaPolygon = new google.maps.Polygon({ paths: coordinates });
+    }
+
+    /**
+     * Converts the districts GeoJSON into an array of Google Maps Polygons for efficient lookups.
+     */
+    function createDistrictPolygons(districtsGeoJson) {
+        districtsGeoJson.features.forEach(feature => {
+            // This handles both Polygon and MultiPolygon shapes in the GeoJSON
+            const paths = feature.geometry.coordinates.map(polygonPath => 
+                polygonPath[0].map(c => ({ lat: c[1], lng: c[0] }))
+            );
+            const districtPolygon = new google.maps.Polygon({ paths: paths });
+            districtPolygons.push({
+                district: feature.properties.DISTRICT,
+                region: feature.properties.REGION,
+                polygon: districtPolygon
+            });
+        });
     }
 
     function addEventListeners() {
@@ -82,11 +111,20 @@ import * as MapCore from './map-core.js';
         DOM.modalConfirmBtn.addEventListener('click', handleRegistrationConfirm);
     }
 
+    /**
+     * Handles a click on the map, performing the boundary check first.
+     */
     function handleMapClick(e) {
-        processLocation(e.latLng.lat(), e.latLng.lng());
+        // Step 3: Perform the point-in-polygon check using the Google Maps Geometry library.
+        if (!somaliaPolygon || !google.maps.geometry.poly.containsLocation(e.latLng, somaliaPolygon)) {
+            console.log("Clicked outside Somalia boundary.");
+            return; // Ignore click
+        }
+        processLocation(e.latLng);
     }
 
     function handleFindMyLocation() {
+        // ... (This function remains the same, it will eventually call processLocation)
         if (!navigator.geolocation) {
             alert("Geolocation is not supported by your browser.");
             return;
@@ -95,10 +133,12 @@ import * as MapCore from './map-core.js';
         DOM.findMyLocationBtn.textContent = "Locating...";
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                const { latitude, longitude } = position.coords;
-                animateToLocation(map, { lat: latitude, lng: longitude }, () => {
-                    processLocation(latitude, longitude);
-                });
+                const latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                if (!somaliaPolygon || !google.maps.geometry.poly.containsLocation(latLng, somaliaPolygon)) {
+                     alert("Your current location is outside of Somalia.");
+                } else {
+                    animateToLocation(map, latLng, () => processLocation(latLng));
+                }
                 DOM.findMyLocationBtn.disabled = false;
                 DOM.findMyLocationBtn.innerHTML = `<span class="icon-location"></span> Find My 6D Address`;
             },
@@ -109,7 +149,51 @@ import * as MapCore from './map-core.js';
             }
         );
     }
+    
+    /**
+     * Processes a valid location after it has passed the boundary check.
+     * @param {google.maps.LatLng} latLng The location to process.
+     */
+    function processLocation(latLng) {
+        const locationData = getAuthoritativeLocation(latLng);
+        if (!locationData) {
+            console.warn("Could not determine district for the selected point.");
+            return;
+        }
 
+        const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
+        currentAddress = {
+            sixDCode: code6D,
+            localitySuffix: localitySuffix,
+            lat: latLng.lat(),
+            lng: latLng.lng(),
+            ...locationData
+        };
+
+        updateSidebarToRegistration(currentAddress);
+        MapCore.drawAddressBoxes(map, latLng);
+        map.panTo(latLng);
+    }
+
+    /**
+     * Finds the district and region for a point using the pre-compiled district polygons.
+     * @param {google.maps.LatLng} latLng The location to check.
+     * @returns {Object|null} An object with district and region, or null if not found.
+     */
+    function getAuthoritativeLocation(latLng) {
+        for (const district of districtPolygons) {
+            if (google.maps.geometry.poly.containsLocation(latLng, district.polygon)) {
+                return {
+                    district: district.district,
+                    region: district.region,
+                };
+            }
+        }
+        return null; // Fallback if not found
+    }
+
+    // --- All other UI and form handling functions remain the same ---
+    
     function handleRegionChange() {
         populateDistrictDropdown(DOM.regRegionSelect.value);
         validateForm();
@@ -129,41 +213,6 @@ import * as MapCore from './map-core.js';
         alert("Registration Successful! (Mocked)");
     }
 
-    function processLocation(lat, lng) {
-        // CRITICAL FIX: Access Turf functions through the 'default' property of the imported module.
-        const point = turf.default.point([lng, lat]);
-        if (!turf.default.booleanPointInPolygon(point, somaliaBoundary.features[0].geometry)) {
-            console.log("Clicked outside Somalia boundary.");
-            return;
-        }
-
-        const locationData = getAuthoritativeLocation(point);
-        if (!locationData) {
-            console.warn("Could not determine district for the selected point.");
-            return;
-        }
-
-        const { code6D, localitySuffix } = MapCore.generate6DCode(lat, lng);
-        currentAddress = { sixDCode: code6D, localitySuffix, lat, lng, ...locationData };
-
-        updateSidebarToRegistration(currentAddress);
-        MapCore.drawAddressBoxes(map, new google.maps.LatLng(lat, lng));
-        map.panTo({ lat, lng });
-    }
-
-    function getAuthoritativeLocation(point) {
-        for (const feature of districtsGeoJson.features) {
-            // CRITICAL FIX: Access Turf functions through the 'default' property.
-            if (turf.default.booleanPointInPolygon(point, feature.geometry)) {
-                return {
-                    district: feature.properties.DISTRICT,
-                    region: feature.properties.REGION,
-                };
-            }
-        }
-        return null;
-    }
-
     function updateSidebarToRegistration(data) {
         DOM.reg6dCodeInput.value = data.sixDCode;
         DOM.regRegionSelect.value = data.region;
@@ -173,7 +222,7 @@ import * as MapCore from './map-core.js';
         DOM.registrationView.classList.add('active');
         validateForm();
     }
-    
+
     function populateRegionDropdown() {
         DOM.regRegionSelect.innerHTML = '<option value="" disabled selected>Select a Region</option>';
         for (const regionName of Object.keys(somaliRegions)) {
