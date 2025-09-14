@@ -1,5 +1,6 @@
 // Import the entire module namespace from the CDN.
-import * as turf from 'https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js';
+// --- REPLACE WITH THIS (CORRECT) LINE ---
+import turf from 'https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js';
 
 // Import all necessary functions and variables from local shared modules.
 import { GOOGLE_MAPS_API_KEY, somaliRegions } from './config.js';
