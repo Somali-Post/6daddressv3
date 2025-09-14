@@ -1,11 +1,9 @@
-// NOTE: All 'import' statements for Turf.js have been removed.
-
 import { GOOGLE_MAPS_API_KEY, somaliRegions } from './config.js';
 import * as Utils from './utils.js';
 import * as MapCore from './map-core.js';
 
 (function() {
-    'use a strict';
+    'use strict';
 
     // --- DOM Element Selectors ---
     const DOM = {
@@ -33,8 +31,8 @@ import * as MapCore from './map-core.js';
 
     // --- Application State ---
     let map;
-    let somaliaPolygon; // The google.maps.Polygon object for the country boundary
-    let districtPolygons = []; // Array to hold { district, region, polygon } objects
+    let somaliaPolygon;
+    let districtPolygons = [];
     let currentAddress = null;
 
     /**
@@ -42,26 +40,23 @@ import * as MapCore from './map-core.js';
      */
     async function init() {
         try {
-            // Step 1: Load Google Maps API, requesting the 'geometry' library.
             const [_, somaliaData, districtsData] = await Promise.all([
                 Utils.loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY, ['geometry']),
                 fetch('data/somalia.geojson').then(res => res.json()),
                 fetch('data/somalia_districts.geojson').then(res => res.json())
             ]);
 
-            // Step 2: Create the polygon objects from the fetched GeoJSON data.
             createSomaliaPolygon(somaliaData);
-            createDistrictPolygons(districtsData);
+            createDistrictPolygons(districtsData); // This function is now fixed.
             
             map = MapCore.initializeBaseMap(DOM.mapContainer, {
-                center: { lat: 2.0469, lng: 45.3182 }, // Mogadishu
+                center: { lat: 2.0469, lng: 45.3182 },
                 zoom: 13,
             });
 
             populateRegionDropdown();
             addEventListeners();
 
-            // Enable UI only after all critical data and polygons are ready (TR-2)
             DOM.findMyLocationBtn.disabled = false;
             DOM.loader.classList.remove('visible');
 
@@ -71,29 +66,44 @@ import * as MapCore from './map-core.js';
         }
     }
 
-    /**
-     * Converts GeoJSON coordinates to Google Maps LatLng objects and creates the main country polygon.
-     */
     function createSomaliaPolygon(geoJson) {
         const coordinates = geoJson.features[0].geometry.coordinates[0].map(c => ({ lat: c[1], lng: c[0] }));
         somaliaPolygon = new google.maps.Polygon({ paths: coordinates });
     }
 
     /**
-     * Converts the districts GeoJSON into an array of Google Maps Polygons for efficient lookups.
+     * CRITICAL FIX: This function now correctly handles both 'Polygon' and 'MultiPolygon' 
+     * geometry types found in the GeoJSON file, preventing the initialization crash.
      */
     function createDistrictPolygons(districtsGeoJson) {
         districtsGeoJson.features.forEach(feature => {
-            // This handles both Polygon and MultiPolygon shapes in the GeoJSON
-            const paths = feature.geometry.coordinates.map(polygonPath => 
-                polygonPath[0].map(c => ({ lat: c[1], lng: c[0] }))
-            );
-            const districtPolygon = new google.maps.Polygon({ paths: paths });
-            districtPolygons.push({
-                district: feature.properties.DISTRICT,
-                region: feature.properties.REGION,
-                polygon: districtPolygon
-            });
+            const geometry = feature.geometry;
+            let paths = [];
+
+            if (geometry.type === 'Polygon') {
+                // Structure for Polygon: [LinearRing, LinearRing, ...]
+                // A LinearRing is an array of [lng, lat] coordinates.
+                paths = geometry.coordinates.map(linearRing =>
+                    linearRing.map(c => ({ lat: c[1], lng: c[0] }))
+                );
+            } else if (geometry.type === 'MultiPolygon') {
+                // Structure for MultiPolygon: [[LinearRing, ...], [LinearRing, ...], ...]
+                // We flatten the array of polygons into a single array of paths.
+                paths = geometry.coordinates.flatMap(polygon =>
+                    polygon.map(linearRing =>
+                        linearRing.map(c => ({ lat: c[1], lng: c[0] }))
+                    )
+                );
+            }
+
+            if (paths.length > 0) {
+                const districtPolygon = new google.maps.Polygon({ paths: paths });
+                districtPolygons.push({
+                    district: feature.properties.DISTRICT,
+                    region: feature.properties.REGION,
+                    polygon: districtPolygon
+                });
+            }
         });
     }
 
@@ -111,20 +121,15 @@ import * as MapCore from './map-core.js';
         DOM.modalConfirmBtn.addEventListener('click', handleRegistrationConfirm);
     }
 
-    /**
-     * Handles a click on the map, performing the boundary check first.
-     */
     function handleMapClick(e) {
-        // Step 3: Perform the point-in-polygon check using the Google Maps Geometry library.
         if (!somaliaPolygon || !google.maps.geometry.poly.containsLocation(e.latLng, somaliaPolygon)) {
             console.log("Clicked outside Somalia boundary.");
-            return; // Ignore click
+            return;
         }
         processLocation(e.latLng);
     }
 
     function handleFindMyLocation() {
-        // ... (This function remains the same, it will eventually call processLocation)
         if (!navigator.geolocation) {
             alert("Geolocation is not supported by your browser.");
             return;
@@ -150,10 +155,6 @@ import * as MapCore from './map-core.js';
         );
     }
     
-    /**
-     * Processes a valid location after it has passed the boundary check.
-     * @param {google.maps.LatLng} latLng The location to process.
-     */
     function processLocation(latLng) {
         const locationData = getAuthoritativeLocation(latLng);
         if (!locationData) {
@@ -175,11 +176,6 @@ import * as MapCore from './map-core.js';
         map.panTo(latLng);
     }
 
-    /**
-     * Finds the district and region for a point using the pre-compiled district polygons.
-     * @param {google.maps.LatLng} latLng The location to check.
-     * @returns {Object|null} An object with district and region, or null if not found.
-     */
     function getAuthoritativeLocation(latLng) {
         for (const district of districtPolygons) {
             if (google.maps.geometry.poly.containsLocation(latLng, district.polygon)) {
@@ -189,7 +185,7 @@ import * as MapCore from './map-core.js';
                 };
             }
         }
-        return null; // Fallback if not found
+        return null;
     }
 
     // --- All other UI and form handling functions remain the same ---
