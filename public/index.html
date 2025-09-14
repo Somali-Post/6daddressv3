@@ -31,10 +31,12 @@
                 <p>Your official digital address is just a click away.</p>
                 <h4>How it works:</h4>
                 <ol>
+                    <!-- UPDATED: Instructions now refer to the info panel -->
                     <li>Use the "Find My 6D Address" button at the bottom of the screen.</li>
                     <li>Alternatively, click anywhere on the map of Somalia.</li>
-                    <li>The sidebar will open for you to complete your registration.</li>
+                    <li>Confirm your address details and register.</li>
                 </ol>
+                <!-- The "Find My..." button has been REMOVED from here -->
             </div>
         </div>
 
@@ -63,13 +65,13 @@
     <!-- NEW: The Info Panel, our primary action center -->
     <div id="info-panel">
         <!-- Initial State -->
-        <div id="info-initial-view" class="info-view active">
+        <div id="info-initial-view">
             <button id="find-my-location-btn" class="btn btn-primary btn-large" disabled>
                 <span class="icon-location"></span> Find My 6D Address
             </button>
         </div>
         <!-- Address Display State (hidden by default) -->
-        <div id="info-address-view" class="info-view">
+        <div id="info-address-view">
             <div class="address-details">
                 <p id="info-6d-code">XX-XX-XX</p>
                 <p id="info-district">District</p>
