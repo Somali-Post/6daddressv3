@@ -1,6 +1,7 @@
-// CRITICAL FIX: Import all necessary functions and variables from shared modules.
-// ADD THIS IMPORT STATEMENT AT THE TOP
-import * as turf from 'https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js';
+// CRITICAL FIX: Changed import to correctly capture the default export from the CDN's UMD bundle.
+import turf from 'https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js';
+
+// Import all necessary functions and variables from shared modules.
 import { GOOGLE_MAPS_API_KEY, somaliRegions } from './config.js';
 import * as Utils from './utils.js';
 import * as MapCore from './map-core.js';
@@ -40,7 +41,6 @@ import * as MapCore from './map-core.js';
 
     /**
      * Main application initialization function.
-     * Follows TR-2 & TR-3: Synchronous async/await chain to prevent race conditions.
      */
     async function init() {
         try {
@@ -140,6 +140,7 @@ import * as MapCore from './map-core.js';
     // --- Core Logic ---
 
     function processLocation(lat, lng) {
+        // With the corrected import, 'turf.point' and 'turf.booleanPointInPolygon' will now work.
         const point = turf.point([lng, lat]);
         if (!turf.booleanPointInPolygon(point, somaliaBoundary.features[0].geometry)) {
             console.log("Clicked outside Somalia boundary.");
@@ -169,16 +170,12 @@ import * as MapCore from './map-core.js';
 
     function getAuthoritativeLocation(point) {
         for (const feature of districtsGeoJson.features) {
-            // --- BUG FIX APPLIED HERE ---
-            // We must check if feature.geometry exists before passing it to Turf.js.
-            // This prevents a crash if the GeoJSON data has a feature with no geometry.
-            if (feature.geometry && turf.booleanPointInPolygon(point, feature.geometry)) {
+            if (turf.booleanPointInPolygon(point, feature.geometry)) {
                 return {
                     district: feature.properties.DISTRICT,
                     region: feature.properties.REGION,
                 };
             }
-            // --- END OF FIX ---
         }
         return null;
     }
@@ -236,9 +233,6 @@ import * as MapCore from './map-core.js';
         DOM.modal.classList.toggle('visible', show);
     }
 
-    /**
-     * Implements the "swoop" animation as per TR-4.
-     */
     function animateToLocation(map, latLng, onComplete) {
         map.panTo(latLng);
         map.setZoom(15);
