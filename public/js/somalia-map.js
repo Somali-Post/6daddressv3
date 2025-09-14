@@ -1,4 +1,6 @@
 // CRITICAL FIX: Import all necessary functions and variables from shared modules.
+// ADD THIS IMPORT STATEMENT AT THE TOP
+import * as turf from 'https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js';
 import { GOOGLE_MAPS_API_KEY, somaliRegions } from './config.js';
 import * as Utils from './utils.js';
 import * as MapCore from './map-core.js';

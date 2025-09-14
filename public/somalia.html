@@ -8,10 +8,9 @@
     <link rel="stylesheet" href="css/somalia-map.css">
     
     <!-- 
-      CRITICAL FIX: Added the Turf.js library script. 
-      This is required for all point-in-polygon boundary checks.
+      CRITICAL FIX: The global Turf.js script tag has been DELETED from here 
+      to resolve the module scope conflict. It is now imported directly in somalia-map.js.
     -->
-    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 </head>
 <body>
 
