@@ -5,22 +5,31 @@ import * as MapCore from './map-core.js';
 (function() {
     'use strict';
 
-    // --- DOM Element Selectors ---
+    // DOM selectors for the UI that ACTUALLY EXISTS right now.
     const DOM = {
         loader: document.getElementById('loader'),
         mapContainer: document.getElementById('map'),
-        // NEW: Selectors for the Info Panel
-        infoPanelInitial: document.getElementById('info-panel-initial'),
-        infoPanelAddress: document.getElementById('info-panel-address'),
-        infoPanelCode: document.getElementById('info-panel-code'),
-        infoPanelDistrict: document.getElementById('info-panel-district'),
-        infoPanelRegion: document.getElementById('info-panel-region'),
-        findMyLocationBtn: document.getElementById('find-my-location-btn'),
-        copyBtn: document.getElementById('copy-btn'),
-        shareBtn: document.getElementById('share-btn'),
+        sidebar: document.getElementById('sidebar'),
+        welcomeView: document.getElementById('welcome-view'),
+        registrationView: document.getElementById('registration-view'),
+        // NOTE: The button ID is from the old HTML structure in your screenshot.
+        findMyLocationBtn: document.querySelector('#welcome-view button'), 
+        registrationForm: document.getElementById('registration-form'),
+        reg6dCodeInput: document.getElementById('reg-6d-code'),
+        regRegionSelect: document.getElementById('reg-region'),
+        regDistrictSelect: document.getElementById('reg-district'),
+        regPhoneInput: document.getElementById('reg-phone'),
+        regNameInput: document.getElementById('reg-name'),
+        registerBtn: document.getElementById('register-btn'),
+        modal: document.getElementById('confirmation-modal'),
+        confirm6dCode: document.getElementById('confirm-6d-code'),
+        confirmLocation: document.getElementById('confirm-location'),
+        confirmName: document.getElementById('confirm-name'),
+        confirmPhone: document.getElementById('confirm-phone'),
+        modalCancelBtn: document.getElementById('modal-cancel-btn'),
+        modalConfirmBtn: document.getElementById('modal-confirm-btn'),
     };
 
-    // --- Application State ---
     let map;
     let somaliaPolygon;
     let districtPolygons = [];
@@ -42,6 +51,7 @@ import * as MapCore from './map-core.js';
                 zoom: 13,
             });
 
+            populateRegionDropdown();
             addEventListeners();
 
             DOM.findMyLocationBtn.disabled = false;
@@ -80,23 +90,25 @@ import * as MapCore from './map-core.js';
 
     function addEventListeners() {
         map.addListener('click', handleMapClick);
+        map.addListener('zoom_changed', () => MapCore.updateDynamicGrid(map));
+        map.addListener('idle', () => MapCore.updateDynamicGrid(map));
         DOM.findMyLocationBtn.addEventListener('click', handleFindMyLocation);
-        // NOTE: We will add functionality to Copy and Share buttons in the next step.
+        DOM.regRegionSelect.addEventListener('change', handleRegionChange);
+        [DOM.regPhoneInput, DOM.regNameInput, DOM.regDistrictSelect].forEach(el => el.addEventListener('input', validateForm));
+        DOM.registrationForm.addEventListener('submit', handleFormSubmit);
+        DOM.modalCancelBtn.addEventListener('click', () => toggleModal(false));
+        DOM.modalConfirmBtn.addEventListener('click', handleRegistrationConfirm);
     }
 
     function handleMapClick(e) {
         if (!somaliaPolygon || !google.maps.geometry.poly.containsLocation(e.latLng, somaliaPolygon)) {
-            console.log("Clicked outside Somalia boundary.");
             return;
         }
         processLocation(e.latLng);
     }
 
     function handleFindMyLocation() {
-        if (!navigator.geolocation) {
-            alert("Geolocation is not supported by your browser.");
-            return;
-        }
+        if (!navigator.geolocation) return alert("Geolocation is not supported.");
         DOM.findMyLocationBtn.disabled = true;
         DOM.findMyLocationBtn.textContent = "Locating...";
         navigator.geolocation.getCurrentPosition(
@@ -108,22 +120,19 @@ import * as MapCore from './map-core.js';
                     animateToLocation(map, latLng, () => processLocation(latLng));
                 }
                 DOM.findMyLocationBtn.disabled = false;
-                DOM.findMyLocationBtn.innerHTML = `<span class="icon-location"></span> Find My 6D Address`;
+                DOM.findMyLocationBtn.textContent = `Find My 6D Address`;
             },
             () => {
-                alert("Unable to retrieve your location. Please click on the map manually.");
+                alert("Unable to retrieve your location.");
                 DOM.findMyLocationBtn.disabled = false;
-                DOM.findMyLocationBtn.innerHTML = `<span class="icon-location"></span> Find My 6D Address`;
+                DOM.findMyLocationBtn.textContent = `Find My 6D Address`;
             }
         );
     }
     
     function processLocation(latLng) {
         const locationData = getAuthoritativeLocation(latLng);
-        if (!locationData) {
-            console.warn("Could not determine district for the selected point.");
-            return;
-        }
+        if (!locationData) return;
 
         const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
         currentAddress = {
@@ -134,9 +143,8 @@ import * as MapCore from './map-core.js';
             ...locationData
         };
 
-        // NEW: Update the Info Panel instead of the sidebar
-        updateInfoPanel(currentAddress);
-
+        // FIX: This now correctly calls the sidebar update function, not the non-existent info panel function.
+        updateSidebarToRegistration(currentAddress);
         MapCore.drawAddressBoxes(map, latLng);
         map.panTo(latLng);
     }
@@ -149,20 +157,75 @@ import * as MapCore from './map-core.js';
         }
         return null;
     }
+    
+    function handleRegionChange() {
+        populateDistrictDropdown(DOM.regRegionSelect.value);
+        validateForm();
+    }
 
-    /**
-     * NEW: This function controls the state of the Info Panel.
-     * @param {object} data The address data to display.
-     */
-    function updateInfoPanel(data) {
-        // Populate the address details
-        DOM.infoPanelCode.textContent = data.sixDCode;
-        DOM.infoPanelDistrict.textContent = data.district;
-        DOM.infoPanelRegion.textContent = `${data.region} ${data.localitySuffix}`;
+    function handleFormSubmit(event) {
+        event.preventDefault();
+        if (!DOM.registerBtn.disabled) {
+            populateConfirmationModal();
+            toggleModal(true);
+        }
+    }
 
-        // Switch the visible panel
-        DOM.infoPanelInitial.classList.remove('active');
-        DOM.infoPanelAddress.classList.add('active');
+    function handleRegistrationConfirm() {
+        console.log("Registration confirmed:", currentAddress);
+        toggleModal(false);
+        alert("Registration Successful! (Mocked)");
+    }
+
+    function updateSidebarToRegistration(data) {
+        DOM.reg6dCodeInput.value = data.sixDCode;
+        DOM.regRegionSelect.value = data.region;
+        populateDistrictDropdown(data.region);
+        DOM.regDistrictSelect.value = data.district;
+        DOM.welcomeView.classList.remove('active');
+        DOM.registrationView.classList.add('active');
+        validateForm();
+    }
+
+    function populateRegionDropdown() {
+        DOM.regRegionSelect.innerHTML = '<option value="" disabled selected>Select a Region</option>';
+        for (const regionName of Object.keys(somaliRegions)) {
+            const option = document.createElement('option');
+            option.value = regionName;
+            option.textContent = regionName;
+            DOM.regRegionSelect.appendChild(option);
+        }
+    }
+
+    function populateDistrictDropdown(regionName) {
+        const districts = somaliRegions[regionName] || [];
+        DOM.regDistrictSelect.innerHTML = '<option value="" disabled selected>Select a District</option>';
+        districts.forEach(district => {
+            const option = document.createElement('option');
+            option.value = district;
+            option.textContent = district;
+            DOM.regDistrictSelect.appendChild(option);
+        });
+    }
+
+    function validateForm() {
+        const isPhoneValid = DOM.regPhoneInput.checkValidity();
+        const isNameValid = DOM.regNameInput.checkValidity();
+        const isDistrictSelected = !!DOM.regDistrictSelect.value;
+        DOM.registerBtn.disabled = !(isPhoneValid && isNameValid && isDistrictSelected);
+    }
+
+    function populateConfirmationModal() {
+        DOM.confirm6dCode.textContent = currentAddress.sixDCode;
+        DOM.confirmLocation.textContent = `${currentAddress.district}, ${currentAddress.region}`;
+        DOM.confirmName.textContent = DOM.regNameInput.value;
+        DOM.confirmPhone.textContent = `+252 ${DOM.regNameInput.value}`;
+        currentAddress.fullName = DOM.regNameInput.value;
+        currentAddress.phoneNumber = DOM.regNameInput.value;
+    }
+
+    function toggleModal(show) {
+        DOM.modal.classList.toggle('visible', show);
     }
 
     function animateToLocation(map, latLng, onComplete) {
