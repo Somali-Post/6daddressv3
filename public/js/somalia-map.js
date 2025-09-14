@@ -1,7 +1,7 @@
-// CRITICAL FIX: Changed import to correctly capture the default export from the CDN's UMD bundle.
-import turf from 'https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js';
+// MODIFIED: This is the correct way to import a UMD module like Turf.js from a CDN
+import * as turf from 'https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js';
 
-// Import all necessary functions and variables from shared modules.
+// Import all necessary functions and variables from our shared local modules.
 import { GOOGLE_MAPS_API_KEY, somaliRegions } from './config.js';
 import * as Utils from './utils.js';
 import * as MapCore from './map-core.js';
@@ -39,9 +39,6 @@ import * as MapCore from './map-core.js';
     let districtsGeoJson;
     let currentAddress = null;
 
-    /**
-     * Main application initialization function.
-     */
     async function init() {
         try {
             const [_, somaliaData, districtsData] = await Promise.all([
@@ -54,7 +51,7 @@ import * as MapCore from './map-core.js';
             districtsGeoJson = districtsData;
 
             map = MapCore.initializeBaseMap(DOM.mapContainer, {
-                center: { lat: 2.0469, lng: 45.3182 }, // Mogadishu
+                center: { lat: 2.0469, lng: 45.3182 },
                 zoom: 13,
             });
 
@@ -70,9 +67,6 @@ import * as MapCore from './map-core.js';
         }
     }
 
-    /**
-     * Attaches all necessary event listeners for the application.
-     */
     function addEventListeners() {
         map.addListener('click', handleMapClick);
         map.addListener('zoom_changed', () => MapCore.updateDynamicGrid(map));
@@ -86,8 +80,6 @@ import * as MapCore from './map-core.js';
         DOM.modalCancelBtn.addEventListener('click', () => toggleModal(false));
         DOM.modalConfirmBtn.addEventListener('click', handleRegistrationConfirm);
     }
-
-    // --- Event Handlers ---
 
     function handleMapClick(e) {
         processLocation(e.latLng.lat(), e.latLng.lng());
@@ -137,10 +129,7 @@ import * as MapCore from './map-core.js';
         alert("Registration Successful! (Mocked)");
     }
 
-    // --- Core Logic ---
-
     function processLocation(lat, lng) {
-        // With the corrected import, 'turf.point' and 'turf.booleanPointInPolygon' will now work.
         const point = turf.point([lng, lat]);
         if (!turf.booleanPointInPolygon(point, somaliaBoundary.features[0].geometry)) {
             console.log("Clicked outside Somalia boundary.");
@@ -154,15 +143,7 @@ import * as MapCore from './map-core.js';
         }
 
         const { code6D, localitySuffix } = MapCore.generate6DCode(lat, lng);
-
-        currentAddress = {
-            sixDCode: code6D,
-            localitySuffix: localitySuffix,
-            lat,
-            lng,
-            ...locationData
-        };
-
+        currentAddress = { sixDCode: code6D, localitySuffix: localitySuffix, lat, lng, ...locationData };
         updateSidebarToRegistration(currentAddress);
         MapCore.drawAddressBoxes(map, new google.maps.LatLng(lat, lng));
         map.panTo({ lat, lng });
@@ -179,8 +160,6 @@ import * as MapCore from './map-core.js';
         }
         return null;
     }
-
-    // --- UI Update & Helper Functions ---
 
     function updateSidebarToRegistration(data) {
         DOM.reg6dCodeInput.value = data.sixDCode;
@@ -244,7 +223,6 @@ import * as MapCore from './map-core.js';
         });
     }
 
-    // --- Application Entry Point ---
     document.addEventListener('DOMContentLoaded', init);
 
 })();
