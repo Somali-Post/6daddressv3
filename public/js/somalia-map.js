@@ -5,15 +5,19 @@ import * as MapCore from './map-core.js';
 (function() {
     'use strict';
 
-    // DOM selectors for the UI that ACTUALLY EXISTS right now.
     const DOM = {
         loader: document.getElementById('loader'),
         mapContainer: document.getElementById('map'),
         sidebar: document.getElementById('sidebar'),
         welcomeView: document.getElementById('welcome-view'),
         registrationView: document.getElementById('registration-view'),
-        // NOTE: The button ID is from the old HTML structure in your screenshot.
-        findMyLocationBtn: document.querySelector('#welcome-view button'), 
+        infoPanelInitial: document.getElementById('info-panel-initial'),
+        infoPanelAddress: document.getElementById('info-panel-address'),
+        findMyLocationBtn: document.getElementById('find-my-location-btn'),
+        info6dCodeSpans: document.querySelectorAll('#info-6d-code span'),
+        infoDistrict: document.getElementById('info-district'),
+        infoRegion: document.getElementById('info-region'),
+        registerThisAddressBtn: document.getElementById('register-this-address-btn'),
         registrationForm: document.getElementById('registration-form'),
         reg6dCodeInput: document.getElementById('reg-6d-code'),
         regRegionSelect: document.getElementById('reg-region'),
@@ -51,9 +55,8 @@ import * as MapCore from './map-core.js';
                 zoom: 13,
             });
 
-            populateRegionDropdown();
             addEventListeners();
-
+            DOM.sidebar.classList.add('visible'); // Show welcome sidebar on load
             DOM.findMyLocationBtn.disabled = false;
             DOM.loader.classList.remove('visible');
 
@@ -93,9 +96,11 @@ import * as MapCore from './map-core.js';
         map.addListener('zoom_changed', () => MapCore.updateDynamicGrid(map));
         map.addListener('idle', () => MapCore.updateDynamicGrid(map));
         DOM.findMyLocationBtn.addEventListener('click', handleFindMyLocation);
-        DOM.regRegionSelect.addEventListener('change', handleRegionChange);
-        [DOM.regPhoneInput, DOM.regNameInput, DOM.regDistrictSelect].forEach(el => el.addEventListener('input', validateForm));
+        DOM.registerThisAddressBtn.addEventListener('click', handleShowRegistrationSidebar);
         DOM.registrationForm.addEventListener('submit', handleFormSubmit);
+        [DOM.regPhoneInput, DOM.regNameInput, DOM.regDistrictSelect].forEach(el => {
+            el.addEventListener('input', validateForm);
+        });
         DOM.modalCancelBtn.addEventListener('click', () => toggleModal(false));
         DOM.modalConfirmBtn.addEventListener('click', handleRegistrationConfirm);
     }
@@ -120,31 +125,26 @@ import * as MapCore from './map-core.js';
                     animateToLocation(map, latLng, () => processLocation(latLng));
                 }
                 DOM.findMyLocationBtn.disabled = false;
-                DOM.findMyLocationBtn.textContent = `Find My 6D Address`;
+                DOM.findMyLocationBtn.innerHTML = `<span class="icon-location"></span> Find My 6D Address`;
             },
             () => {
                 alert("Unable to retrieve your location.");
                 DOM.findMyLocationBtn.disabled = false;
-                DOM.findMyLocationBtn.textContent = `Find My 6D Address`;
+                DOM.findMyLocationBtn.innerHTML = `<span class="icon-location"></span> Find My 6D Address`;
             }
         );
     }
-    
+
     function processLocation(latLng) {
         const locationData = getAuthoritativeLocation(latLng);
         if (!locationData) return;
 
         const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
         currentAddress = {
-            sixDCode: code6D,
-            localitySuffix,
-            lat: latLng.lat(),
-            lng: latLng.lng(),
-            ...locationData
+            sixDCode: code6D, localitySuffix, lat: latLng.lat(), lng: latLng.lng(), ...locationData
         };
 
-        // FIX: This now correctly calls the sidebar update function, not the non-existent info panel function.
-        updateSidebarToRegistration(currentAddress);
+        updateInfoPanel(currentAddress);
         MapCore.drawAddressBoxes(map, latLng);
         map.panTo(latLng);
     }
@@ -157,33 +157,33 @@ import * as MapCore from './map-core.js';
         }
         return null;
     }
-    
-    function handleRegionChange() {
-        populateDistrictDropdown(DOM.regRegionSelect.value);
-        validateForm();
+
+    function updateInfoPanel(data) {
+        DOM.infoPanelInitial.classList.add('hidden');
+        DOM.infoPanelAddress.classList.remove('hidden');
+
+        const codeParts = data.sixDCode.split('-');
+        DOM.info6dCodeSpans[0].textContent = codeParts[0];
+        DOM.info6dCodeSpans[1].textContent = codeParts[1];
+        DOM.info6dCodeSpans[2].textContent = codeParts[2];
+
+        DOM.infoDistrict.textContent = data.district;
+        DOM.infoRegion.textContent = `${data.region} ${data.localitySuffix}`;
     }
 
-    function handleFormSubmit(event) {
-        event.preventDefault();
-        if (!DOM.registerBtn.disabled) {
-            populateConfirmationModal();
-            toggleModal(true);
-        }
+    function handleShowRegistrationSidebar() {
+        if (!currentAddress) return;
+        populateRegistrationForm(currentAddress);
+        DOM.welcomeView.classList.remove('active');
+        DOM.registrationView.classList.add('active');
     }
 
-    function handleRegistrationConfirm() {
-        console.log("Registration confirmed:", currentAddress);
-        toggleModal(false);
-        alert("Registration Successful! (Mocked)");
-    }
-
-    function updateSidebarToRegistration(data) {
+    function populateRegistrationForm(data) {
+        populateRegionDropdown();
         DOM.reg6dCodeInput.value = data.sixDCode;
         DOM.regRegionSelect.value = data.region;
         populateDistrictDropdown(data.region);
         DOM.regDistrictSelect.value = data.district;
-        DOM.welcomeView.classList.remove('active');
-        DOM.registrationView.classList.add('active');
         validateForm();
     }
 
@@ -208,6 +208,14 @@ import * as MapCore from './map-core.js';
         });
     }
 
+    function handleFormSubmit(event) {
+        event.preventDefault();
+        if (!DOM.registerBtn.disabled) {
+            populateConfirmationModal();
+            toggleModal(true);
+        }
+    }
+
     function validateForm() {
         const isPhoneValid = DOM.regPhoneInput.checkValidity();
         const isNameValid = DOM.regNameInput.checkValidity();
@@ -219,13 +227,19 @@ import * as MapCore from './map-core.js';
         DOM.confirm6dCode.textContent = currentAddress.sixDCode;
         DOM.confirmLocation.textContent = `${currentAddress.district}, ${currentAddress.region}`;
         DOM.confirmName.textContent = DOM.regNameInput.value;
-        DOM.confirmPhone.textContent = `+252 ${DOM.regNameInput.value}`;
+        DOM.confirmPhone.textContent = `+252 ${DOM.regPhoneInput.value}`;
         currentAddress.fullName = DOM.regNameInput.value;
-        currentAddress.phoneNumber = DOM.regNameInput.value;
+        currentAddress.phoneNumber = DOM.regPhoneInput.value;
     }
 
     function toggleModal(show) {
         DOM.modal.classList.toggle('visible', show);
+    }
+
+    function handleRegistrationConfirm() {
+        console.log("Registration confirmed. Sending data to backend...", currentAddress);
+        toggleModal(false);
+        alert("Registration Successful! (Mocked)");
     }
 
     function animateToLocation(map, latLng, onComplete) {
