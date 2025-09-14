@@ -85,6 +85,11 @@ body {
     overflow: hidden;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     transition: transform 0.3s ease-in-out;
+    transform: translateX(0); /* Default state for desktop */
+}
+
+#sidebar:not(.active) {
+    transform: translateX(-110%); /* Hide sidebar when not active */
 }
 
 .sidebar-header {
@@ -140,10 +145,15 @@ body {
     backdrop-filter: var(--blur-effect);
     -webkit-backdrop-filter: var(--blur-effect);
     border: 1px solid var(--border-color);
-    display: none; /* Hidden by default */
+    display: none; /* Hidden by default, JS will make it flex */
     justify-content: center;
     align-items: center;
     cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+#recenter-btn:hover {
+    transform: scale(1.1);
 }
 
 .icon-recenter {
@@ -169,17 +179,24 @@ body {
     border-radius: 16px;
     padding: 12px;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    display: flex;
-    justify-content: center;
+}
+
+.info-view {
+    display: none;
+    width: 100%;
     align-items: center;
+}
+.info-view.active {
+    display: flex;
+}
+
+#info-initial-view {
+    justify-content: center;
 }
 
 #info-address-view {
-    display: none; /* Hidden by default */
-    width: 100%;
     flex-direction: row;
     justify-content: space-between;
-    align-items: center;
 }
 
 .address-details {
@@ -243,7 +260,7 @@ body {
         width: 100%;
         max-height: 80vh;
         border-radius: 20px 20px 0 0;
-        transform: translateY(100%); /* Start hidden off-screen */
+        transform: translateY(110%); /* Start hidden off-screen */
     }
 
     #sidebar.active {
