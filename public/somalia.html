@@ -2,36 +2,111 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>6D Address - Somalia</title>
-    <link rel="stylesheet" href="/css/shared.css">
-    <link rel="stylesheet" href="/css/somalia-map.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>6D Address - Somalia Registration</title>
+    <link rel="stylesheet" href="css/shared.css">
+    <link rel="stylesheet" href="css/somalia-map.css">
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 </head>
 <body>
-    <div id="map"></div>
 
-    <div id="logo">
-        <img src="/assets/logo-somalia.png" alt="6D Address Somalia Logo">
+    <div id="map"></div>
+    <div id="loader" class="visible">
+        <div class="spinner"></div>
+        <p>Initializing Secure Map...</p>
     </div>
 
-    <button id="recenter-btn" class="control-button hidden" title="Take me back to my selected location">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><circle cx="12" cy="12" r="8"></circle><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line></svg>
-    </button>
+    <aside id="sidebar">
+        <!-- State 1: Welcome / Initial View -->
+        <div id="welcome-view" class="sidebar-view active">
+            <div class="sidebar-header">
+                <img src="assets/logo.svg" alt="6D Address Logo" class="logo">
+                <h2>Welcome to 6D Address</h2>
+            </div>
+            <div class="sidebar-content">
+                <p>Your official digital address is just a click away.</p>
+                <h4>How it works:</h4>
+                <ol>
+                    <li>Click the button below to find your current location.</li>
+                    <li>Alternatively, click anywhere on the map of Somalia.</li>
+                    <li>Confirm your address details and register.</li>
+                </ol>
+                <button id="find-my-location-btn" class="btn btn-primary" disabled>
+                    <span class="icon-location"></span> Find My 6D Address
+                </button>
+            </div>
+        </div>
 
-    <div id="info-panel">
-        <button id="find-my-address-btn" class="find-address-btn" disabled>
-            <img src="/assets/geolocate.svg" alt="Find My Location">
-            <span>Find My 6D Address</span>
-        </button>
-        <div id="address-content" class="hidden">
-            <div id="code-display"></div>
-            <div id="address-display">
-                <div id="line1-display"></div>
-                <div id="line2-display"></div>
+        <!-- State 2: Registration Form View -->
+        <div id="registration-view" class="sidebar-view">
+            <div class="sidebar-header">
+                <img src="assets/logo.svg" alt="6D Address Logo" class="logo">
+                <h2>Register Your Address</h2>
+            </div>
+            <div class="sidebar-content">
+                <p class="form-intro">Confirm your location details and complete the form below.</p>
+                
+                <form id="registration-form" novalidate>
+                    <div class="form-group readonly">
+                        <label for="reg-6d-code">6D Address Code</label>
+                        <input type="text" id="reg-6d-code" name="six_d_code" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reg-region">Region</label>
+                        <select id="reg-region" name="region" required></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reg-district">District</label>
+                        <select id="reg-district" name="district" required></select>
+                    </div>
+                    
+                    <hr class="form-divider">
+
+                    <div class="form-group">
+                        <label for="reg-phone">Phone Number (e.g. 61xxxxxxx)</label>
+                        <div class="phone-input-wrapper">
+                            <span>+252</span>
+                            <input type="tel" id="reg-phone" name="phone_number" placeholder="61xxxxxxx" required pattern="^[6-9]\d{7}$">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reg-name">Full Name</label>
+                        <input type="text" id="reg-name" name="full_name" placeholder="Your full name" required minlength="3">
+                    </div>
+
+                    <button type="submit" id="register-btn" class="btn btn-primary" disabled>Register</button>
+                </form>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Confirm Registration</h3>
+            <p>Please review your details before confirming.</p>
+            <div class="confirmation-details">
+                <div class="detail-item"><span>6D Code:</span> <strong id="confirm-6d-code"></strong></div>
+                <div class="detail-item"><span>Location:</span> <strong id="confirm-location"></strong></div>
+                <div class="detail-item"><span>Full Name:</span> <strong id="confirm-name"></strong></div>
+                <div class="detail-item"><span>Phone:</span> <strong id="confirm-phone"></strong></div>
+            </div>
+            <div class="modal-actions">
+                <button id="modal-cancel-btn" class="btn btn-secondary">Cancel</button>
+                <button id="modal-confirm-btn" class="btn btn-primary">Confirm & Proceed</button>
             </div>
         </div>
     </div>
-    
-    <script type="module" src="/js/somalia-map.js"></script>
+
+    <!-- Core & Utility Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/map-core.js"></script>
+    <!-- Page-specific Script -->
+    <script src="js/somalia-map.js"></script>
+
 </body>
 </html>
