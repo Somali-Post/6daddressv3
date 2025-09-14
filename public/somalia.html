@@ -20,7 +20,8 @@
         <!-- State 1: Welcome / Initial View -->
         <div id="welcome-view" class="sidebar-view active">
             <div class="sidebar-header">
-                <img src="assets/logo.svg" alt="6D Address Logo" class="logo">
+                <!-- LOGO PATH CORRECTED -->
+                <img src="assets/logo-somalia.png" alt="6D Address Somalia Logo" class="logo">
                 <h2>Welcome to 6D Address</h2>
             </div>
             <div class="sidebar-content">
@@ -40,7 +41,8 @@
         <!-- State 2: Registration Form View -->
         <div id="registration-view" class="sidebar-view">
             <div class="sidebar-header">
-                <img src="assets/logo.svg" alt="6D Address Logo" class="logo">
+                <!-- LOGO PATH CORRECTED -->
+                <img src="assets/logo-somalia.png" alt="6D Address Somalia Logo" class="logo">
                 <h2>Register Your Address</h2>
             </div>
             <div class="sidebar-content">
@@ -101,12 +103,20 @@
         </div>
     </div>
 
-    <!-- Core & Utility Scripts -->
-    <script src="js/config.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/map-core.js"></script>
-    <!-- Page-specific Script -->
-    <script src="js/somalia-map.js"></script>
+    <!-- 
+      CRITICAL FIX: The Google Maps API script is now included.
+      The API key will be injected here by the Netlify build script.
+    -->
+    <script id="google-maps-script" async></script>
+
+    <!-- 
+      CRITICAL FIX: All local scripts are now loaded with type="module" 
+      to enable modern JavaScript import/export syntax.
+    -->
+    <script src="js/config.js" type="module"></script>
+    <script src="js/utils.js" type="module"></script>
+    <script src="js/map-core.js" type="module"></script>
+    <script src="js/somalia-map.js" type="module"></script>
 
 </body>
 </html>
