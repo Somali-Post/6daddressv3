@@ -145,17 +145,19 @@ body {
 
 /* NEW STYLES TO FIX BUTTONS */
 #info-panel .btn {
-    background: none; /* Removes the white background */
-    border: none; /* Removes any border */
-    font-size: 1.1rem; /* Makes the font more prominent */
+    background: none;
+    border: none;
+    font-size: 1.1rem;
     font-weight: 500;
-    padding: 10px 0; /* Adjusts padding for a cleaner look */
+    padding: 12px 0; /* Slightly increased padding for better spacing */
     transition: background-color 0.2s ease;
     width: 100%;
+    border-radius: 10px; /* Added for a clean hover effect */
+    color: var(--text-primary); /* Ensures text is white */
 }
 
 #info-panel .btn:hover {
-    background-color: rgba(255, 255, 255, 0.1); /* Adds a subtle hover effect */
+    background-color: var(--primary-blue); /* FIX: Animate to light blue on hover */
 }
 
 /* UPDATED: Hero style for the primary "Find My Address" button */
