@@ -229,15 +229,15 @@ function updateInfoPanel(data) {
         DOM.info6dCodeSpans[2].textContent = codeParts[2];
     }
 
-    // CRITICAL FIX: Check if the properties exist before trying to display them.
-    if (DOM.infoDistrict) {
-        // Use the district if it exists, otherwise show an empty string.
-        DOM.infoDistrict.textContent = data.district || ''; 
-    }
-    if (DOM.infoRegion) {
-        // Use the region if it exists, otherwise just show the suffix.
-        const regionText = data.region || ''; 
-        DOM.infoRegion.textContent = `${regionText} ${data.localitySuffix}`.trim();
+    // CRITICAL FIX: Implement special logic for Banaadir due to incomplete GeoJSON data.
+    if (data.region === 'Banaadir') {
+        // If the region is Banaadir, we create a more useful "proxy district".
+        DOM.infoDistrict.textContent = `Banaadir Sector ${data.localitySuffix}`;
+        DOM.infoRegion.textContent = `Banaadir Region`; // Display a cleaner region name.
+    } else {
+        // For all other regions, display the district and region as normal.
+        DOM.infoDistrict.textContent = data.district;
+        DOM.infoRegion.textContent = `${data.region} ${data.localitySuffix}`;
     }
 }
 
