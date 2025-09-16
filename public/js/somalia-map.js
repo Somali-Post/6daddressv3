@@ -36,19 +36,19 @@ import * as MapCore from './map-core.js';
 
     let map;
     let somaliaPolygon;
-    let districtPolygons = [];
+    // REMOVED: The 'districtPolygons' state variable is no longer needed.
     let currentAddress = null;
 
     async function init() {
         try {
-            const [_, somaliaData, districtsData] = await Promise.all([
+            // UPDATED: Removed the fetch call for 'somalia_districts.geojson'.
+            const [_, somaliaData] = await Promise.all([
                 Utils.loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY, ['geometry']),
-                fetch('data/somalia.geojson').then(res => res.json()),
-                fetch('data/somalia_districts.geojson').then(res => res.json())
+                fetch('data/somalia.geojson').then(res => res.json())
             ]);
 
             createSomaliaPolygon(somaliaData);
-            createDistrictPolygons(districtsData);
+            // REMOVED: The call to 'createDistrictPolygons' is no longer needed.
             
             map = MapCore.initializeBaseMap(DOM.mapContainer, {
                 center: { lat: 2.0469, lng: 45.3182 },
@@ -66,32 +66,7 @@ import * as MapCore from './map-core.js';
         }
     }
 
-    function createDistrictPolygons(districtsGeoJson) {
-        console.log("--- Starting to process GeoJSON features ---");
-        let featureCount = 0;
-        districtsGeoJson.features.forEach(feature => {
-            featureCount++;
-            if (featureCount <= 5) {
-                console.log(`Properties for feature #${featureCount}:`, feature.properties);
-            }
-            const geometry = feature.geometry;
-            let paths = [];
-            if (geometry.type === 'Polygon') {
-                paths = geometry.coordinates.map(linearRing => linearRing.map(c => ({ lat: c[1], lng: c[0] })));
-            } else if (geometry.type === 'MultiPolygon') {
-                paths = geometry.coordinates.flatMap(polygon => polygon.map(linearRing => linearRing.map(c => ({ lat: c[1], lng: c[0] }))));
-            }
-            if (paths.length > 0) {
-                const districtPolygon = new google.maps.Polygon({ paths: paths });
-                districtPolygons.push({
-                    district: feature.properties.NAME_2,
-                    region: feature.properties.NAME_1,
-                    polygon: districtPolygon
-                });
-            }
-        });
-        console.log(`--- Finished processing. Total features found: ${featureCount} ---`);
-    }
+    // REMOVED: The 'createDistrictPolygons' function is deleted.
 
     function createSomaliaPolygon(geoJson) {
         const coordinates = geoJson.features[0].geometry.coordinates[0].map(c => ({ lat: c[1], lng: c[0] }));
@@ -142,89 +117,72 @@ import * as MapCore from './map-core.js';
         );
     }
 
+    /**
+     * UPDATED: This function is now async and uses the new Google-first geocoding.
+     */
     async function processLocation(latLng) {
-        const locationData = await getEnhancedLocationData(latLng);
+        const locationData = await getGoogleGeocode(latLng);
         if (!locationData) {
-            console.error("Could not determine location data even after fallback.");
+            console.error("Google Geocoding failed to return a valid address for this location.");
             return;
         }
+
         const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
         currentAddress = {
-            sixDCode: code6D, localitySuffix, lat: latLng.lat(), lng: latLng.lng(), ...locationData
+            sixDCode: code6D,
+            localitySuffix: localitySuffix,
+            lat: latLng.lat(),
+            lng: latLng.lng(),
+            ...locationData
         };
+
         updateInfoPanel(currentAddress);
         MapCore.drawAddressBoxes(map, latLng);
         map.panTo(latLng);
     }
 
-    async function getEnhancedLocationData(latLng) {
-        let localData = getAuthoritativeLocation(latLng);
-        if (!localData) return null;
-        if (localData.district === 'Mogadisho') {
-            console.log("Local data shows 'Mogadisho', attempting to enhance with Google Geocoding...");
-            try {
-                const googleDistrict = await reverseGeocodeWithGoogle(latLng);
-                if (googleDistrict) {
-                    console.log(`%cGoogle Enhancement SUCCESS: Found district '${googleDistrict}'`, "color: green; font-weight: bold;");
-                    localData.district = googleDistrict;
-                } else {
-                     console.warn("Google Geocoding did not return a specific district.");
-                }
-            } catch (error) {
-                console.error("Google Geocoding API call failed:", error);
-            }
-        }
-        return localData;
-    }
+    // REMOVED: The 'getAuthoritativeLocation' function is deleted.
 
-    async function reverseGeocodeWithGoogle(latLng) {
+    /**
+     * NEW: This is now the single source of truth for geocoding.
+     * @param {google.maps.LatLng} latLng The location to geocode.
+     * @returns {Promise<Object|null>} A promise that resolves with { district, region } or null.
+     */
+    async function getGoogleGeocode(latLng) {
+        console.log("--- Geocoding with Google API... ---");
         const geocoder = new google.maps.Geocoder();
-        const response = await geocoder.geocode({ location: latLng });
-        if (response.results && response.results.length > 0) {
-            const components = response.results[0].address_components;
-            const district = parseGoogleComponent(components, 'administrative_area_level_2');
-            const locality = parseGoogleComponent(components, 'locality');
-            return district || locality || null;
+        try {
+            const response = await geocoder.geocode({ location: latLng });
+            if (response.results && response.results.length > 0) {
+                const components = response.results[0].address_components;
+                
+                // Intelligently parse the components for the best possible names
+                const region = parseGoogleComponent(components, 'administrative_area_level_1');
+                const district = parseGoogleComponent(components, 'administrative_area_level_2') || parseGoogleComponent(components, 'locality');
+
+                if (district && region) {
+                    console.log(`%cSUCCESS: Found District '${district}', Region '${region}'`, "color: green;");
+                    return { district, region };
+                }
+            }
+            console.error("FAILURE: Google Geocoding response did not contain required address components.");
+            return null;
+        } catch (error) {
+            console.error("FAILURE: Google Geocoding API call failed.", error);
+            return null;
         }
-        return null;
     }
 
+    /**
+     * NEW: A helper function to find a specific component type from a Google Geocode result.
+     */
     function parseGoogleComponent(components, type) {
         const component = components.find(c => c.types.includes(type));
         return component ? component.long_name : null;
     }
 
-    function getAuthoritativeLocation(latLng) {
-        console.log("--- Searching for authoritative location (smallest area)... ---");
-        let smallestMatch = null;
-        let smallestArea = Infinity;
-        for (const district of districtPolygons) {
-            if (google.maps.geometry.poly.containsLocation(latLng, district.polygon)) {
-                console.log(`MATCH FOUND: Point is inside '${district.district}'. Checking its area.`);
-                const area = google.maps.geometry.spherical.computeArea(district.polygon.getPath());
-                if (area < smallestArea) {
-                    console.log(`%cNEW SMALLEST: '${district.district}' (area: ${area.toFixed(2)}) is smaller than previous best (area: ${smallestArea.toFixed(2)}).`, "color: green; font-weight: bold;");
-                    smallestArea = area;
-                    smallestMatch = { district: district.district, region: district.region };
-                } else {
-                    console.log(`%cSKIPPING: '${district.district}' (area: ${area.toFixed(2)}) is larger than the current best match '${smallestMatch.district}' (area: ${smallestArea.toFixed(2)}).`, "color: orange;");
-                }
-            }
-        }
-        if (smallestMatch) {
-            console.log("SUCCESS: The smallest matching polygon was found.");
-            console.log("Final District:", smallestMatch.district);
-            console.log("Final Region:", smallestMatch.region);
-            return smallestMatch;
-        } else {
-            console.error("FAILURE: Point did not fall inside any known district polygon.");
-            return null;
-        }
-    }
-
-    // --- START OF REPLACEMENT BLOCK ---
     /**
-     * Updates the info panel, gracefully handling the known data gap for Mogadishu.
+     * UPDATED: Simplified to remove all special logic. It now displays exactly what Google returns.
      */
     function updateInfoPanel(data) {
         console.log("--- Updating info panel with this data: ---", data);
@@ -237,18 +195,9 @@ import * as MapCore from './map-core.js';
         DOM.info6dCodeSpans[1].textContent = codeParts[1];
         DOM.info6dCodeSpans[2].textContent = codeParts[2];
 
-        // FINAL FIX: Gracefully handle the "Mogadishu" data limitation.
-        if (data.district === 'Mogadisho') {
-            // If the district is the generic "Mogadisho", display the more useful Region name.
-            DOM.infoDistrict.textContent = data.region; // This will be "Banaadir"
-            DOM.infoRegion.textContent = `Capital Region ${data.localitySuffix}`;
-        } else {
-            // For all other valid districts, display as normal.
-            DOM.infoDistrict.textContent = data.district;
-            DOM.infoRegion.textContent = `${data.region} ${data.localitySuffix}`;
-        }
+        DOM.infoDistrict.textContent = data.district;
+        DOM.infoRegion.textContent = `${data.region} ${data.localitySuffix}`;
     }
-    // --- END OF REPLACEMENT BLOCK ---
 
     function handleShowRegistrationSidebar() {
         if (!currentAddress) return;
@@ -262,19 +211,7 @@ import * as MapCore from './map-core.js';
         DOM.reg6dCodeInput.value = data.sixDCode;
         DOM.regRegionSelect.value = data.region;
         populateDistrictDropdown(data.region);
-        
-        // Handle the Mogadishu case for the form as well
-        if (data.district === 'Mogadisho') {
-            // Find the correct list of districts for Banaadir from our config
-            const banaadirRegion = somaliRegions['Banaadir'];
-            if (banaadirRegion) {
-                // Leave the district dropdown unselected for the user to choose
-                DOM.regDistrictSelect.value = '';
-            }
-        } else {
-            DOM.regDistrictSelect.value = data.district;
-        }
-        
+        DOM.regDistrictSelect.value = data.district;
         validateForm();
     }
 
@@ -315,7 +252,6 @@ import * as MapCore from './map-core.js';
     }
 
     function populateConfirmationModal() {
-        // Use the selected district from the form for the confirmation
         const finalDistrict = DOM.regDistrictSelect.value || currentAddress.district;
         DOM.confirm6dCode.textContent = currentAddress.sixDCode;
         DOM.confirmLocation.textContent = `${finalDistrict}, ${currentAddress.region}`;
@@ -323,7 +259,7 @@ import * as MapCore from './map-core.js';
         DOM.confirmPhone.textContent = `+252 ${DOM.regPhoneInput.value}`;
         currentAddress.fullName = DOM.regNameInput.value;
         currentAddress.phoneNumber = DOM.regPhoneInput.value;
-        currentAddress.district = finalDistrict; // Update the final district
+        currentAddress.district = finalDistrict;
     }
 
     function toggleModal(show) {
