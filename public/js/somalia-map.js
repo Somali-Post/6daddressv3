@@ -75,6 +75,7 @@ import * as MapCore from './map-core.js';
         map.addListener('click', handleMapClick);
         map.addListener('zoom_changed', () => MapCore.updateDynamicGrid(map));
         map.addListener('idle', () => MapCore.updateDynamicGrid(map));
+        DOM.sidebarToggleBtn.addEventListener('click', () => DOM.sidebar.classList.toggle('is-collapsed'));
         DOM.findMyLocationBtn.addEventListener('click', handleFindMyLocation);
         DOM.registerThisAddressBtn.addEventListener('click', handleShowRegistrationSidebar);
         // Note: The registration form is not part of the new sidebar design, so these listeners are commented out for now.

@@ -49,6 +49,36 @@ main {
     border-right: 1px solid var(--border-color); display: flex; flex-direction: column;
     padding: 1rem; transition: width 0.3s ease-in-out; z-index: 20;
 }
+
+#sidebar.is-collapsed {
+    width: 88px; /* Collapsed width (padding + icon width) */
+    padding: 1rem 0.75rem;
+}
+
+#sidebar.is-collapsed .logo-text,
+#sidebar.is-collapsed .link-text,
+#sidebar.is-collapsed .user-details {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    transition: opacity 0.2s ease, width 0.2s ease;
+}
+
+#sidebar.is-collapsed .sidebar-toggle {
+    transform: rotate(180deg);
+}
+
+#sidebar.is-collapsed .nav-link {
+    justify-content: center;
+}
+
+#sidebar.is-collapsed .user-profile {
+    justify-content: center;
+}
+
+#sidebar.is-collapsed .logout-btn {
+    display: none;
+}
 .sidebar-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
 .logo-link { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
 .logo { width: 40px; height: 40px; }
