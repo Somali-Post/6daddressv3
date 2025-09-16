@@ -36,24 +36,26 @@ import * as MapCore from './map-core.js';
 
     let map;
     let somaliaPolygon;
-    // REMOVED: The 'districtPolygons' state variable is no longer needed.
+    let placesService; // NEW: Instance of the Places API service
     let currentAddress = null;
 
     async function init() {
         try {
-            // UPDATED: Removed the fetch call for 'somalia_districts.geojson'.
+            // UPDATED: Request the 'places' library in addition to 'geometry'.
             const [_, somaliaData] = await Promise.all([
-                Utils.loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY, ['geometry']),
+                Utils.loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY, ['geometry', 'places']),
                 fetch('data/somalia.geojson').then(res => res.json())
             ]);
 
             createSomaliaPolygon(somaliaData);
-            // REMOVED: The call to 'createDistrictPolygons' is no longer needed.
             
             map = MapCore.initializeBaseMap(DOM.mapContainer, {
                 center: { lat: 2.0469, lng: 45.3182 },
                 zoom: 13,
             });
+
+            // NEW: Initialize the Places Service after the map is created.
+            placesService = new google.maps.places.PlacesService(map);
 
             addEventListeners();
             DOM.sidebar.classList.add('visible');
@@ -65,8 +67,6 @@ import * as MapCore from './map-core.js';
             DOM.loader.innerHTML = "<p>Error: Could not load map data. Please refresh.</p>";
         }
     }
-
-    // REMOVED: The 'createDistrictPolygons' function is deleted.
 
     function createSomaliaPolygon(geoJson) {
         const coordinates = geoJson.features[0].geometry.coordinates[0].map(c => ({ lat: c[1], lng: c[0] }));
@@ -118,83 +118,115 @@ import * as MapCore from './map-core.js';
     }
 
     /**
-     * UPDATED: This function is now async and uses the new Google-first geocoding.
+     * REPLACED: Orchestrates the multi-layered geocoding process.
      */
     async function processLocation(latLng) {
-        const locationData = await getGoogleGeocode(latLng);
-        if (!locationData) {
-            console.error("Google Geocoding failed to return a valid address for this location.");
-            return;
+        try {
+            // Fetch from both APIs concurrently for maximum performance.
+            const [geocodeResult, placeResult] = await Promise.all([
+                fetchGoogleGeocode(latLng),
+                getPlaceDetails(latLng)
+            ]);
+
+            // The new parsing function intelligently combines the results.
+            const locationData = parseAddressComponents(geocodeResult, placeResult);
+
+            if (!locationData.district || !locationData.region) {
+                console.error("Could not determine a valid district/region from the combined API results.");
+                return;
+            }
+
+            const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
+            currentAddress = {
+                sixDCode: code6D, localitySuffix, lat: latLng.lat(), lng: latLng.lng(), ...locationData
+            };
+
+            updateInfoPanel(currentAddress);
+            MapCore.drawAddressBoxes(map, latLng);
+            map.panTo(latLng);
+
+        } catch (error) {
+            console.error("An error occurred during the geocoding process:", error);
         }
-
-        const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
-        currentAddress = {
-            sixDCode: code6D,
-            localitySuffix: localitySuffix,
-            lat: latLng.lat(),
-            lng: latLng.lng(),
-            ...locationData
-        };
-
-        updateInfoPanel(currentAddress);
-        MapCore.drawAddressBoxes(map, latLng);
-        map.panTo(latLng);
     }
 
-    // REMOVED: The 'getAuthoritativeLocation' function is deleted.
-
     /**
-     * NEW: This is now the single source of truth for geocoding.
-     * @param {google.maps.LatLng} latLng The location to geocode.
-     * @returns {Promise<Object|null>} A promise that resolves with { district, region } or null.
+     * NEW: Fetches raw geocode data from Google.
      */
-    async function getGoogleGeocode(latLng) {
-        console.log("--- Geocoding with Google API... ---");
+    async function fetchGoogleGeocode(latLng) {
         const geocoder = new google.maps.Geocoder();
         try {
             const response = await geocoder.geocode({ location: latLng });
-            if (response.results && response.results.length > 0) {
-                const components = response.results[0].address_components;
-                
-                // Intelligently parse the components for the best possible names
-                const region = parseGoogleComponent(components, 'administrative_area_level_1');
-                const district = parseGoogleComponent(components, 'administrative_area_level_2') || parseGoogleComponent(components, 'locality');
-
-                if (district && region) {
-                    console.log(`%cSUCCESS: Found District '${district}', Region '${region}'`, "color: green;");
-                    return { district, region };
-                }
-            }
-            console.error("FAILURE: Google Geocoding response did not contain required address components.");
-            return null;
+            return response.results;
         } catch (error) {
-            console.error("FAILURE: Google Geocoding API call failed.", error);
-            return null;
+            console.error("Google Geocoding API call failed.", error);
+            return []; // Return empty array on failure
         }
     }
 
     /**
-     * NEW: A helper function to find a specific component type from a Google Geocode result.
+     * NEW: Fetches hyper-local place details using the Places API.
      */
-    function parseGoogleComponent(components, type) {
-        const component = components.find(c => c.types.includes(type));
-        return component ? component.long_name : null;
+    function getPlaceDetails(latLng) {
+        return new Promise((resolve) => {
+            const request = {
+                location: latLng,
+                radius: 50, // Search in a tight 50-meter radius for hyper-local results
+                rankBy: google.maps.places.RankBy.PROMINENCE
+            };
+            placesService.nearbySearch(request, (results, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
+                    resolve(results[0]); // Resolve with the most prominent nearby place
+                } else {
+                    resolve(null); // Resolve with null if no places are found or an error occurs
+                }
+            });
+        });
     }
 
     /**
-     * UPDATED: Simplified to remove all special logic. It now displays exactly what Google returns.
+     * REPLACED: The intelligent heart of the geocoding logic.
+     * Parses and combines results from both APIs to find the most specific address.
      */
-    function updateInfoPanel(data) {
-        console.log("--- Updating info panel with this data: ---", data);
+    function parseAddressComponents(geocodeResults, placeResult) {
+        let district = null;
+        let region = null;
 
+        // Helper to parse a component array
+        const getComponent = (components, type) => {
+            const component = components.find(c => c.types.includes(type));
+            return component ? component.long_name : null;
+        };
+
+        // Step 1: Get the best possible data from the main Geocoding API result
+        if (geocodeResults && geocodeResults.length > 0) {
+            const components = geocodeResults[0].address_components;
+            region = getComponent(components, 'administrative_area_level_1');
+            district = getComponent(components, 'administrative_area_level_2') || getComponent(components, 'locality');
+        }
+
+        // Step 2: Enhance with the hyper-local Places API result
+        if (placeResult) {
+            // A 'neighborhood' or 'sublocality' is almost always the specific district we want.
+            const placeIsSpecific = placeResult.types.includes('neighborhood') || placeResult.types.includes('sublocality_level_1') || placeResult.types.includes('sublocality');
+            
+            if (placeIsSpecific && placeResult.name) {
+                console.log(`%cEnhancement: Using specific place name '${placeResult.name}' as the district.`, "color: green;");
+                district = placeResult.name;
+            }
+        }
+        
+        console.log(`Final Parsed Address -> District: ${district}, Region: ${region}`);
+        return { district, region };
+    }
+
+    function updateInfoPanel(data) {
         DOM.infoPanelInitial.classList.add('hidden');
         DOM.infoPanelAddress.classList.remove('hidden');
-
         const codeParts = data.sixDCode.split('-');
         DOM.info6dCodeSpans[0].textContent = codeParts[0];
         DOM.info6dCodeSpans[1].textContent = codeParts[1];
         DOM.info6dCodeSpans[2].textContent = codeParts[2];
-
         DOM.infoDistrict.textContent = data.district;
         DOM.infoRegion.textContent = `${data.region} ${data.localitySuffix}`;
     }
