@@ -136,18 +136,28 @@ import * as MapCore from './map-core.js';
     }
 
     function processLocation(latLng) {
-        const locationData = getAuthoritativeLocation(latLng);
-        if (!locationData) return;
+    const locationData = getAuthoritativeLocation(latLng);
 
-        const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
-        currentAddress = {
-            sixDCode: code6D, localitySuffix, lat: latLng.lat(), lng: latLng.lng(), ...locationData
-        };
-
-        updateInfoPanel(currentAddress);
-        MapCore.drawAddressBoxes(map, latLng);
-        map.panTo(latLng);
+    // CRITICAL FIX: This check now stops the function completely if no district is found.
+    if (!locationData) {
+        console.warn("Could not determine district for the selected point. It may be in a coastal area or outside defined district boundaries.");
+        // We do NOT update the info panel, leaving it in its previous state.
+        return;
     }
+
+    const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
+    currentAddress = {
+        sixDCode: code6D,
+        localitySuffix: localitySuffix,
+        lat: latLng.lat(),
+        lng: latLng.lng(),
+        ...locationData
+    };
+
+    updateInfoPanel(currentAddress);
+    MapCore.drawAddressBoxes(map, latLng);
+    map.panTo(latLng);
+}
 
     function getAuthoritativeLocation(latLng) {
         for (const district of districtPolygons) {
