@@ -56,7 +56,7 @@ import * as MapCore from './map-core.js';
             });
 
             addEventListeners();
-            DOM.sidebar.classList.add('visible'); // Show welcome sidebar on load
+            DOM.sidebar.classList.add('visible');
             DOM.findMyLocationBtn.disabled = false;
             DOM.loader.classList.remove('visible');
 
@@ -66,41 +66,50 @@ import * as MapCore from './map-core.js';
         }
     }
 
+    // --- MODIFIED: ADDED DIAGNOSTIC LOGS ---
+    function createDistrictPolygons(districtsGeoJson) {
+        console.log("--- Starting to process GeoJSON features ---");
+        let featureCount = 0;
+
+        districtsGeoJson.features.forEach(feature => {
+            featureCount++;
+            // --- DIAGNOSTIC LOG 1 ---
+            if (featureCount <= 5) {
+                console.log(`Properties for feature #${featureCount}:`, feature.properties);
+            }
+            // --- END LOG ---
+
+            const geometry = feature.geometry;
+            let paths = [];
+
+            if (geometry.type === 'Polygon') {
+                paths = geometry.coordinates.map(linearRing =>
+                    linearRing.map(c => ({ lat: c[1], lng: c[0] }))
+                );
+            } else if (geometry.type === 'MultiPolygon') {
+                paths = geometry.coordinates.flatMap(polygon =>
+                    polygon.map(linearRing =>
+                        linearRing.map(c => ({ lat: c[1], lng: c[0] }))
+                    )
+                );
+            }
+
+            if (paths.length > 0) {
+                const districtPolygon = new google.maps.Polygon({ paths: paths });
+                districtPolygons.push({
+                    district: feature.properties.NAME_2,
+                    region: feature.properties.NAME_1,
+                    polygon: districtPolygon
+                });
+            }
+        });
+        console.log(`--- Finished processing. Total features found: ${featureCount} ---`);
+    }
+
     function createSomaliaPolygon(geoJson) {
         const coordinates = geoJson.features[0].geometry.coordinates[0].map(c => ({ lat: c[1], lng: c[0] }));
         somaliaPolygon = new google.maps.Polygon({ paths: coordinates });
     }
-
-    // --- REPLACE WITH THIS ---
-
-function createDistrictPolygons(districtsGeoJson) {
-    districtsGeoJson.features.forEach(feature => {
-        const geometry = feature.geometry;
-        let paths = [];
-
-        if (geometry.type === 'Polygon') {
-            paths = geometry.coordinates.map(linearRing =>
-                linearRing.map(c => ({ lat: c[1], lng: c[0] }))
-            );
-        } else if (geometry.type === 'MultiPolygon') {
-            paths = geometry.coordinates.flatMap(polygon =>
-                polygon.map(linearRing =>
-                    linearRing.map(c => ({ lat: c[1], lng: c[0] }))
-                )
-            );
-        }
-
-        if (paths.length > 0) {
-            const districtPolygon = new google.maps.Polygon({ paths: paths });
-            districtPolygons.push({
-                // MODIFIED: Read from the correct property names from your GeoJSON file
-                district: feature.properties.NAME_2,
-                region: feature.properties.NAME_1,
-                polygon: districtPolygon
-            });
-        }
-    });
-}
 
     function addEventListeners() {
         map.addListener('click', handleMapClick);
@@ -160,37 +169,48 @@ function createDistrictPolygons(districtsGeoJson) {
         map.panTo(latLng);
     }
 
+    // --- MODIFIED: ADDED DIAGNOSTIC LOGS ---
     function getAuthoritativeLocation(latLng) {
+        console.log("--- Searching for authoritative location... ---");
         for (const district of districtPolygons) {
             if (google.maps.geometry.poly.containsLocation(latLng, district.polygon)) {
+                // --- DIAGNOSTIC LOG 2 ---
+                console.log("SUCCESS: Point is inside a polygon.");
+                console.log("Found District:", district.district);
+                console.log("Found Region:", district.region);
+                // --- END LOG ---
                 return { district: district.district, region: district.region };
             }
         }
+        // --- DIAGNOSTIC LOG 3 ---
+        console.error("FAILURE: Point did not fall inside any known district polygon.");
+        // --- END LOG ---
         return null;
     }
 
+    // --- MODIFIED: ADDED DIAGNOSTIC LOGS ---
     function updateInfoPanel(data) {
-    // Make sure the correct panel view is visible
-    DOM.infoPanelInitial.classList.add('hidden');
-    DOM.infoPanelAddress.classList.remove('hidden');
+        // --- DIAGNOSTIC LOG 4 ---
+        console.log("--- Updating info panel with this data: ---", data);
+        // --- END LOG ---
 
-    // Update the 6D Code display
-    const codeParts = data.sixDCode.split('-');
-    if (DOM.info6dCodeSpans && DOM.info6dCodeSpans.length === 3) {
-        DOM.info6dCodeSpans[0].textContent = codeParts[0];
-        DOM.info6dCodeSpans[1].textContent = codeParts[1];
-        DOM.info6dCodeSpans[2].textContent = codeParts[2];
-    }
+        DOM.infoPanelInitial.classList.add('hidden');
+        DOM.infoPanelAddress.classList.remove('hidden');
 
-    // CRITICAL FIX: Display the authoritative District and Region
-    // The 'data' object has 'district' and 'region' properties from getAuthoritativeLocation
-    if (DOM.infoDistrict) {
-        DOM.infoDistrict.textContent = data.district; // e.g., "Hodan"
+        const codeParts = data.sixDCode.split('-');
+        if (DOM.info6dCodeSpans && DOM.info6dCodeSpans.length === 3) {
+            DOM.info6dCodeSpans[0].textContent = codeParts[0];
+            DOM.info6dCodeSpans[1].textContent = codeParts[1];
+            DOM.info6dCodeSpans[2].textContent = codeParts[2];
+        }
+
+        if (DOM.infoDistrict) {
+            DOM.infoDistrict.textContent = data.district;
+        }
+        if (DOM.infoRegion) {
+            DOM.infoRegion.textContent = `${data.region} ${data.localitySuffix}`;
+        }
     }
-    if (DOM.infoRegion) {
-        DOM.infoRegion.textContent = `${data.region} ${data.localitySuffix}`; // e.g., "Banaadir 03"
-    }
-}
 
     function handleShowRegistrationSidebar() {
         if (!currentAddress) return;
