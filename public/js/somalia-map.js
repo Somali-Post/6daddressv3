@@ -170,17 +170,27 @@ function createDistrictPolygons(districtsGeoJson) {
     }
 
     function updateInfoPanel(data) {
-        DOM.infoPanelInitial.classList.add('hidden');
-        DOM.infoPanelAddress.classList.remove('hidden');
+    // Make sure the correct panel view is visible
+    DOM.infoPanelInitial.classList.add('hidden');
+    DOM.infoPanelAddress.classList.remove('hidden');
 
-        const codeParts = data.sixDCode.split('-');
+    // Update the 6D Code display
+    const codeParts = data.sixDCode.split('-');
+    if (DOM.info6dCodeSpans && DOM.info6dCodeSpans.length === 3) {
         DOM.info6dCodeSpans[0].textContent = codeParts[0];
         DOM.info6dCodeSpans[1].textContent = codeParts[1];
         DOM.info6dCodeSpans[2].textContent = codeParts[2];
-
-        DOM.infoDistrict.textContent = data.district;
-        DOM.infoRegion.textContent = `${data.region} ${data.localitySuffix}`;
     }
+
+    // CRITICAL FIX: Display the authoritative District and Region
+    // The 'data' object has 'district' and 'region' properties from getAuthoritativeLocation
+    if (DOM.infoDistrict) {
+        DOM.infoDistrict.textContent = data.district; // e.g., "Hodan"
+    }
+    if (DOM.infoRegion) {
+        DOM.infoRegion.textContent = `${data.region} ${data.localitySuffix}`; // e.g., "Banaadir 03"
+    }
+}
 
     function handleShowRegistrationSidebar() {
         if (!currentAddress) return;
