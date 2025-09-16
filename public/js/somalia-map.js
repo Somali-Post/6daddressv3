@@ -35,32 +35,85 @@ import * as MapCore from './map-core.js';
     };
 
     let map;
-    let geocoder;
-    let placesService; // <-- ADDED
     let somaliaPolygon;
-    let districtPolygons = [];
     let currentAddress = null;
+    
+    // --- FIX APPLIED: Integrated Proven Logic ---
+    let geocoder;
+    let placesService;
+
+    // Function to initialize the services
+    function initializeServices(map) {
+        geocoder = new google.maps.Geocoder();
+        placesService = new google.maps.places.PlacesService(map);
+    }
+
+    // Function to get results from the Geocoding API
+    function getReverseGeocode(latLng) {
+        return new Promise((resolve) => {
+            geocoder.geocode({ location: latLng }, (results, status) => {
+                resolve((status === 'OK' && results[0]) ? results[0].address_components : []);
+            });
+        });
+    }
+
+    // Function to get results from the Places API
+    function getPlaceDetails(latLng) {
+        return new Promise((resolve) => {
+            const request = { location: latLng, rankBy: google.maps.places.RankBy.DISTANCE, type: 'neighborhood' };
+            placesService.nearbySearch(request, (results, status) => {
+                resolve((status === google.maps.places.PlacesServiceStatus.OK && results[0]) ? results[0] : null);
+            });
+        });
+    }
+
+    // The intelligent parsing function that combines both results
+    function parseAddressComponents(geocodeComponents, placeResult) {
+        const getComponent = (type) => {
+            const component = geocodeComponents.find(c => c.types.includes(type));
+            return component ? component.long_name : null;
+        };
+        
+        const district = getComponent('sublocality_level_1') || 
+                         getComponent('locality') || 
+                         getComponent('administrative_area_level_2') || 
+                         '';
+        
+        const region = getComponent('administrative_area_level_1') || 
+                       getComponent('country') || 
+                       '';
+
+        return { district, region };
+    }
+
+    // The main processing function that orchestrates the calls
+    async function processLocationWithGoogle(latLng) {
+        const [geocodeResult, placeResult] = await Promise.all([
+            getReverseGeocode(latLng),
+            getPlaceDetails(latLng)
+        ]);
+        const finalAddress = parseAddressComponents(geocodeResult, placeResult);
+        return finalAddress;
+    }
+    // --- END OF FIX ---
 
     async function init() {
         try {
-            // MODIFIED: Added 'places' library to the API call
-            const [_, somaliaData, districtsData] = await Promise.all([
+            // FIX APPLIED: Request 'places' library and remove districts fetch
+            const [_, somaliaData] = await Promise.all([
                 Utils.loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY, ['geometry', 'places']),
-                fetch('data/somalia.geojson').then(res => res.json()),
-                fetch('data/somalia_districts.geojson').then(res => res.json())
+                fetch('data/somalia.geojson').then(res => res.json())
             ]);
 
             createSomaliaPolygon(somaliaData);
-            createDistrictPolygons(districtsData);
             
             map = MapCore.initializeBaseMap(DOM.mapContainer, {
                 center: { lat: 2.0469, lng: 45.3182 },
                 zoom: 13,
             });
 
-            // ADDED: Initialize the Geocoder and PlacesService
-            geocoder = new google.maps.Geocoder();
-            placesService = new google.maps.places.PlacesService(map);
+            // FIX APPLIED: Initialize the new services
+            initializeServices(map);
 
             addEventListeners();
             DOM.sidebar.classList.add('visible');
@@ -78,25 +131,7 @@ import * as MapCore from './map-core.js';
         somaliaPolygon = new google.maps.Polygon({ paths: coordinates });
     }
 
-    function createDistrictPolygons(districtsGeoJson) {
-        districtsGeoJson.features.forEach(feature => {
-            const geometry = feature.geometry;
-            let paths = [];
-            if (geometry.type === 'Polygon') {
-                paths = geometry.coordinates.map(linearRing => linearRing.map(c => ({ lat: c[1], lng: c[0] })));
-            } else if (geometry.type === 'MultiPolygon') {
-                paths = geometry.coordinates.flatMap(polygon => polygon.map(linearRing => linearRing.map(c => ({ lat: c[1], lng: c[0] }))));
-            }
-            if (paths.length > 0) {
-                const districtPolygon = new google.maps.Polygon({ paths: paths });
-                districtPolygons.push({
-                    district: feature.properties.NAME_2,
-                    region: feature.properties.NAME_1,
-                    polygon: districtPolygon
-                });
-            }
-        });
-    }
+    // The createDistrictPolygons function has been removed.
 
     function addEventListeners() {
         map.addListener('click', handleMapClick);
@@ -142,76 +177,34 @@ import * as MapCore from './map-core.js';
         );
     }
 
-    // --- MODIFIED: processLocation now uses the multi-layered geocoding ---
+    // --- FIX APPLIED: This function now uses the proven Google hybrid logic ---
     async function processLocation(latLng) {
+        // Call the new, proven function to get the address
+        const locationData = await processLocationWithGoogle(latLng);
+
+        if (!locationData || !locationData.district) {
+            console.warn("Could not determine district for the selected point using Google APIs.");
+            // Optionally, show an error to the user
+            return;
+        }
+
         const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
-        
-        // Show loading state immediately
-        updateInfoPanel({ sixDCode: code6D, district: 'Locating...', region: '...' }, localitySuffix);
-        MapCore.drawAddressBoxes(map, latLng);
-        map.panTo(latLng);
-
-        // Fetch from both APIs concurrently for speed
-        const [geocodeResult, placeResult] = await Promise.all([
-            getReverseGeocode(latLng),
-            getPlaceDetails(latLng)
-        ]);
-
-        const finalAddress = parseAddressComponents(geocodeResult, placeResult);
-
         currentAddress = {
             sixDCode: code6D,
             localitySuffix,
             lat: latLng.lat(),
             lng: latLng.lng(),
-            ...finalAddress
+            ...locationData
         };
 
-        updateInfoPanel(currentAddress, localitySuffix);
+        updateInfoPanel(currentAddress);
+        MapCore.drawAddressBoxes(map, latLng);
+        map.panTo(latLng);
     }
 
-    // --- NEW AND REPLACED GEOCODING FUNCTIONS ---
+    // The getAuthoritativeLocation function has been removed.
 
-    function getReverseGeocode(latLng) {
-        return new Promise((resolve) => {
-            geocoder.geocode({ location: latLng }, (results, status) => {
-                resolve((status === 'OK' && results[0]) ? results[0].address_components : []);
-            });
-        });
-    }
-
-    function getPlaceDetails(latLng) {
-        return new Promise((resolve) => {
-            const request = { location: latLng, rankBy: google.maps.places.RankBy.DISTANCE, type: 'neighborhood' };
-            placesService.nearbySearch(request, (results, status) => {
-                resolve((status === google.maps.places.PlacesServiceStatus.OK && results[0]) ? results[0] : null);
-            });
-        });
-    }
-
-    function parseAddressComponents(geocodeComponents, placeResult) {
-        const getComponent = (type) => {
-            const component = geocodeComponents.find(c => c.types.includes(type));
-            return component ? component.long_name : null;
-        };
-        
-        // This hierarchy prioritizes the most specific names first.
-        const district = getComponent('sublocality_level_1') || 
-                         getComponent('locality') || 
-                         getComponent('administrative_area_level_2') || 
-                         '';
-        
-        const region = getComponent('administrative_area_level_1') || 
-                       getComponent('country') || 
-                       '';
-
-        return { district, region };
-    }
-    
-    // --- END OF NEW GEOCODING FUNCTIONS ---
-
-
-    function updateInfoPanel(data, suffix) {
+    function updateInfoPanel(data) {
         DOM.infoPanelInitial.classList.add('hidden');
         DOM.infoPanelAddress.classList.remove('hidden');
 
@@ -227,7 +220,7 @@ import * as MapCore from './map-core.js';
         }
         if (DOM.infoRegion) {
             const regionText = data.region || '';
-            DOM.infoRegion.textContent = `${regionText} ${suffix}`.trim();
+            DOM.infoRegion.textContent = `${regionText} ${data.localitySuffix}`.trim();
         }
     }
 
