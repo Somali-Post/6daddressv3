@@ -156,13 +156,25 @@ import * as MapCore from './map-core.js';
     }
 
     function getPlaceDetails(latLng) {
-        return new Promise((resolve) => {
-            const request = { location: latLng, rankBy: google.maps.places.RankBy.DISTANCE };
-            placesService.nearbySearch(request, (results, status) => {
-                resolve((status === google.maps.places.PlacesServiceStatus.OK && results[0]) ? results[0] : null);
-            });
+    return new Promise((resolve) => {
+        // MODIFIED: Added the required 'type' parameter to the request.
+        const request = {
+            location: latLng,
+            rankBy: google.maps.places.RankBy.DISTANCE,
+            type: 'sublocality' // We are asking for the nearest sublocality/district
+        };
+        
+        placesService.nearbySearch(request, (results, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
+                resolve(results[0]);
+            } else {
+                // If 'sublocality' fails, we can add a fallback later if needed.
+                // For now, just resolve with null.
+                resolve(null);
+            }
         });
-    }
+    });
+}
 
     function parseAddressComponents(geocodeComponents, placeResult) {
         const getComponent = (type) => {
