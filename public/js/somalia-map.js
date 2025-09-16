@@ -217,9 +217,7 @@ import * as MapCore from './map-core.js';
 
 // --- THIS FUNCTION IS UNCHANGED, BUT INCLUDED FOR COMPLETENESS ---
 function updateInfoPanel(data) {
-    // --- DIAGNOSTIC LOG 4 ---
     console.log("--- Updating info panel with this data: ---", data);
-    // --- END LOG ---
 
     DOM.infoPanelInitial.classList.add('hidden');
     DOM.infoPanelAddress.classList.remove('hidden');
@@ -231,11 +229,15 @@ function updateInfoPanel(data) {
         DOM.info6dCodeSpans[2].textContent = codeParts[2];
     }
 
+    // CRITICAL FIX: Check if the properties exist before trying to display them.
     if (DOM.infoDistrict) {
-        DOM.infoDistrict.textContent = data.district;
+        // Use the district if it exists, otherwise show an empty string.
+        DOM.infoDistrict.textContent = data.district || ''; 
     }
     if (DOM.infoRegion) {
-        DOM.infoRegion.textContent = `${data.region} ${data.localitySuffix}`;
+        // Use the region if it exists, otherwise just show the suffix.
+        const regionText = data.region || ''; 
+        DOM.infoRegion.textContent = `${regionText} ${data.localitySuffix}`.trim();
     }
 }
 
