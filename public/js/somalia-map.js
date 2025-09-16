@@ -171,46 +171,73 @@ import * as MapCore from './map-core.js';
 
     // --- MODIFIED: ADDED DIAGNOSTIC LOGS ---
     function getAuthoritativeLocation(latLng) {
-        console.log("--- Searching for authoritative location... ---");
-        for (const district of districtPolygons) {
-            if (google.maps.geometry.poly.containsLocation(latLng, district.polygon)) {
-                // --- DIAGNOSTIC LOG 2 ---
-                console.log("SUCCESS: Point is inside a polygon.");
-                console.log("Found District:", district.district);
-                console.log("Found Region:", district.region);
+    console.log("--- Searching for authoritative location (smallest area)... ---");
+    let smallestMatch = null;
+    let smallestArea = Infinity;
+
+    for (const district of districtPolygons) {
+        if (google.maps.geometry.poly.containsLocation(latLng, district.polygon)) {
+            // --- NEW DIAGNOSTIC LOG ---
+            console.log(`MATCH FOUND: Point is inside '${district.district}'. Checking its area.`);
+            // --- END LOG ---
+
+            const area = google.maps.geometry.spherical.computeArea(district.polygon.getPath());
+
+            if (area < smallestArea) {
+                // --- NEW DIAGNOSTIC LOG ---
+                console.log(`%cNEW SMALLEST: '${district.district}' (area: ${area.toFixed(2)}) is smaller than previous best (area: ${smallestArea.toFixed(2)}).`, "color: green; font-weight: bold;");
                 // --- END LOG ---
-                return { district: district.district, region: district.region };
+                smallestArea = area;
+                smallestMatch = {
+                    district: district.district,
+                    region: district.region,
+                };
+            } else {
+                // --- NEW DIAGNOSTIC LOG ---
+                console.log(`%cSKIPPING: '${district.district}' (area: ${area.toFixed(2)}) is larger than the current best match '${smallestMatch.district}' (area: ${smallestArea.toFixed(2)}).`, "color: orange;");
+                // --- END LOG ---
             }
         }
+    }
+
+    if (smallestMatch) {
+        // --- DIAGNOSTIC LOG 2 (MODIFIED) ---
+        console.log("SUCCESS: The smallest matching polygon was found.");
+        console.log("Final District:", smallestMatch.district);
+        console.log("Final Region:", smallestMatch.region);
+        // --- END LOG ---
+        return smallestMatch;
+    } else {
         // --- DIAGNOSTIC LOG 3 ---
         console.error("FAILURE: Point did not fall inside any known district polygon.");
         // --- END LOG ---
         return null;
     }
+}
 
-    // --- MODIFIED: ADDED DIAGNOSTIC LOGS ---
-    function updateInfoPanel(data) {
-        // --- DIAGNOSTIC LOG 4 ---
-        console.log("--- Updating info panel with this data: ---", data);
-        // --- END LOG ---
+// --- THIS FUNCTION IS UNCHANGED, BUT INCLUDED FOR COMPLETENESS ---
+function updateInfoPanel(data) {
+    // --- DIAGNOSTIC LOG 4 ---
+    console.log("--- Updating info panel with this data: ---", data);
+    // --- END LOG ---
 
-        DOM.infoPanelInitial.classList.add('hidden');
-        DOM.infoPanelAddress.classList.remove('hidden');
+    DOM.infoPanelInitial.classList.add('hidden');
+    DOM.infoPanelAddress.classList.remove('hidden');
 
-        const codeParts = data.sixDCode.split('-');
-        if (DOM.info6dCodeSpans && DOM.info6dCodeSpans.length === 3) {
-            DOM.info6dCodeSpans[0].textContent = codeParts[0];
-            DOM.info6dCodeSpans[1].textContent = codeParts[1];
-            DOM.info6dCodeSpans[2].textContent = codeParts[2];
-        }
-
-        if (DOM.infoDistrict) {
-            DOM.infoDistrict.textContent = data.district;
-        }
-        if (DOM.infoRegion) {
-            DOM.infoRegion.textContent = `${data.region} ${data.localitySuffix}`;
-        }
+    const codeParts = data.sixDCode.split('-');
+    if (DOM.info6dCodeSpans && DOM.info6dCodeSpans.length === 3) {
+        DOM.info6dCodeSpans[0].textContent = codeParts[0];
+        DOM.info6dCodeSpans[1].textContent = codeParts[1];
+        DOM.info6dCodeSpans[2].textContent = codeParts[2];
     }
+
+    if (DOM.infoDistrict) {
+        DOM.infoDistrict.textContent = data.district;
+    }
+    if (DOM.infoRegion) {
+        DOM.infoRegion.textContent = `${data.region} ${data.localitySuffix}`;
+    }
+}
 
     function handleShowRegistrationSidebar() {
         if (!currentAddress) return;
