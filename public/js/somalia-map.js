@@ -142,42 +142,24 @@ import * as MapCore from './map-core.js';
         );
     }
 
-    // --- START OF REPLACEMENT BLOCK ---
-
-    /**
-     * Main processing function. Becomes async to handle the Google API call.
-     * @param {google.maps.LatLng} latLng The location to process.
-     */
     async function processLocation(latLng) {
         const locationData = await getEnhancedLocationData(latLng);
         if (!locationData) {
             console.error("Could not determine location data even after fallback.");
             return;
         }
-
         const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
         currentAddress = {
-            sixDCode: code6D,
-            localitySuffix: localitySuffix,
-            lat: latLng.lat(),
-            lng: latLng.lng(),
-            ...locationData
+            sixDCode: code6D, localitySuffix, lat: latLng.lat(), lng: latLng.lng(), ...locationData
         };
-
         updateInfoPanel(currentAddress);
         MapCore.drawAddressBoxes(map, latLng);
         map.panTo(latLng);
     }
 
-    /**
-     * Gets location data, using local GeoJSON first and Google as a fallback for Banaadir.
-     * @param {google.maps.LatLng} latLng The location to check.
-     * @returns {Promise<Object|null>} A promise that resolves with the best location data.
-     */
     async function getEnhancedLocationData(latLng) {
         let localData = getAuthoritativeLocation(latLng);
         if (!localData) return null;
-
         if (localData.district === 'Mogadisho') {
             console.log("Local data shows 'Mogadisho', attempting to enhance with Google Geocoding...");
             try {
@@ -195,15 +177,9 @@ import * as MapCore from './map-core.js';
         return localData;
     }
 
-    /**
-     * Performs a reverse geocode using the Google Maps API.
-     * @param {google.maps.LatLng} latLng The location to geocode.
-     * @returns {Promise<string|null>} A promise that resolves with the district name or null.
-     */
     async function reverseGeocodeWithGoogle(latLng) {
         const geocoder = new google.maps.Geocoder();
         const response = await geocoder.geocode({ location: latLng });
-
         if (response.results && response.results.length > 0) {
             const components = response.results[0].address_components;
             const district = parseGoogleComponent(components, 'administrative_area_level_2');
@@ -213,27 +189,15 @@ import * as MapCore from './map-core.js';
         return null;
     }
 
-    /**
-     * A helper function to find a specific component type from a Google Geocode result.
-     * @param {Array} components The address_components array from Google.
-     * @param {string} type The type to search for (e.g., 'locality').
-     * @returns {string|null} The long_name of the component or null.
-     */
     function parseGoogleComponent(components, type) {
         const component = components.find(c => c.types.includes(type));
         return component ? component.long_name : null;
     }
 
-    /**
-     * Finds the most specific district from our local GeoJSON data by area.
-     * @param {google.maps.LatLng} latLng The location to check.
-     * @returns {Object|null} The district and region data, or null if not found.
-     */
     function getAuthoritativeLocation(latLng) {
         console.log("--- Searching for authoritative location (smallest area)... ---");
         let smallestMatch = null;
         let smallestArea = Infinity;
-
         for (const district of districtPolygons) {
             if (google.maps.geometry.poly.containsLocation(latLng, district.polygon)) {
                 console.log(`MATCH FOUND: Point is inside '${district.district}'. Checking its area.`);
@@ -241,16 +205,12 @@ import * as MapCore from './map-core.js';
                 if (area < smallestArea) {
                     console.log(`%cNEW SMALLEST: '${district.district}' (area: ${area.toFixed(2)}) is smaller than previous best (area: ${smallestArea.toFixed(2)}).`, "color: green; font-weight: bold;");
                     smallestArea = area;
-                    smallestMatch = {
-                        district: district.district,
-                        region: district.region,
-                    };
+                    smallestMatch = { district: district.district, region: district.region };
                 } else {
                     console.log(`%cSKIPPING: '${district.district}' (area: ${area.toFixed(2)}) is larger than the current best match '${smallestMatch.district}' (area: ${smallestArea.toFixed(2)}).`, "color: orange;");
                 }
             }
         }
-
         if (smallestMatch) {
             console.log("SUCCESS: The smallest matching polygon was found.");
             console.log("Final District:", smallestMatch.district);
@@ -262,8 +222,9 @@ import * as MapCore from './map-core.js';
         }
     }
 
+    // --- START OF REPLACEMENT BLOCK ---
     /**
-     * Updates the info panel with the final, processed data.
+     * Updates the info panel, gracefully handling the known data gap for Mogadishu.
      */
     function updateInfoPanel(data) {
         console.log("--- Updating info panel with this data: ---", data);
@@ -276,10 +237,17 @@ import * as MapCore from './map-core.js';
         DOM.info6dCodeSpans[1].textContent = codeParts[1];
         DOM.info6dCodeSpans[2].textContent = codeParts[2];
 
-        DOM.infoDistrict.textContent = data.district;
-        DOM.infoRegion.textContent = `${data.region} ${data.localitySuffix}`;
+        // FINAL FIX: Gracefully handle the "Mogadishu" data limitation.
+        if (data.district === 'Mogadisho') {
+            // If the district is the generic "Mogadisho", display the more useful Region name.
+            DOM.infoDistrict.textContent = data.region; // This will be "Banaadir"
+            DOM.infoRegion.textContent = `Capital Region ${data.localitySuffix}`;
+        } else {
+            // For all other valid districts, display as normal.
+            DOM.infoDistrict.textContent = data.district;
+            DOM.infoRegion.textContent = `${data.region} ${data.localitySuffix}`;
+        }
     }
-
     // --- END OF REPLACEMENT BLOCK ---
 
     function handleShowRegistrationSidebar() {
@@ -294,7 +262,19 @@ import * as MapCore from './map-core.js';
         DOM.reg6dCodeInput.value = data.sixDCode;
         DOM.regRegionSelect.value = data.region;
         populateDistrictDropdown(data.region);
-        DOM.regDistrictSelect.value = data.district;
+        
+        // Handle the Mogadishu case for the form as well
+        if (data.district === 'Mogadisho') {
+            // Find the correct list of districts for Banaadir from our config
+            const banaadirRegion = somaliRegions['Banaadir'];
+            if (banaadirRegion) {
+                // Leave the district dropdown unselected for the user to choose
+                DOM.regDistrictSelect.value = '';
+            }
+        } else {
+            DOM.regDistrictSelect.value = data.district;
+        }
+        
         validateForm();
     }
 
@@ -335,12 +315,15 @@ import * as MapCore from './map-core.js';
     }
 
     function populateConfirmationModal() {
+        // Use the selected district from the form for the confirmation
+        const finalDistrict = DOM.regDistrictSelect.value || currentAddress.district;
         DOM.confirm6dCode.textContent = currentAddress.sixDCode;
-        DOM.confirmLocation.textContent = `${currentAddress.district}, ${currentAddress.region}`;
+        DOM.confirmLocation.textContent = `${finalDistrict}, ${currentAddress.region}`;
         DOM.confirmName.textContent = DOM.regNameInput.value;
         DOM.confirmPhone.textContent = `+252 ${DOM.regPhoneInput.value}`;
         currentAddress.fullName = DOM.regNameInput.value;
         currentAddress.phoneNumber = DOM.regPhoneInput.value;
+        currentAddress.district = finalDistrict; // Update the final district
     }
 
     function toggleModal(show) {
