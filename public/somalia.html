@@ -6,11 +6,6 @@
     <title>6D Address - Somalia Registration</title>
     <link rel="stylesheet" href="css/shared.css">
     <link rel="stylesheet" href="css/somalia-map.css">
-    
-    <!-- 
-      CRITICAL FIX: The global Turf.js script tag has been DELETED from here 
-      to resolve the module scope conflict. It is now imported directly in somalia-map.js.
-    -->
 </head>
 <body>
 
@@ -31,17 +26,14 @@
                 <p>Your official digital address is just a click away.</p>
                 <h4>How it works:</h4>
                 <ol>
-                    <li>Click the button below to find your current location.</li>
-                    <li>Alternatively, click anywhere on the map of Somalia.</li>
-                    <li>Confirm your address details and register.</li>
+                    <li>Use the button at the bottom of the map to find your current location.</li>
+                    <li>Click any location on the map to see its 6D Address.</li>
+                    <li>Click "Register This Address" in the panel that appears to begin the registration process here.</li>
                 </ol>
-                <button id="find-my-location-btn" class="btn btn-primary" disabled>
-                    <span class="icon-location"></span> Find My 6D Address
-                </button>
             </div>
         </div>
 
-        <!-- State 2: Registration Form View -->
+        <!-- State 2: Registration Form View (CRITICAL FIX: Full form markup is now present) -->
         <div id="registration-view" class="sidebar-view">
             <div class="sidebar-header">
                 <img src="assets/logo-somalia.png" alt="6D Address Somalia Logo" class="logo">
@@ -87,7 +79,28 @@
         </div>
     </aside>
 
-    <!-- Confirmation Modal -->
+    <!-- Floating Info Panel -->
+    <div id="info-panel">
+        <!-- Initial State -->
+        <div id="info-panel-initial">
+            <button id="find-my-location-btn" class="btn btn-primary" disabled>
+                <span class="icon-location"></span> Find My 6D Address
+            </button>
+        </div>
+        <!-- Address Display State -->
+        <div id="info-panel-address" class="hidden">
+            <div class="address-display">
+                <div id="info-6d-code" class="code-display">
+                    <span class="code-part-1"></span>-<span class="code-part-2"></span>-<span class="code-part-3"></span>
+                </div>
+                <p id="info-district"></p>
+                <p id="info-region"></p>
+            </div>
+            <button id="register-this-address-btn" class="btn btn-secondary">Register This Address</button>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal (CRITICAL FIX: Full modal markup is now present) -->
     <div id="confirmation-modal" class="modal-overlay">
         <div class="modal-content">
             <h3>Confirm Registration</h3>
@@ -105,10 +118,7 @@
         </div>
     </div>
 
-    <!-- The Google Maps API script tag (API key injected by build script) -->
     <script id="google-maps-script" async></script>
-
-    <!-- Local application scripts loaded as modules -->
     <script src="js/config.js" type="module"></script>
     <script src="js/utils.js" type="module"></script>
     <script src="js/map-core.js" type="module"></script>
