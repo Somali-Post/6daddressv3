@@ -4,12 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>6D Address - Somalia Registration</title>
-    <!-- Link to the CSS file -->
     <link rel="stylesheet" href="css/somalia-map.css">
 </head>
 <body>
 
-    <!-- The Sidebar is now the first direct child of the body -->
     <aside id="sidebar">
         <div class="sidebar-top">
             <a href="#" class="logo-link">
@@ -17,12 +15,10 @@
                 <span class="logo-text">6D Address</span>
             </a>
             <button id="sidebar-toggle-btn" class="sidebar-toggle" title="Toggle sidebar">
-                <svg xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
             </button>
         </div>
-
         <nav class="sidebar-nav">
-            <!-- Logged-Out User Navigation -->
             <ul id="nav-logged-out" class="nav-links">
                 <li class="nav-item">
                     <a href="#" class="nav-link active" title="Find Address">
@@ -37,45 +33,61 @@
                     </a>
                 </li>
             </ul>
-
-            <!-- Logged-In User Navigation (Hidden by default) -->
-            <ul id="nav-logged-in" class="nav-links hidden">
-                <!-- ... Logged-in links ... -->
-            </ul>
         </nav>
-
         <div class="sidebar-bottom">
-            <!-- Logged-Out User Profile Area -->
             <div id="profile-logged-out" class="user-profile">
                 <a href="#" class="nav-link" title="Register or Login">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     <span class="link-text">Register / Login</span>
                 </a>
             </div>
-
-            <!-- Logged-In User Profile Area (Hidden by default) -->
-            <div id="profile-logged-in" class="user-profile hidden">
-                <!-- ... Logged-in profile ... -->
-            </div>
         </div>
     </aside>
 
-    <!-- CRITICAL FIX: The <main> tag is now wrapping the rest of the content -->
     <main>
         <div id="map"></div>
         <div id="loader" class="visible">
             <div class="spinner"></div>
             <p>Initializing Secure Map...</p>
         </div>
+        
+        <!-- CRITICAL FIX: Info Panel and Modal HTML restored inside the main tag -->
         <div id="info-panel">
-            <!-- ... Info panel content ... -->
+            <div id="info-panel-initial">
+                <button id="find-my-location-btn" class="btn btn-primary" disabled>
+                    <span class="icon-location"></span> Find My 6D Address
+                </button>
+            </div>
+            <div id="info-panel-address" class="hidden">
+                <div class="address-display">
+                    <div id="info-6d-code" class="code-display">
+                        <span class="code-part-1"></span>-<span class="code-part-2"></span>-<span class="code-part-3"></span>
+                    </div>
+                    <p id="info-district"></p>
+                    <p id="info-region"></p>
+                </div>
+                <button id="register-this-address-btn" class="btn btn-secondary">Register This Address</button>
+            </div>
         </div>
+
         <div id="confirmation-modal" class="modal-overlay">
-            <!-- ... Modal content ... -->
+            <div class="modal-content">
+                <h3>Confirm Registration</h3>
+                <p>Please review your details before confirming.</p>
+                <div class="confirmation-details">
+                    <div class="detail-item"><span>6D Code:</span> <strong id="confirm-6d-code"></strong></div>
+                    <div class="detail-item"><span>Location:</span> <strong id="confirm-location"></strong></div>
+                    <div class="detail-item"><span>Full Name:</span> <strong id="confirm-name"></strong></div>
+                    <div class="detail-item"><span>Phone:</span> <strong id="confirm-phone"></strong></div>
+                </div>
+                <div class="modal-actions">
+                    <button id="modal-cancel-btn" class="btn btn-secondary">Cancel</button>
+                    <button id="modal-confirm-btn" class="btn btn-primary">Confirm & Proceed</button>
+                </div>
+            </div>
         </div>
     </main>
 
-    <!-- Scripts remain at the end -->
     <script id="google-maps-script" async></script>
     <script src="js/config.js" type="module"></script>
     <script src="js/utils.js" type="module"></script>
