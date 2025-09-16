@@ -142,6 +142,33 @@ body {
     transition: all 0.3s ease-in-out;
 }
 
+/* UPDATED: Hero style for the primary "Find My Address" button */
+#info-panel #find-my-location-btn {
+    background-color: var(--primary-blue); /* Use brand's primary blue */
+    border: none;
+    font-size: 1.1rem; /* Larger font for emphasis */
+    padding: 12px 24px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* UPDATED: Style for the secondary "Register" button */
+#info-panel #register-this-address-btn {
+    background-color: transparent; /* Remove white background */
+    border: 1px solid var(--primary-blue); /* Use an outline style */
+    color: var(--text-primary); /* White text */
+    width: 100%;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+#info-panel #register-this-address-btn:hover {
+    background-color: var(--primary-blue);
+    color: var(--text-primary);
+}
+
 #info-panel-address {
     display: flex;
     flex-direction: column;
@@ -159,6 +186,7 @@ body {
     font-size: 0.9rem;
 }
 
+/* UPDATED: Set the base color for the dashes */
 .code-display {
     background-color: #f0f0f0;
     border-radius: 8px;
@@ -169,15 +197,13 @@ body {
     display: inline-block;
     margin-bottom: 8px;
     border: 1px solid #ccc;
+    color: #0c111f; /* Navy color for the dashes */
 }
 
+/* The colored spans will override the parent color for the numbers */
 .code-part-1 { color: #D32F2F; } /* Red */
 .code-part-2 { color: #388E3C; } /* Green */
 .code-part-3 { color: #1976D2; } /* Blue */
-
-#register-this-address-btn {
-    width: 100%;
-}
 
 .icon-location {
     display: inline-block;
