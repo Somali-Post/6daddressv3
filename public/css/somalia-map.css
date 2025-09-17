@@ -30,61 +30,21 @@ main {
 }
 
 #loader {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: var(--background-color);
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    /* FIX: Hide the loader by default */
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: var(--background-color); z-index: 100;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
 }
+#loader.visible { opacity: 1; visibility: visible; }
+.spinner { border: 4px solid var(--border-color); border-left-color: var(--primary-blue); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* FIX: This class makes the loader visible when the JS adds it */
-#loader.visible {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* FIX: Restoring the spinner styles */
-.spinner {
-    border: 4px solid var(--border-color);
-    border-left-color: var(--primary-blue);
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
-}
-
-#loader p {
-    margin-top: 20px;
-    color: var(--text-secondary);
-    font-size: 1rem;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* --- Sidebar Architecture --- */
+/* --- KEY ARCHITECTURAL CHANGE: Sidebar is now a flex container --- */
 #sidebar {
-    display: flex;
+    display: flex; /* Lays out the rail and content side-by-side */
     height: 100vh;
-    width: 80px; /* Default collapsed width */
     background-color: var(--sidebar-bg);
-    transition: width 0.3s ease-in-out;
     z-index: 20;
-}
-
-#sidebar.is-expanded {
-    width: 340px; /* Expanded width */
 }
 
 .sidebar-nav-rail {
@@ -99,97 +59,49 @@ main {
 }
 
 .nav-top { flex-grow: 1; }
-.nav-bottom { margin-top: auto; } /* Pushes this to the bottom */
-
-.nav-links {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.nav-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
-    color: var(--text-secondary);
-    transition: background-color 0.2s ease, color 0.2s ease;
-    text-decoration: none;
-}
+.nav-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.nav-link { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 8px; color: var(--text-secondary); transition: all 0.2s ease; text-decoration: none; }
 .nav-link:hover { background-color: var(--hover-bg); color: var(--text-primary); }
 .nav-link.active { background-color: var(--primary-blue); color: var(--text-primary); }
 .nav-link svg { width: 24px; height: 24px; }
 
+/* --- KEY FIX: The content wrapper is now the element that animates --- */
 .sidebar-content-wrapper {
-    flex-grow: 1;
-    padding: 1.5rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.sidebar-view {
-    position: absolute;
-    top: 1.5rem; right: 1.5rem; bottom: 1.5rem; left: 1.5rem;
+    width: 0; /* Collapsed by default */
+    padding: 0;
     opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: width 0.3s ease-in-out, padding 0.3s ease-in-out, opacity 0.2s ease-in-out;
 }
-.sidebar-view.active { opacity: 1; visibility: visible; }
 
+#sidebar.is-expanded .sidebar-content-wrapper {
+    width: 260px; /* Expanded width */
+    padding: 1.5rem;
+    opacity: 1;
+}
+
+.sidebar-view { display: none; }
+.sidebar-view.active { display: block; }
 .sidebar-header .logo { width: 48px; margin-bottom: 1rem; }
 .sidebar-header h3 { font-size: 1.5rem; margin: 0 0 1rem 0; color: var(--text-primary); }
-.sidebar-content p { color: var(--text-secondary); line-height: 1.6; }
-.sidebar-content-wrapper {
-    flex-grow: 1;
-    padding: 1.5rem;
-    position: relative;
-    overflow: hidden; /* Prevents content from spilling out when collapsed */
-    white-space: nowrap; /* Prevents text wrapping */
-}
-/* --- Info Panel --- */
-#info-panel {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 15;
-    background-color: var(--sidebar-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    width: 350px;
-}
+.sidebar-content p { color: var(--text-secondary); line-height: 1.6; white-space: normal; }
 
+/* --- Info Panel Styles (Unchanged) --- */
+#info-panel {
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 15;
+    background-color: var(--sidebar-bg); border: 1px solid var(--border-color);
+    border-radius: 16px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); width: 350px;
+}
 .info-panel-view { display: none; padding: 1rem; }
 .info-panel-view.active { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
-
 #info-panel-loading { flex-direction: row; justify-content: center; gap: 1rem; font-size: 1.1rem; color: var(--text-secondary); }
-.spinner-small {
-    border: 3px solid var(--border-color);
-    border-left-color: var(--primary-blue);
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    animation: spin 1s linear infinite;
-}
-
-.address-details { text-align: center; }
-.code-display {
-    background-color: #f0f0f0; border-radius: 8px; padding: 8px 16px;
-    font-size: 1.5rem; font-weight: bold; font-family: 'Courier New', monospace;
-    display: inline-block; margin-bottom: 0.5rem; color: #0c111f;
-}
+.spinner-small { border: 3px solid var(--border-color); border-left-color: var(--primary-blue); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+.address-details { text-align: center; position: relative; width: 100%; }
+.code-display { background-color: #f0f0f0; border-radius: 8px; padding: 8px 16px; font-size: 1.5rem; font-weight: bold; font-family: 'Courier New', monospace; display: inline-block; margin-bottom: 0.5rem; color: #0c111f; }
 .location-text { color: var(--text-secondary); margin: 0; }
-
-.address-actions { display: flex; gap: 0.5rem; position: absolute; top: 12px; right: 12px; }
-.icon-btn { background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; }
-.icon-btn:hover { background: rgba(255,255,255,0.2); }
-
+.address-actions { display: flex; gap: 0.5rem; position: absolute; top: -4px; right: 0; }
+.icon-btn { background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; }
+.icon-btn:hover { background: rgba(255,255,255,0.2); color: var(--text-primary); }
 #info-panel .btn { width: 100%; padding: 12px; font-size: 1rem; font-weight: 500; }
-
 .hidden { display: none !important; }
