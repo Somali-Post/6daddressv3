@@ -8,53 +8,37 @@
 </head>
 <body>
 
-    <!-- NEW: Sidebar Container for floating effect -->
     <div class="sidebar-container">
-        <!-- The sidebar starts in the expanded state for styling -->
         <aside id="sidebar">
             <div class="sidebar-content-wrapper">
-                <!-- View 1: Logged Out / Call to Action -->
                 <div id="view-register-cta" class="sidebar-view active">
-    <div class="sidebar-header">
-        <img src="assets/logo-somalia.png" alt="6D Address Logo" class="logo">
-        <h3>Your Digital Address Awaits</h3>
-    </div>
-    <div class="sidebar-content">
-        <p>Find a location on the map and click "Register This Address" to begin.</p>
-        
-        <!-- NEW: Promotional Card -->
-        <div class="promo-card">
-            <div class="promo-content">
-                <h4>Get Official Certificates</h4>
-                <p>Register to print and share official address certificates.</p>
+                    <div class="sidebar-header">
+                        <img src="assets/logo-somalia.png" alt="6D Address Logo" class="logo">
+                        <h3>Your Digital Address Awaits</h3>
+                    </div>
+                    <div class="sidebar-content">
+                        <p>Find a location on the map and click "Register This Address" to begin.</p>
+                        <div class="promo-card">
+                            <div class="promo-content">
+                                <h4>Get Official Certificates</h4>
+                                <p>Register to print and share official address certificates.</p>
+                            </div>
+                            <div class="promo-icon"><span>&rarr;</span></div>
+                        </div>
+                    </div>
+                    <div class="sidebar-footer">
+                        <button class="support-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 10.075q.4 0 .688-.288t.287-.687q0-.4-.287-.688T12 8.112q-.4 0-.688.288t-.287.687q0 .4.287.688t.688.287m0 7.775q.4 0 .688-.288t.287-.687v-3.75q0-.4-.287-.688T12 12.15q-.4 0-.688.288t-.287.687v3.75q0 .4.287.688t.688.287M12 22q-2.075 0-3.9-.788t-3.175-2.137q-1.35-1.35-2.137-3.175T2 12q0-2.075.788-3.9t2.137-3.175q1.35-1.35 3.175-2.138T12 2q2.075 0 3.9.788t3.175 2.138q1.35 1.35 2.138 3.175T22 12q0 2.075-.788 3.9t-2.138 3.175q-1.35 1.35-3.175 2.137T12 22"/></svg>
+                            <span>Support</span>
+                        </button>
+                        <div class="theme-toggle-wrapper">
+                            <div class="theme-toggle-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21q-3.75 0-6.375-2.625T3 12q0-3.75 2.625-6.375T12 3q.35 0 .688.025t.662.075q-1.025.725-1.638 1.888T11.1 7.5q0 2.25 1.575 3.825T16.5 12.9q1.575 0 2.738-.613T20.9 10.65q.05.325.075.662T21 12q0 3.75-2.625 6.375T12 21"/></svg></div>
+                            <span class="theme-toggle-label">Dark Mode</span>
+                            <button id="theme-toggle-btn" role="switch" aria-checked="false" class="theme-toggle-switch"><span class="theme-toggle-thumb"></span></button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="promo-icon">
-                <span>&rarr;</span>
-            </div>
-        </div>
-    </div>
-    <div class="sidebar-footer">
-        <button class="support-button">
-            <!-- Support Icon SVG -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 10.075q.4 0 .688-.288t.287-.687q0-.4-.287-.688T12 8.112q-.4 0-.688.288t-.287.687q0 .4.287.688t.688.287m0 7.775q.4 0 .688-.288t.287-.687v-3.75q0-.4-.287-.688T12 12.15q-.4 0-.688.288t-.287.687v3.75q0 .4.287.688t.688.287M12 22q-2.075 0-3.9-.788t-3.175-2.137q-1.35-1.35-2.137-3.175T2 12q0-2.075.788-3.9t2.137-3.175q1.35-1.35 3.175-2.138T12 2q2.075 0 3.9.788t3.175 2.138q1.35 1.35 2.138 3.175T22 12q0 2.075-.788 3.9t-2.138 3.175q-1.35 1.35-3.175 2.137T12 22"/></svg>
-            <span>Support</span>
-        </button>
-        <div class="theme-toggle-wrapper">
-        <div class="theme-toggle-icon">
-            <!-- Moon Icon for Dark Mode -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21q-3.75 0-6.375-2.625T3 12q0-3.75 2.625-6.375T12 3q.35 0 .688.025t.662.075q-1.025.725-1.638 1.888T11.1 7.5q0 2.25 1.575 3.825T16.5 12.9q1.575 0 2.738-.613T20.9 10.65q.05.325.075.662T21 12q0 3.75-2.625 6.375T12 21"/></svg>
-        </div>
-        <span class="theme-toggle-label">Dark Mode</span>
-        <button id="theme-toggle-btn" role="switch" aria-checked="false" class="theme-toggle-switch">
-            <span class="theme-toggle-thumb"></span>
-        </button>
-    </div>
-</div>
-    </div>
-</div>
-                <!-- Other views will be added later -->
-            </div>
-
             <nav class="sidebar-nav-rail">
                 <div class="nav-top">
                     <button id="sidebar-toggle-btn" class="nav-link" title="Toggle Sidebar">
@@ -62,16 +46,8 @@
                     </button>
                 </div>
                 <ul id="nav-logged-out" class="nav-links">
-                    <li class="nav-item">
-                        <a href="#" class="nav-link active" title="Register">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4s-4 1.79-4 4s1.79 4 4 4m-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6m9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4"/></svg>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" title="Help">
-                             <svg xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M10 19h4v-2h-4zm2-17c5.35.22 7.68 5.62 4.5 9.67c-1.75 2.25-2.86 3.73-3.5 4.33c-.64.6-1 1.17-1 2h-2c0-1.25.5-2.25 1-3c.5-.74 1.65-2.17 3.38-4.5c2.01-2.59.42-6.01-3.38-6.17A4.5 4.5 0 0 0 7.5 8.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5c0-1.38 1.12-2.5 2.5-2.5"/></svg>
-                        </a>
-                    </li>
+                    <li class="nav-item"><a href="#" class="nav-link active" title="Register"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4s-4 1.79-4 4s1.79 4 4 4m-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6m9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4"/></svg></a></li>
+                    <li class="nav-item"><a href="#" class="nav-link" title="Help"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M10 19h4v-2h-4zm2-17c5.35.22 7.68 5.62 4.5 9.67c-1.75 2.25-2.86 3.73-3.5 4.33c-.64.6-1 1.17-1 2h-2c0-1.25.5-2.25 1-3c.5-.74 1.65-2.17 3.38-4.5c2.01-2.59.42-6.01-3.38-6.17A4.5 4.5 0 0 0 7.5 8.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5c0-1.38 1.12-2.5 2.5-2.5"/></svg></a></li>
                 </ul>
             </nav>
         </aside>
@@ -79,18 +55,25 @@
 
     <main>
         <div id="map"></div>
-        <div id="loader" class="visible">
-            <div class="spinner"></div>
-        </div>
+        <div id="loader" class="visible"><div class="spinner"></div></div>
         <div id="info-panel">
-            <!-- Info panel content remains the same for now -->
-            <div id="info-panel-initial" class="info-panel-view active">
-                <button id="find-my-location-btn" class="btn" disabled>Find My 6D Address</button>
+            <div id="info-panel-initial" class="info-panel-view active"><button id="find-my-location-btn" class="btn" disabled>Find My 6D Address</button></div>
+            <div id="info-panel-loading" class="info-panel-view"><div class="spinner-small"></div><span>Locating...</span></div>
+            <div id="info-panel-address" class="info-panel-view">
+                <div class="address-details">
+                    <div class="code-display"></div>
+                    <div class="location-text"></div>
+                    <div class="address-actions">
+                        <button id="copy-btn" title="Copy Address" class="icon-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M19 21H8V7h11zM8 5H6v18h12v-2H8z"/></svg></button>
+                        <button id="share-btn" title="Share Address" class="icon-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81c1.66 0 3-1.34 3-3s-1.34-3-3-3s-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65c0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92"/></svg></button>
+                        <button id="recenter-btn" title="Recenter Map" class="icon-btn hidden"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4s4-1.79 4-4s-1.79-4-4-4m-7 7H3v4h4v-2H5zM5 5h2V3H3v4h2zm14 0v2h2V3h-4v2zm0 14h2v-4h-2v2h-2v2z"/></svg></button>
+                    </div>
+                </div>
+                <button id="register-this-address-btn" class="btn btn-primary">Register This Address</button>
             </div>
         </div>
     </main>
 
-    <!-- Scripts -->
     <script id="google-maps-script" async></script>
     <script src="js/config.js" type="module"></script>
     <script src="js/utils.js" type="module"></script>

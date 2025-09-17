@@ -12,11 +12,7 @@ import * as MapCore from './map-core.js';
         sidebar: document.getElementById('sidebar'),
         sidebarToggleBtn: document.getElementById('sidebar-toggle-btn'),
         themeToggleBtn: document.getElementById('theme-toggle-btn'),
-        
-        // Sidebar Views
         viewRegisterCTA: document.getElementById('view-register-cta'),
-        
-        // Info Panel
         infoPanelInitial: document.getElementById('info-panel-initial'),
         infoPanelLoading: document.getElementById('info-panel-loading'),
         infoPanelAddress: document.getElementById('info-panel-address'),
@@ -31,9 +27,8 @@ import * as MapCore from './map-core.js';
 
     const appState = {
         isSidebarExpanded: false,
-        theme: 'light', // 'light' or 'dark'
+        theme: 'light',
         activeSidebarView: 'register-cta',
-        isLoggedIn: false,
     };
 
     let map;
@@ -45,9 +40,7 @@ import * as MapCore from './map-core.js';
     async function init() {
         try {
             const savedTheme = localStorage.getItem('6d-theme');
-            if (savedTheme) {
-                appState.theme = savedTheme;
-            }
+            if (savedTheme) appState.theme = savedTheme;
             applyTheme();
 
             const [_, somaliaData] = await Promise.all([
@@ -83,21 +76,16 @@ import * as MapCore from './map-core.js';
 
     function addEventListeners() {
         map.addListener('click', handleMapClick);
-        map.addListener('dragend', () => {
-            if (currentAddress) DOM.recenterBtn.classList.remove('hidden');
-        });
-
+        map.addListener('dragend', () => { if (currentAddress) DOM.recenterBtn.classList.remove('hidden'); });
         DOM.sidebarToggleBtn.addEventListener('click', () => {
             appState.isSidebarExpanded = !appState.isSidebarExpanded;
             renderSidebar();
         });
-
         DOM.themeToggleBtn.addEventListener('click', () => {
             appState.theme = appState.theme === 'light' ? 'dark' : 'light';
             localStorage.setItem('6d-theme', appState.theme);
             applyTheme();
         });
-
         DOM.findMyLocationBtn.addEventListener('click', handleFindMyLocation);
         DOM.registerThisAddressBtn.addEventListener('click', handleShowRegistrationSidebar);
         DOM.copyBtn.addEventListener('click', handleCopyAddress);
@@ -111,7 +99,6 @@ import * as MapCore from './map-core.js';
 
     function renderSidebar() {
         DOM.sidebar.classList.toggle('is-expanded', appState.isSidebarExpanded);
-        // This will be expanded later to handle multiple views
         DOM.viewRegisterCTA.classList.toggle('active', appState.activeSidebarView === 'register-cta');
     }
 
