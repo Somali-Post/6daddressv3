@@ -100,6 +100,69 @@ main {
 .sidebar-header .logo { width: 32px; margin-bottom: 1rem; }
 .sidebar-header h3 { font-size: 1.25rem; margin: 0 0 1rem 0; color: var(--text-primary); }
 .sidebar-content p { color: var(--text-secondary); line-height: 1.6; white-space: normal; }
+/* --- Styles for New Default View Elements --- */
+.sidebar-view {
+    display: none;
+    flex-direction: column; /* Allow footer to stick to bottom */
+    height: 100%;
+}
+.sidebar-view.active { display: flex; }
+
+.sidebar-content {
+    flex-grow: 1; /* Pushes footer down */
+}
+
+.promo-card {
+    background-color: var(--background-color); /* Use main bg for contrast */
+    border-radius: 16px;
+    padding: 1rem;
+    margin-top: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--border-color);
+}
+.promo-content h4 { margin: 0 0 0.25rem 0; color: var(--text-primary); }
+.promo-content p { font-size: 0.875rem; margin: 0; line-height: 1.4; }
+.promo-icon {
+    background-color: var(--primary-blue);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-left: 1rem;
+}
+
+.sidebar-footer {
+    padding-top: 1rem;
+    margin-top: auto; /* Stick to the bottom */
+}
+
+.support-button {
+    width: 100%;
+    background-color: var(--hover-bg);
+    border: none;
+    border-radius: 12px;
+    padding: 0.75rem;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s ease;
+}
+.support-button:hover {
+    background-color: var(--primary-blue);
+}
 
 /* --- Info Panel & Loader (Simplified for now) --- */
 #info-panel {
