@@ -6,19 +6,16 @@ import * as MapCore from './map-core.js';
     'use strict';
 
     const DOM = {
+        body: document.body,
         loader: document.getElementById('loader'),
         mapContainer: document.getElementById('map'),
         sidebar: document.getElementById('sidebar'),
         sidebarToggleBtn: document.getElementById('sidebar-toggle-btn'),
+        themeToggleBtn: document.getElementById('theme-toggle-btn'),
         
         // Sidebar Views
         viewRegisterCTA: document.getElementById('view-register-cta'),
-        viewRegistrationForm: document.getElementById('view-registration-form'),
-        viewDashboard: document.getElementById('view-dashboard'),
         
-        // Nav Rail Links
-        navLoggedOutLinks: document.querySelectorAll('#nav-logged-out .nav-link'),
-
         // Info Panel
         infoPanelInitial: document.getElementById('info-panel-initial'),
         infoPanelLoading: document.getElementById('info-panel-loading'),
@@ -32,10 +29,10 @@ import * as MapCore from './map-core.js';
         recenterBtn: document.getElementById('recenter-btn'),
     };
 
-    // --- Application State ---
     const appState = {
         isSidebarExpanded: false,
-        activeSidebarView: 'register-cta', // 'register-cta', 'registration-form', 'dashboard'
+        theme: 'light', // 'light' or 'dark'
+        activeSidebarView: 'register-cta',
         isLoggedIn: false,
     };
 
@@ -47,6 +44,12 @@ import * as MapCore from './map-core.js';
 
     async function init() {
         try {
+            const savedTheme = localStorage.getItem('6d-theme');
+            if (savedTheme) {
+                appState.theme = savedTheme;
+            }
+            applyTheme();
+
             const [_, somaliaData] = await Promise.all([
                 Utils.loadGoogleMapsAPI(GOOGLE_MAPS_API_KEY, ['geometry', 'places']),
                 fetch('data/somalia.geojson').then(res => res.json())
@@ -63,7 +66,7 @@ import * as MapCore from './map-core.js';
             placesService = new google.maps.places.PlacesService(map);
 
             addEventListeners();
-            renderSidebar(); // Initial render of the sidebar
+            renderSidebar();
             DOM.findMyLocationBtn.disabled = false;
             DOM.loader.classList.remove('visible');
 
@@ -89,13 +92,10 @@ import * as MapCore from './map-core.js';
             renderSidebar();
         });
 
-        DOM.navLoggedOutLinks.forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                appState.isSidebarExpanded = true; // Clicking an icon always expands the sidebar
-                // In the future, we'll set the active view based on which icon was clicked
-                renderSidebar();
-            });
+        DOM.themeToggleBtn.addEventListener('click', () => {
+            appState.theme = appState.theme === 'light' ? 'dark' : 'light';
+            localStorage.setItem('6d-theme', appState.theme);
+            applyTheme();
         });
 
         DOM.findMyLocationBtn.addEventListener('click', handleFindMyLocation);
@@ -104,14 +104,15 @@ import * as MapCore from './map-core.js';
         DOM.recenterBtn.addEventListener('click', handleRecenterMap);
     }
 
+    function applyTheme() {
+        DOM.body.classList.toggle('dark-mode', appState.theme === 'dark');
+        DOM.themeToggleBtn.setAttribute('aria-checked', appState.theme === 'dark');
+    }
+
     function renderSidebar() {
         DOM.sidebar.classList.toggle('is-expanded', appState.isSidebarExpanded);
-        ['register-cta', 'registration-form', 'dashboard'].forEach(view => {
-            const viewElement = DOM[`view${view.charAt(0).toUpperCase() + view.slice(1).replace(/-/g, '')}`];
-            if(viewElement) {
-                viewElement.classList.toggle('active', appState.activeSidebarView === view);
-            }
-        });
+        // This will be expanded later to handle multiple views
+        DOM.viewRegisterCTA.classList.toggle('active', appState.activeSidebarView === 'register-cta');
     }
 
     function handleMapClick(e) {

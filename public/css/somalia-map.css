@@ -1,11 +1,25 @@
+/* --- Light Mode Theme (Default) --- */
 :root {
     --sidebar-bg: #ffffff;
     --background-color: #f3f4f6;
     --border-color: #e5e7eb;
-    --primary-blue: #4f46e5; /* A slightly different blue from the reference */
+    --primary-blue: #4f46e5;
     --text-primary: #111827;
     --text-secondary: #6b7280;
     --hover-bg: #f3f4f6;
+    --info-panel-bg: #ffffff;
+}
+
+/* --- Dark Mode Theme --- */
+body.dark-mode {
+    --sidebar-bg: #111827;
+    --background-color: #0c111f;
+    --border-color: rgba(122, 162, 255, 0.15);
+    --primary-blue: #007aff;
+    --text-primary: #f9fafb;
+    --text-secondary: #9ca3af;
+    --hover-bg: rgba(55, 65, 81, 0.5);
+    --info-panel-bg: #111827;
 }
 
 /* --- Main Layout --- */
@@ -13,7 +27,8 @@ body {
     background-color: var(--background-color);
     overflow: hidden;
     color: var(--text-primary);
-    position: relative; /* Needed for absolute positioning of sidebar container */
+    position: relative;
+    transition: background-color 0.3s ease;
 }
 
 main {
@@ -31,6 +46,17 @@ main {
     z-index: 1;
 }
 
+/* --- Loader --- */
+#loader {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: var(--background-color); z-index: 100;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+#loader.visible { opacity: 1; visibility: visible; }
+.spinner { border: 4px solid var(--border-color); border-left-color: var(--primary-blue); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* --- Floating Sidebar Architecture --- */
 .sidebar-container {
     position: absolute;
@@ -42,13 +68,14 @@ main {
 
 #sidebar {
     display: flex;
-    flex-direction: row-reverse; /* Puts the nav rail on the left */
+    flex-direction: row-reverse;
     height: 100%;
     background-color: var(--sidebar-bg);
     border-radius: 24px;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     border: 1px solid var(--border-color);
-    overflow: hidden; /* Important for the pill shape */
+    overflow: hidden;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .sidebar-nav-rail {
@@ -60,30 +87,22 @@ main {
     padding: 1rem 0;
     border-left: 1px solid var(--border-color);
     flex-shrink: 0;
+    transition: border-color 0.3s ease;
 }
 
 .nav-top { flex-grow: 1; }
 .nav-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
 .nav-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    color: var(--text-secondary);
-    transition: all 0.2s ease;
-    text-decoration: none;
-    background: none;
-    border: none;
-    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; width: 48px; height: 48px;
+    border-radius: 12px; color: var(--text-secondary); transition: all 0.2s ease;
+    text-decoration: none; background: none; border: none; cursor: pointer;
 }
 .nav-link:hover { background-color: var(--hover-bg); color: var(--primary-blue); }
 .nav-link.active { background-color: var(--primary-blue); color: white; }
 .nav-link svg { width: 24px; height: 24px; }
 
 .sidebar-content-wrapper {
-    width: 0; /* Will be controlled by is-expanded class */
+    width: 0;
     padding: 0;
     overflow: hidden;
     white-space: nowrap;
@@ -95,89 +114,60 @@ main {
     padding: 1.5rem;
 }
 
-.sidebar-view { display: none; }
-.sidebar-view.active { display: block; }
+.sidebar-view { display: none; flex-direction: column; height: 100%; }
+.sidebar-view.active { display: flex; }
 .sidebar-header .logo { width: 32px; margin-bottom: 1rem; }
 .sidebar-header h3 { font-size: 1.25rem; margin: 0 0 1rem 0; color: var(--text-primary); }
+.sidebar-content { flex-grow: 1; }
 .sidebar-content p { color: var(--text-secondary); line-height: 1.6; white-space: normal; }
-/* --- Styles for New Default View Elements --- */
-.sidebar-view {
-    display: none;
-    flex-direction: column; /* Allow footer to stick to bottom */
-    height: 100%;
-}
-.sidebar-view.active { display: flex; }
-
-.sidebar-content {
-    flex-grow: 1; /* Pushes footer down */
-}
-
 .promo-card {
-    background-color: var(--background-color); /* Use main bg for contrast */
-    border-radius: 16px;
-    padding: 1rem;
-    margin-top: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border: 1px solid var(--border-color);
+    background-color: var(--background-color); border-radius: 16px; padding: 1rem;
+    margin-top: 2rem; display: flex; align-items: center; justify-content: space-between;
+    border: 1px solid var(--border-color); transition: all 0.3s ease;
 }
 .promo-content h4 { margin: 0 0 0.25rem 0; color: var(--text-primary); }
 .promo-content p { font-size: 0.875rem; margin: 0; line-height: 1.4; }
 .promo-icon {
-    background-color: var(--primary-blue);
-    color: white;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    line-height: 1;
-    flex-shrink: 0;
-    margin-left: 1rem;
+    background-color: var(--primary-blue); color: white; width: 32px; height: 32px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; line-height: 1; flex-shrink: 0; margin-left: 1rem;
 }
-
-.sidebar-footer {
-    padding-top: 1rem;
-    margin-top: auto; /* Stick to the bottom */
-}
-
+.sidebar-footer { padding-top: 1rem; margin-top: auto; }
 .support-button {
-    width: 100%;
-    background-color: var(--hover-bg);
-    border: none;
-    border-radius: 12px;
-    padding: 0.75rem;
-    color: var(--text-primary);
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: background-color 0.2s ease;
+    width: 100%; background-color: var(--hover-bg); border: none; border-radius: 12px;
+    padding: 0.75rem; color: var(--text-primary); font-size: 1rem; font-weight: 500;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    gap: 0.5rem; transition: background-color 0.2s ease;
 }
-.support-button:hover {
-    background-color: var(--primary-blue);
-}
+.support-button:hover { background-color: var(--primary-blue); color: white; }
 
-/* --- Info Panel & Loader (Simplified for now) --- */
+/* --- Theme Toggle Styles --- */
+.theme-toggle-wrapper { display: flex; align-items: center; padding: 0.75rem 0; margin-top: 0.5rem; }
+.theme-toggle-icon { color: var(--text-secondary); }
+.theme-toggle-label { flex-grow: 1; margin: 0 1rem; font-weight: 500; }
+.theme-toggle-switch {
+    position: relative; width: 44px; height: 24px; border-radius: 12px;
+    background-color: var(--hover-bg); border: 1px solid var(--border-color);
+    cursor: pointer; flex-shrink: 0; transition: background-color 0.2s ease;
+}
+.theme-toggle-switch[aria-checked="true"] { background-color: var(--primary-blue); }
+.theme-toggle-thumb {
+    position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+    background-color: white; border-radius: 50%;
+    transition: transform 0.2s ease-in-out;
+}
+.theme-toggle-switch[aria-checked="true"] .theme-toggle-thumb { transform: translateX(20px); }
+
+/* --- Info Panel --- */
 #info-panel {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 15;
-    background-color: var(--sidebar-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 15;
+    background-color: var(--info-panel-bg); border: 1px solid var(--border-color);
+    border-radius: 16px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    width: 350px; transition: all 0.3s ease;
 }
 .info-panel-view { display: none; padding: 1rem; }
-.info-panel-view.active { display: flex; }
-#loader { /* ... loader styles ... */ }
-.spinner { /* ... spinner styles ... */ }
+.info-panel-view.active { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+#info-panel-loading { flex-direction: row; justify-content: center; gap: 1rem; font-size: 1.1rem; color: var(--text-secondary); }
+.spinner-small { border: 3px solid var(--border-color); border-left-color: var(--primary-blue); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+#info-panel .btn { width: 100%; padding: 12px; font-size: 1rem; font-weight: 500; }
 .hidden { display: none !important; }
