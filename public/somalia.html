@@ -3,91 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>6D Address - Somalia Registration</title>
+    <title>6D Address - Somalia</title>
     <link rel="stylesheet" href="css/somalia-map.css">
 </head>
 <body>
 
+    <!-- The New Collapsible Sidebar -->
     <aside id="sidebar">
-        <div class="sidebar-top">
-            <a href="#" class="logo-link">
-                <img src="assets/logo-somalia.png" alt="6D Address Logo" class="logo">
-                <span class="logo-text">6D Address</span>
-            </a>
-            <button id="sidebar-toggle-btn" class="sidebar-toggle" title="Toggle sidebar">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
-            </button>
+        <!-- This container holds all the different views that can be displayed -->
+        <div class="sidebar-content-wrapper">
+
+            <!-- View 1: Logged Out / Call to Action -->
+            <div id="view-register-cta" class="sidebar-view active">
+                <div class="sidebar-header">
+                    <img src="assets/logo-somalia.png" alt="6D Address Logo" class="logo">
+                    <h3>Your Digital Address Awaits</h3>
+                </div>
+                <div class="sidebar-content">
+                    <p>Find a location on the map and click "Register This Address" to begin.</p>
+                </div>
+            </div>
+
+            <!-- View 2: The Registration Form -->
+            <div id="view-registration-form" class="sidebar-view">
+                <div class="sidebar-header">
+                    <h4>Registering Address</h4>
+                    <div class="code-display-sidebar">...</div>
+                </div>
+                <div class="sidebar-content">
+                    <!-- Registration form will be built here -->
+                </div>
+            </div>
+
+            <!-- View 3: The Logged-In Dashboard -->
+            <div id="view-dashboard" class="sidebar-view">
+                <div class="sidebar-header">
+                    <h3>Welcome Back!</h3>
+                </div>
+                <div class="sidebar-content">
+                    <!-- Dashboard content will be built here -->
+                </div>
+            </div>
+
         </div>
-        <nav class="sidebar-nav">
+
+        <!-- The Icon-based Navigation Rail -->
+        <nav class="sidebar-nav-rail">
+            <div class="nav-top">
+                <button id="sidebar-toggle-btn" class="nav-link" title="Toggle Sidebar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M13 18v-5l8 5v-12l-8 5v-5l-8 6z"/></svg>
+                </button>
+            </div>
             <ul id="nav-logged-out" class="nav-links">
                 <li class="nav-item">
-                    <a href="#" class="nav-link active" title="Find Address">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                        <span class="link-text">Find Address</span>
+                    <a href="#" class="nav-link active" title="Register">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4s-4 1.79-4 4s1.79 4 4 4m-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6m9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4"/></svg>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="#" class="nav-link" title="Help">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
-                        <span class="link-text">Help</span>
+                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M10 19h4v-2h-4zm2-17c5.35.22 7.68 5.62 4.5 9.67c-1.75 2.25-2.86 3.73-3.5 4.33c-.64.6-1 1.17-1 2h-2c0-1.25.5-2.25 1-3c.5-.74 1.65-2.17 3.38-4.5c2.01-2.59.42-6.01-3.38-6.17A4.5 4.5 0 0 0 7.5 8.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5c0-1.38 1.12-2.5 2.5-2.5"/></svg>
                     </a>
                 </li>
             </ul>
-        </nav>
-        <div class="sidebar-bottom">
-            <div id="profile-logged-out" class="user-profile">
-                <a href="#" class="nav-link" title="Register or Login">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    <span class="link-text">Register / Login</span>
-                </a>
+            <ul id="nav-logged-in" class="nav-links hidden">
+                <!-- Logged-in icons will go here -->
+            </ul>
+            <div class="nav-bottom">
+                <!-- Logout icon will go here -->
             </div>
-        </div>
+        </nav>
     </aside>
 
     <main>
         <div id="map"></div>
-        <div id="loader" class="visible">
-            <div class="spinner"></div>
-            <p>Initializing Secure Map...</p>
-        </div>
-        
-        <!-- CRITICAL FIX: Info Panel and Modal HTML restored inside the main tag -->
-        <div id="info-panel">
-            <div id="info-panel-initial">
-                <button id="find-my-location-btn" class="btn btn-primary" disabled>
-                    <span class="icon-location"></span> Find My 6D Address
-                </button>
-            </div>
-            <div id="info-panel-address" class="hidden">
-                <div class="address-display">
-                    <div id="info-6d-code" class="code-display">
-                        <span class="code-part-1"></span>-<span class="code-part-2"></span>-<span class="code-part-3"></span>
-                    </div>
-                    <p id="info-district"></p>
-                    <p id="info-region"></p>
-                </div>
-                <button id="register-this-address-btn" class="btn btn-secondary">Register This Address</button>
-            </div>
-        </div>
+        <div id="loader" class="visible"></div>
 
-        <div id="confirmation-modal" class="modal-overlay">
-            <div class="modal-content">
-                <h3>Confirm Registration</h3>
-                <p>Please review your details before confirming.</p>
-                <div class="confirmation-details">
-                    <div class="detail-item"><span>6D Code:</span> <strong id="confirm-6d-code"></strong></div>
-                    <div class="detail-item"><span>Location:</span> <strong id="confirm-location"></strong></div>
-                    <div class="detail-item"><span>Full Name:</span> <strong id="confirm-name"></strong></div>
-                    <div class="detail-item"><span>Phone:</span> <strong id="confirm-phone"></strong></div>
+        <!-- Info Panel with new states -->
+        <div id="info-panel">
+            <!-- Initial State -->
+            <div id="info-panel-initial" class="info-panel-view active">
+                <button id="find-my-location-btn" class="btn" disabled>Find My 6D Address</button>
+            </div>
+            <!-- Loading State -->
+            <div id="info-panel-loading" class="info-panel-view">
+                <div class="spinner-small"></div>
+                <span>Locating...</span>
+            </div>
+            <!-- Address State -->
+            <div id="info-panel-address" class="info-panel-view">
+                <div class="address-details">
+                    <div class="code-display">...</div>
+                    <div class="location-text">...</div>
                 </div>
-                <div class="modal-actions">
-                    <button id="modal-cancel-btn" class="btn btn-secondary">Cancel</button>
-                    <button id="modal-confirm-btn" class="btn btn-primary">Confirm & Proceed</button>
+                <div class="address-actions">
+                    <button id="copy-btn" title="Copy Address" class="icon-btn"></button>
+                    <button id="share-btn" title="Share Address" class="icon-btn"></button>
+                    <button id="recenter-btn" title="Recenter Map" class="icon-btn hidden"></button>
                 </div>
+                <button id="register-this-address-btn" class="btn btn-primary">Register This Address</button>
             </div>
         </div>
     </main>
 
+    <!-- Scripts -->
     <script id="google-maps-script" async></script>
     <script src="js/config.js" type="module"></script>
     <script src="js/utils.js" type="module"></script>
