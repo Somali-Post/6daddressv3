@@ -12,3 +12,8 @@ build/
 # Ignore OS-specific files
 .DS_Store
 Thumbs.db
+
+# Ignore local development server files
+server.js
+package.json
+package-lock.json
