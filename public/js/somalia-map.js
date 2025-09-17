@@ -1,36 +1,30 @@
-import { GOOGLE_MAPS_API_KEY, somaliRegions } from './config.js';
+import { GOOGLE_MAPS_API_KEY } from './config.js';
 import * as Utils from './utils.js';
 import * as MapCore from './map-core.js';
 
 (function() {
     'use strict';
 
+    // The DOM object is now synchronized with the new HTML structure.
     const DOM = {
         loader: document.getElementById('loader'),
         mapContainer: document.getElementById('map'),
         sidebar: document.getElementById('sidebar'),
         sidebarToggleBtn: document.getElementById('sidebar-toggle-btn'),
+        
+        // Info Panel Views
         infoPanelInitial: document.getElementById('info-panel-initial'),
+        infoPanelLoading: document.getElementById('info-panel-loading'),
         infoPanelAddress: document.getElementById('info-panel-address'),
+        
+        // Info Panel Buttons & Content
         findMyLocationBtn: document.getElementById('find-my-location-btn'),
-        info6dCodeSpans: document.querySelectorAll('#info-6d-code span'),
-        infoDistrict: document.getElementById('info-district'),
-        infoRegion: document.getElementById('info-region'),
         registerThisAddressBtn: document.getElementById('register-this-address-btn'),
-        registrationForm: document.getElementById('registration-form'),
-        reg6dCodeInput: document.getElementById('reg-6d-code'),
-        regRegionSelect: document.getElementById('reg-region'),
-        regDistrictSelect: document.getElementById('reg-district'),
-        regPhoneInput: document.getElementById('reg-phone'),
-        regNameInput: document.getElementById('reg-name'),
-        registerBtn: document.getElementById('register-btn'),
-        modal: document.getElementById('confirmation-modal'),
-        confirm6dCode: document.getElementById('confirm-6d-code'),
-        confirmLocation: document.getElementById('confirm-location'),
-        confirmName: document.getElementById('confirm-name'),
-        confirmPhone: document.getElementById('confirm-phone'),
-        modalCancelBtn: document.getElementById('modal-cancel-btn'),
-        modalConfirmBtn: document.getElementById('modal-confirm-btn'),
+        infoCodeDisplay: document.querySelector('#info-panel-address .code-display'),
+        infoLocationText: document.querySelector('#info-panel-address .location-text'),
+        copyBtn: document.getElementById('copy-btn'),
+        shareBtn: document.getElementById('share-btn'),
+        recenterBtn: document.getElementById('recenter-btn'),
     };
 
     let map;
@@ -71,21 +65,22 @@ import * as MapCore from './map-core.js';
         somaliaPolygon = new google.maps.Polygon({ paths: coordinates });
     }
 
+    // Event listeners now only reference elements that exist in the new HTML.
     function addEventListeners() {
         map.addListener('click', handleMapClick);
-        map.addListener('zoom_changed', () => MapCore.updateDynamicGrid(map));
-        map.addListener('idle', () => MapCore.updateDynamicGrid(map));
-        DOM.sidebarToggleBtn.addEventListener('click', () => DOM.sidebar.classList.toggle('is-collapsed'));
+        map.addListener('dragend', () => {
+            if (currentAddress) {
+                DOM.recenterBtn.classList.remove('hidden');
+            }
+        });
+
+        DOM.sidebarToggleBtn.addEventListener('click', () => {
+            DOM.sidebar.classList.toggle('is-expanded');
+        });
         DOM.findMyLocationBtn.addEventListener('click', handleFindMyLocation);
         DOM.registerThisAddressBtn.addEventListener('click', handleShowRegistrationSidebar);
-        // Note: The registration form is not part of the new sidebar design, so these listeners are commented out for now.
-        // We will re-implement this when we build the registration modal/page.
-        // DOM.registrationForm.addEventListener('submit', handleFormSubmit);
-        // [DOM.regPhoneInput, DOM.regNameInput, DOM.regDistrictSelect].forEach(el => {
-        //     el.addEventListener('input', validateForm);
-        // });
-        DOM.modalCancelBtn.addEventListener('click', () => toggleModal(false));
-        DOM.modalConfirmBtn.addEventListener('click', handleRegistrationConfirm);
+        DOM.copyBtn.addEventListener('click', handleCopyAddress);
+        DOM.recenterBtn.addEventListener('click', handleRecenterMap);
     }
 
     function handleMapClick(e) {
@@ -97,34 +92,35 @@ import * as MapCore from './map-core.js';
 
     function handleFindMyLocation() {
         if (!navigator.geolocation) return alert("Geolocation is not supported.");
-        DOM.findMyLocationBtn.disabled = true;
-        DOM.findMyLocationBtn.textContent = "Locating...";
+        
+        switchInfoPanelView('loading');
+        
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
                 if (!somaliaPolygon || !google.maps.geometry.poly.containsLocation(latLng, somaliaPolygon)) {
                      alert("Your current location is outside of Somalia.");
+                     switchInfoPanelView('initial');
                 } else {
                     animateToLocation(map, latLng, () => processLocation(latLng));
                 }
-                DOM.findMyLocationBtn.disabled = false;
-                DOM.findMyLocationBtn.innerHTML = `<span class="icon-location"></span> Find My 6D Address`;
             },
             () => {
                 alert("Unable to retrieve your location.");
-                DOM.findMyLocationBtn.disabled = false;
-                DOM.findMyLocationBtn.innerHTML = `<span class="icon-location"></span> Find My 6D Address`;
+                switchInfoPanelView('initial');
             }
         );
     }
 
     async function processLocation(latLng) {
-        const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
+        switchInfoPanelView('loading');
+        DOM.recenterBtn.classList.add('hidden');
         
-        updateInfoPanel({ sixDCode: code6D, district: 'Locating...', region: '...' }, localitySuffix);
         MapCore.drawAddressBoxes(map, latLng);
         map.panTo(latLng);
 
+        const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
+        
         const [geocodeComponents, placeResult] = await Promise.all([
             getReverseGeocode(latLng),
             getPlaceDetails(latLng)
@@ -140,7 +136,8 @@ import * as MapCore from './map-core.js';
             ...finalAddress
         };
 
-        updateInfoPanel(currentAddress, localitySuffix);
+        updateInfoPanel(currentAddress);
+        switchInfoPanelView('address');
     }
 
     function getReverseGeocode(latLng) {
@@ -180,74 +177,46 @@ import * as MapCore from './map-core.js';
         const region = getComponent('administrative_area_level_1') || getComponent('country') || '';
         return { district, region };
     }
+
+    function switchInfoPanelView(viewName) {
+        ['initial', 'loading', 'address'].forEach(view => {
+            const element = DOM[`infoPanel${view.charAt(0).toUpperCase() + view.slice(1)}`];
+            element.classList.toggle('active', view === viewName);
+        });
+    }
     
-    function updateInfoPanel(data, suffix) {
-        DOM.infoPanelInitial.classList.add('hidden');
-        DOM.infoPanelAddress.classList.remove('hidden');
-
-        const codeParts = data.sixDCode.split('-');
-        DOM.info6dCodeSpans[0].textContent = codeParts[0];
-        DOM.info6dCodeSpans[1].textContent = codeParts[1];
-        DOM.info6dCodeSpans[2].textContent = codeParts[2];
-
-        DOM.infoDistrict.textContent = data.district || '';
-        const regionText = data.region || '';
-        DOM.infoRegion.textContent = `${regionText} ${suffix}`.trim();
+    function updateInfoPanel(data) {
+        DOM.infoCodeDisplay.textContent = data.sixDCode;
+        DOM.infoLocationText.textContent = `${data.district}, ${data.region} ${data.localitySuffix}`;
     }
 
     function handleShowRegistrationSidebar() {
-        // This function will be updated later to trigger the registration flow,
-        // likely by opening a modal or navigating to a new view.
         if (!currentAddress) return;
-        alert(`Registering address: ${currentAddress.sixDCode}\nDistrict: ${currentAddress.district}\nRegion: ${currentAddress.region}`);
-        // For now, we just alert. The old form logic is removed.
+        DOM.sidebar.classList.add('is-expanded');
+        // In the future, this will also switch the sidebar view to the registration form.
+        alert(`Triggering registration for: ${currentAddress.sixDCode}`);
     }
 
-    // --- The functions below are currently unused but kept for future implementation of the registration modal ---
-
-    function handleFormSubmit(event) {
-        event.preventDefault();
-        if (!DOM.registerBtn.disabled) {
-            populateConfirmationModal();
-            toggleModal(true);
-        }
+    function handleCopyAddress() {
+        if (!currentAddress) return;
+        const addressString = `${currentAddress.sixDCode}\n${currentAddress.district}, ${currentAddress.region} ${currentAddress.localitySuffix}`;
+        navigator.clipboard.writeText(addressString).then(() => {
+            alert("Address copied to clipboard!");
+        });
     }
 
-    function validateForm() {
-        const isPhoneValid = DOM.regPhoneInput.checkValidity();
-        const isNameValid = DOM.regNameInput.checkValidity();
-        const isDistrictSelected = !!DOM.regDistrictSelect.value;
-        DOM.registerBtn.disabled = !(isPhoneValid && isNameValid && isDistrictSelected);
-    }
-
-    function populateConfirmationModal() {
-        DOM.confirm6dCode.textContent = currentAddress.sixDCode;
-        DOM.confirmLocation.textContent = `${currentAddress.district}, ${currentAddress.region}`;
-        DOM.confirmName.textContent = DOM.regNameInput.value;
-        DOM.confirmPhone.textContent = `+252 ${DOM.regPhoneInput.value}`;
-        currentAddress.fullName = DOM.regNameInput.value;
-        currentAddress.phoneNumber = DOM.regPhoneInput.value;
-    }
-
-    function toggleModal(show) {
-        DOM.modal.classList.toggle('visible', show);
-    }
-
-    function handleRegistrationConfirm() {
-        console.log("Registration confirmed. Sending data to backend...", currentAddress);
-        toggleModal(false);
-        alert("Registration Successful! (Mocked)");
+    function handleRecenterMap() {
+        if (!currentAddress) return;
+        map.panTo({ lat: currentAddress.lat, lng: currentAddress.lng });
+        DOM.recenterBtn.classList.add('hidden');
     }
 
     function animateToLocation(map, latLng, onComplete) {
         map.panTo(latLng);
-        map.setZoom(15);
-        google.maps.event.addListenerOnce(map, 'idle', () => {
-            map.setZoom(18);
-            if (onComplete) {
-                 google.maps.event.addListenerOnce(map, 'idle', onComplete);
-            }
-        });
+        map.setZoom(18);
+        if (onComplete) {
+            google.maps.event.addListenerOnce(map, 'idle', onComplete);
+        }
     }
 
     document.addEventListener('DOMContentLoaded', init);
