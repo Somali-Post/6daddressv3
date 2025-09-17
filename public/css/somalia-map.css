@@ -30,8 +30,47 @@ main {
 }
 
 #loader {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: var(--background-color); z-index: 100;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--background-color);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /* FIX: Hide the loader by default */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+}
+
+/* FIX: This class makes the loader visible when the JS adds it */
+#loader.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* FIX: Restoring the spinner styles */
+.spinner {
+    border: 4px solid var(--border-color);
+    border-left-color: var(--primary-blue);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+#loader p {
+    margin-top: 20px;
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 /* --- Sidebar Architecture --- */
