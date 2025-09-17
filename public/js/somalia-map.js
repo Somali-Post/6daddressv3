@@ -104,12 +104,8 @@ import * as MapCore from './map-core.js';
         DOM.recenterBtn.addEventListener('click', handleRecenterMap);
     }
 
-    // --- State Rendering Function ---
     function renderSidebar() {
-        // 1. Handle Expanded/Collapsed State
         DOM.sidebar.classList.toggle('is-expanded', appState.isSidebarExpanded);
-
-        // 2. Handle Active View
         ['register-cta', 'registration-form', 'dashboard'].forEach(view => {
             const viewElement = DOM[`view${view.charAt(0).toUpperCase() + view.slice(1).replace(/-/g, '')}`];
             if(viewElement) {
@@ -117,8 +113,6 @@ import * as MapCore from './map-core.js';
             }
         });
     }
-
-    // --- All other functions remain the same ---
 
     function handleMapClick(e) {
         if (!somaliaPolygon || !google.maps.geometry.poly.containsLocation(e.latLng, somaliaPolygon)) return;
@@ -178,7 +172,6 @@ import * as MapCore from './map-core.js';
         appState.activeSidebarView = 'registration-form';
         appState.isSidebarExpanded = true;
         renderSidebar();
-        // We will populate the form in the next step
     }
 
     function handleCopyAddress() {
