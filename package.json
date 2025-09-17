@@ -1,0 +1,10 @@
+{
+  "name": "6daddressv3",
+  "version": "1.0.0",
+  "description": "6D Address Platform",
+  "scripts": {
+    "build": "node scripts/inject-env.js"
+  },
+  "author": "Your Name",
+  "license": "ISC"
+}

@@ -1,14 +1,16 @@
-# Netlify Build Configuration
+# netlify.toml
 
+# This section tells Netlify how to build your site.
 [build]
-  # This command executes the 'build' script defined in package.json.
-  # It runs our inject-env.js script to handle the API key.
-  command = "npm run build"
-
-  # The directory that contains the deploy-ready assets. This is the critical fix.
-  # Netlify will make the contents of this directory the root of the live website.
+  # The command to run. We still need this for the API key injection.
+  command = "node scripts/inject-env.js"
+  
+  # The folder that contains all your live website files.
   publish = "public"
 
-[build.environment]
-  # This ensures Netlify uses a compatible and stable version of Node.js to run our script.
-  NODE_VERSION = "18"
+# This section is for URL rules.
+[[redirects]]
+  # When a user goes to "/somalia", serve them the somalia.html file.
+  from = "/somalia"
+  to = "/somalia.html"
+  status = 200 # This is a "rewrite", so the URL in the browser stays clean.
