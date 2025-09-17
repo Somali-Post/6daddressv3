@@ -144,7 +144,13 @@ main {
 .sidebar-header .logo { width: 48px; margin-bottom: 1rem; }
 .sidebar-header h3 { font-size: 1.5rem; margin: 0 0 1rem 0; color: var(--text-primary); }
 .sidebar-content p { color: var(--text-secondary); line-height: 1.6; }
-
+.sidebar-content-wrapper {
+    flex-grow: 1;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden; /* Prevents content from spilling out when collapsed */
+    white-space: nowrap; /* Prevents text wrapping */
+}
 /* --- Info Panel --- */
 #info-panel {
     position: absolute;
