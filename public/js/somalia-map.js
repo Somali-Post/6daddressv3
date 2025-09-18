@@ -152,7 +152,9 @@ import * as MapCore from './map-core.js';
 
     async function processLocation(latLng) {
         switchInfoPanelView('loading');
-        DOM.recenterBtn.classList.add('hidden');
+        if (DOM.recenterBtn) {
+            DOM.recenterBtn.classList.add('hidden');
+        }
         MapCore.drawAddressBoxes(map, latLng);
         map.panTo(latLng);
         const { code6D, localitySuffix } = MapCore.generate6DCode(latLng.lat(), latLng.lng());
