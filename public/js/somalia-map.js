@@ -12,7 +12,6 @@ import * as MapCore from './map-core.js';
         sidebar: document.getElementById('sidebar'),
         sidebarToggleBtn: document.getElementById('sidebar-toggle-btn'),
         themeToggleBtn: document.getElementById('theme-toggle-btn'),
-        viewRegisterCTA: document.getElementById('view-register-cta'),
         infoPanelInitial: document.getElementById('info-panel-initial'),
         infoPanelLoading: document.getElementById('info-panel-loading'),
         infoPanelAddress: document.getElementById('info-panel-address'),
@@ -26,9 +25,8 @@ import * as MapCore from './map-core.js';
     };
 
     const appState = {
-        isSidebarExpanded: false,
         theme: 'light',
-        activeSidebarView: 'register-cta',
+        activeSidebarView: 'welcome-view',
     };
 
     let map;
@@ -59,7 +57,7 @@ import * as MapCore from './map-core.js';
             placesService = new google.maps.places.PlacesService(map);
 
             addEventListeners();
-            renderSidebar();
+            switchSidebarView(appState.activeSidebarView); // Set initial view
             DOM.findMyLocationBtn.disabled = false;
             DOM.loader.classList.remove('visible');
 
@@ -77,19 +75,29 @@ import * as MapCore from './map-core.js';
     function addEventListeners() {
         map.addListener('click', handleMapClick);
         map.addListener('dragend', () => { if (currentAddress) DOM.recenterBtn.classList.remove('hidden'); });
+        
         DOM.sidebarToggleBtn.addEventListener('click', () => {
-            appState.isSidebarExpanded = !appState.isSidebarExpanded;
-            renderSidebar();
+            DOM.body.classList.toggle('sidebar-collapsed');
         });
+
         DOM.themeToggleBtn.addEventListener('click', () => {
             appState.theme = appState.theme === 'light' ? 'dark' : 'light';
             localStorage.setItem('6d-theme', appState.theme);
             applyTheme();
         });
+
         DOM.findMyLocationBtn.addEventListener('click', handleFindMyLocation);
         DOM.registerThisAddressBtn.addEventListener('click', handleShowRegistrationSidebar);
         DOM.copyBtn.addEventListener('click', handleCopyAddress);
         DOM.recenterBtn.addEventListener('click', handleRecenterMap);
+
+        const loginRegisterBtn = document.getElementById('login-register-btn');
+        if (loginRegisterBtn) {
+            loginRegisterBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleShowRegistrationSidebar();
+            });
+        }
     }
 
     function applyTheme() {
@@ -97,9 +105,12 @@ import * as MapCore from './map-core.js';
         DOM.themeToggleBtn.setAttribute('aria-checked', appState.theme === 'dark');
     }
 
-    function renderSidebar() {
-        DOM.sidebar.classList.toggle('is-expanded', appState.isSidebarExpanded);
-        DOM.viewRegisterCTA.classList.toggle('active', appState.activeSidebarView === 'register-cta');
+    function switchSidebarView(viewId) {
+        document.querySelectorAll('.sidebar-view').forEach(view => view.classList.remove('active'));
+        const viewToShow = document.getElementById(viewId);
+        if (viewToShow) {
+            viewToShow.classList.add('active');
+        }
     }
 
     function handleMapClick(e) {
@@ -156,10 +167,8 @@ import * as MapCore from './map-core.js';
     }
 
     function handleShowRegistrationSidebar() {
-        if (!currentAddress) return;
-        appState.activeSidebarView = 'registration-form';
-        appState.isSidebarExpanded = true;
-        renderSidebar();
+        DOM.body.classList.remove('sidebar-collapsed'); // Ensure sidebar is expanded
+        switchSidebarView('registration-view');
     }
 
     function handleCopyAddress() {
