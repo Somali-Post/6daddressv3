@@ -74,22 +74,34 @@ import * as MapCore from './map-core.js';
 
     function addEventListeners() {
         map.addListener('click', handleMapClick);
-        map.addListener('dragend', () => { if (currentAddress) DOM.recenterBtn.classList.remove('hidden'); });
-        
-        DOM.sidebarToggleBtn.addEventListener('click', () => {
-            DOM.body.classList.toggle('sidebar-collapsed');
-        });
+        map.addListener('dragend', () => { if (currentAddress && DOM.recenterBtn) DOM.recenterBtn.classList.remove('hidden'); });
 
-        DOM.themeToggleBtn.addEventListener('click', () => {
-            appState.theme = appState.theme === 'light' ? 'dark' : 'light';
-            localStorage.setItem('6d-theme', appState.theme);
-            applyTheme();
-        });
+        if (DOM.sidebarToggleBtn) {
+            DOM.sidebarToggleBtn.addEventListener('click', () => {
+                DOM.body.classList.toggle('sidebar-collapsed');
+            });
+        }
 
-        DOM.findMyLocationBtn.addEventListener('click', handleFindMyLocation);
-        DOM.registerThisAddressBtn.addEventListener('click', handleShowRegistrationSidebar);
-        DOM.copyBtn.addEventListener('click', handleCopyAddress);
-        DOM.recenterBtn.addEventListener('click', handleRecenterMap);
+        if (DOM.themeToggleBtn) {
+            DOM.themeToggleBtn.addEventListener('click', () => {
+                appState.theme = appState.theme === 'light' ? 'dark' : 'light';
+                localStorage.setItem('6d-theme', appState.theme);
+                applyTheme();
+            });
+        }
+
+        if (DOM.findMyLocationBtn) {
+            DOM.findMyLocationBtn.addEventListener('click', handleFindMyLocation);
+        }
+        if (DOM.registerThisAddressBtn) {
+            DOM.registerThisAddressBtn.addEventListener('click', handleShowRegistrationSidebar);
+        }
+        if (DOM.copyBtn) {
+            DOM.copyBtn.addEventListener('click', handleCopyAddress);
+        }
+        if (DOM.recenterBtn) {
+            DOM.recenterBtn.addEventListener('click', handleRecenterMap);
+        }
 
         const loginRegisterBtn = document.getElementById('login-register-btn');
         if (loginRegisterBtn) {
