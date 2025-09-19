@@ -367,41 +367,49 @@ function renderInfoPanel({ sixD, regionName, districtName }) {
 }
 
 async function handleSelectLatLng(rawLatLng) {
-  if (!rawLatLng) return;
-  const lat = typeof rawLatLng.lat === 'function' ? rawLatLng.lat() : rawLatLng.lat;
-  const lng = typeof rawLatLng.lng === 'function' ? rawLatLng.lng() : rawLatLng.lng;
+    if (!rawLatLng) return;
 
-  // 1) Snap to grid center
-  const snapped = snapToGridCenter({ lat, lng });
-  lastSnapped = snapped;
+    // --- THIS IS THE FIX ---
+    // Create a new variable to hold the proper Google Maps LatLng object.
+    let googleLatLng;
 
-  // 2) 6D code
-  const sixD = generate6DCode(snapped.lat, snapped.lng);
+    // Check if the input is a Google Maps object (which has a .lat() function)
+    // or a plain object from the Geolocation API (which has a .lat property).
+    if (typeof rawLatLng.lat === 'function') {
+        googleLatLng = rawLatLng; // It's already the correct type
+    } else {
+        // It's a plain object, so we must convert it.
+        googleLatLng = new google.maps.LatLng(rawLatLng.lat, rawLatLng.lng);
+    }
+    // --- END OF FIX ---
 
-  // 3) Draw address boxes (clear old overlays first if you have a helper)
-  // if (activeOverlays && clearAddressBoxes) clearAddressBoxes(activeOverlays);
-  activeOverlays = drawAddressBoxes(map, snapped);
+    // Now, use the guaranteed-to-be-correct 'googleLatLng' object for all subsequent calls.
+    const snapped = snapToGridCenter(googleLatLng);
+    lastSnapped = snapped;
 
-  // 4) Dynamic grid
-  updateDynamicGrid(map, snapped);
+    const sixD = generate6DCode(snapped.lat(), snapped.lng());
 
-  // 5) Marker + center
-  placeMarkerLatLng(snapped, !marker);
-  map.panTo(snapped);
+    // Clear previous visuals and draw new ones
+    if (activeOverlays) clearMapObjects(); // Assuming clearMapObjects is defined
+    activeOverlays = drawAddressBoxes(map, snapped);
+    
+    updateDynamicGrid(map, snapped);
+    
+    placeMarkerLatLng(snapped, !marker);
+    map.panTo(snapped);
 
-  // 6) Resolve Region/District
-  let regionName = '';
-  let districtName = '';
-  try {
-    const rd = await reverseGeocode(snapped.lat, snapped.lng);
-    regionName = rd.regionName || '';
-    districtName = rd.districtName || '';
-  } catch (e) {
-    console.warn('Reverse geocoding failed:', e?.message || e);
-  }
-
-  // 7) Info panel (3-line)
-  renderInfoPanel({ sixD, regionName, districtName });
+    // Get the address and update the UI
+    let regionName = '';
+    let districtName = '';
+    try {
+        const rd = await reverseGeocode(snapped.lat(), snapped.lng());
+        regionName = rd.regionName || '';
+        districtName = rd.districtName || '';
+    } catch (e) {
+        console.warn('Reverse geocoding failed:', e?.message || e);
+    }
+    
+    renderInfoPanel({ sixD, regionName, districtName });
 }
 
 function bindUI() {
