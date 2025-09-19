@@ -30,7 +30,7 @@
     </div>
 
     <div class="sidebar__scroll">
-      <!-- Primary nav (Logged-Out) -->
+      <!-- Main Navigation Group (Logged-Out) -->
       <nav class="sidebar__nav" aria-label="Primary">
         <!-- 1) Global Map -->
         <a class="sidebar__link" href="/index.html">
@@ -63,7 +63,37 @@
         </a>
       </nav>
 
-      <!-- Registration form stays in DOM (no nav link) so “Register This Address” works -->
+      <!-- Bottom Utility Group -->
+      <div class="sidebar__utility" aria-label="Utilities">
+        <!-- Settings -->
+        <a class="sidebar__link" href="#">
+          <!-- Gear icon -->
+          <svg class="sidebar__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8z" stroke="currentColor" stroke-width="2"/>
+            <path d="M19.4 15a7.97 7.97 0 0 0 .1-1 7.97 7.97 0 0 0-.1-1l2.1-1.6a.5.5 0 0 0 .1-.7l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.32 7.32 0 0 0-1.7-1l-.4-2.7a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.7a7.32 7.32 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.7L4.6 12a7.97 7.97 0 0 0-.1 1c0 .34.04.67.1 1l-2.1 1.6a.5.5 0 0 0-.1.7l2 3.5a.5.5 0 0 0 .6.2l2.5-1a7.32 7.32 0 0 0 1.7 1l.4 2.7a.5.5 0 0 0 .5.4h4a.5.5 0 0 0 .5-.4l.4-2.7a7.32 7.32 0 0 0 1.7-1l2.5 1a.5.5 0 0 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.7L19.4 15z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+          <span class="link-text">Settings</span>
+        </a>
+
+        <!-- Light/Dark Mode -->
+        <div class="sidebar__link sidebar__link--toggle" role="group" aria-label="Appearance">
+          <!-- Sun/Moon icon -->
+          <svg class="sidebar__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 4V2m0 20v-2M4 12H2m20 0h-2M5 5l-1.4-1.4M20.4 20.4L19 19M19 5l1.4-1.4M5 19L3.6 20.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/>
+          </svg>
+
+          <div class="link-text" style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <span>Light/Dark Mode</span>
+            <label class="switch" aria-label="Toggle dark mode">
+              <input type="checkbox" id="themeToggle" />
+              <span class="slider" aria-hidden="true"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Registration form stays for CTA flow (no nav link) -->
       <section id="view-register" class="sidebar-view" aria-labelledby="register-title">
         <form class="link-text" id="registerForm" novalidate>
           <h2 id="register-title" class="sr-only">Register This Address</h2>
