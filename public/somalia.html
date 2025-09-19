@@ -131,14 +131,17 @@
     </footer>
   </aside>
 
-  <!-- Floating info panel (kept simple; JS fills content) -->
+  <!-- Floating info panel (JS fills content) -->
   <div id="infoPanel" class="info-panel" role="region" aria-live="polite">
     <div class="info-panel__row">
       <button class="btn btn--primary" id="ctaFind">Find My 6D Address</button>
     </div>
   </div>
 
-  <!-- Keep your existing Maps API loading exactly as you have it -->
-  <script type="module" src="js/somalia-map.js"></script>
+  <!-- ADD THIS SCRIPT TAG -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&libraries=geometry,places" async defer></script>
+
+  <!-- Your existing application script (ES module) -->
+  <script type="module" src="/js/somalia-map.js"></script>
 </body>
 </html>
