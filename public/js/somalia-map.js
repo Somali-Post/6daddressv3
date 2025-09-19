@@ -8,7 +8,10 @@ import {
 } from './map-core.js';
 import * as CONFIG from './config.js';
 
-// ------------ Config normalization (unchanged from earlier robust version)
+// ----------------------------
+// Helpers
+// ----------------------------
+const $ = (sel, root = document) => root.querySelector(sel);
 const normalize = (s) =>
   (s || '')
     .toString()
@@ -20,8 +23,30 @@ const normalize = (s) =>
 const REGION_SYNONYMS = new Map([['benadir', 'banaadir'], ['banadir', 'banaadir']]);
 const DISTRICT_SYNONYMS = new Map([]);
 
-const $ = (sel, root = document) => root.querySelector(sel);
+// Ensure we PASS a LatLng-like (with lat()/lng()) to functions that expect it
+function toLatLngLike(raw) {
+  if (!raw) return new google.maps.LatLng(0, 0);
+  if (typeof raw.lat === 'function' && typeof raw.lng === 'function') return raw;
+  // If Google is available, create a proper LatLng; otherwise, stub methods
+  if (typeof google !== 'undefined' && google.maps && typeof google.maps.LatLng === 'function') {
+    return new google.maps.LatLng(Number(raw.lat), Number(raw.lng));
+  }
+  return { lat: () => Number(raw.lat), lng: () => Number(raw.lng) };
+}
 
+// Ensure we GET a plain {lat, lng} back for UI code
+function toPlainLatLng(val) {
+  if (!val) return { lat: 0, lng: 0 };
+  if (typeof val.lat === 'function' && typeof val.lng === 'function') {
+    return { lat: Number(val.lat()), lng: Number(val.lng()) };
+  }
+  if (typeof val.lat === 'number' && typeof val.lng === 'number') return val;
+  return { lat: Number(val.lat || 0), lng: Number(val.lng || 0) };
+}
+
+// ----------------------------
+// Config normalization
+// ----------------------------
 function coerceRegionsShape(input) {
   if (!input) return [];
   if (Array.isArray(input)) {
@@ -41,7 +66,6 @@ function coerceRegionsShape(input) {
   }
   return [];
 }
-
 function resolveSomaliRegions() {
   const candidates = [
     CONFIG.somaliRegions,
@@ -51,7 +75,6 @@ function resolveSomaliRegions() {
     typeof window !== 'undefined' && window.somaliRegions,
     typeof window !== 'undefined' && window.config?.somaliRegions,
   ].filter(Boolean);
-
   for (const c of candidates) {
     const normalized = coerceRegionsShape(c);
     if (normalized.length) return normalized;
@@ -59,7 +82,6 @@ function resolveSomaliRegions() {
   console.warn('[config] No usable somaliRegions found in config.js.');
   return [];
 }
-
 function canonicalRegionName(name) {
   const n = normalize(name);
   return REGION_SYNONYMS.get(n) || n;
@@ -69,9 +91,10 @@ function canonicalDistrictName(name) {
   return DISTRICT_SYNONYMS.get(n) || n;
 }
 
+// ----------------------------
+// State
+// ----------------------------
 let SOMALI_REGIONS = [];
-
-// ------------ State
 let map;
 let marker;
 let lastSnapped = null;
@@ -79,7 +102,9 @@ let activeOverlays = null;
 let geocoder;
 let placesService;
 
-// ------------ Dropdown population
+// ----------------------------
+// Dropdown population
+// ----------------------------
 function findRegionByName(name) {
   if (!name) return null;
   const canon = canonicalRegionName(name);
@@ -145,7 +170,9 @@ function autoSelectDistrict(regionName, districtName) {
   districtSel.value = match || '';
 }
 
-// ------------ Geocoding
+// ----------------------------
+// Geocoding
+// ----------------------------
 function getComponentLongName(components, type) {
   const c = (components || []).find((comp) => comp.types?.includes(type));
   return c ? c.long_name : '';
@@ -204,7 +231,9 @@ async function reverseGeocode(lat, lng) {
   return { regionName, districtName };
 }
 
-// ------------ Map utilities
+// ----------------------------
+// Map utilities
+// ----------------------------
 function waitForGoogleMaps(timeoutMs = 15000) {
   const startedAt = Date.now();
   return new Promise((resolve, reject) => {
@@ -250,12 +279,11 @@ function showSidebarView(viewId) {
   if (currentBtn) currentBtn.classList.add('is-active');
 }
 
-// ------------ NEW: recenter visibility controller
+// Recenter visibility
 function updateRecenterVisibility() {
   const btn = $('#btnRecenter');
   if (!btn || !map || !lastSnapped) return;
 
-  // Require geometry library; guard just in case
   const hasGeom = !!(google.maps.geometry && google.maps.geometry.spherical);
   if (!hasGeom) { btn.style.display = 'none'; return; }
 
@@ -263,11 +291,10 @@ function updateRecenterVisibility() {
     new google.maps.LatLng(lastSnapped.lat, lastSnapped.lng),
     map.getCenter()
   );
-  const thresholdMeters = 350; // show recenter if user pans ~>350m away
-  btn.style.display = dist > thresholdMeters ? 'inline-flex' : 'none';
+  btn.style.display = dist > 350 ? 'inline-flex' : 'none';
 }
 
-// ------------ Info panel renderer (UPDATED)
+// Info panel
 function renderInfoPanel({ sixD, regionName, districtName }) {
   const info = $('#infoPanel');
   if (!info) return;
@@ -277,7 +304,6 @@ function renderInfoPanel({ sixD, regionName, districtName }) {
   const line2 = districtName || '';
   const line3 = regionName || 'Somalia';
 
-  // Small icon button styles (inline to avoid CSS file changes)
   const iconBtnStyle = `
     display:inline-flex;align-items:center;justify-content:center;
     width:32px;height:32px;border:1px solid rgba(255,255,255,0.15);
@@ -290,14 +316,12 @@ function renderInfoPanel({ sixD, regionName, districtName }) {
         <div style="display:flex;align-items:center;gap:8px;">
           <div id="codeText" style="font-weight:600;font-size:16px;">${line1}</div>
           <div style="display:flex;gap:6px;">
-            <!-- Copy -->
             <button id="btnCopy" title="Copy address" aria-label="Copy address" style="${iconBtnStyle}">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="2"/>
                 <rect x="4" y="4" width="11" height="11" rx="2" stroke="currentColor" stroke-width="2" opacity="0.8"/>
               </svg>
             </button>
-            <!-- Share (placeholder) -->
             <button id="btnShare" title="Share" aria-label="Share" style="${iconBtnStyle}">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <circle cx="18" cy="5" r="3" stroke="currentColor" stroke-width="2"/>
@@ -306,7 +330,6 @@ function renderInfoPanel({ sixD, regionName, districtName }) {
                 <path d="M8.9 11l6.2-4.2M8.9 13l6.2 4.2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
               </svg>
             </button>
-            <!-- Recenter (hidden by default) -->
             <button id="btnRecenter" title="Recenter" aria-label="Recenter" style="${iconBtnStyle};display:none;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
@@ -318,51 +341,34 @@ function renderInfoPanel({ sixD, regionName, districtName }) {
         <div style="opacity:.9;">${line2}</div>
         <div style="opacity:.7;">${line3}</div>
       </div>
-
       <button class="btn btn--primary" id="btnRegister">Register This Address</button>
     </div>
   `;
 
-  // Copy handler
   $('#btnCopy')?.addEventListener('click', async () => {
     const fullText = `${line1}${line2 ? ' — ' + line2 : ''}${line3 ? ', ' + line3 : ''}`;
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(fullText);
       } else {
-        // Fallback for older browsers
         const ta = document.createElement('textarea');
-        ta.value = fullText;
-        document.body.appendChild(ta);
+        ta.value = fullText; document.body.appendChild(ta);
         ta.select(); document.execCommand('copy');
         document.body.removeChild(ta);
       }
-      // tiny UX hint: flash the code text
-      const el = $('#codeText');
-      if (el) {
-        el.style.opacity = '0.6';
-        setTimeout(() => (el.style.opacity = '1'), 180);
-      }
-    } catch (e) {
-      console.warn('Copy failed:', e);
-    }
+      const el = $('#codeText'); if (el) { el.style.opacity = '0.6'; setTimeout(() => (el.style.opacity = '1'), 180); }
+    } catch (e) { console.warn('Copy failed:', e); }
   });
 
-  // Share (placeholder)
-  $('#btnShare')?.addEventListener('click', () => {
-    // Intentionally no-op for now
-  });
+  $('#btnShare')?.addEventListener('click', () => { /* placeholder */ });
 
-  // Recenter
   $('#btnRecenter')?.addEventListener('click', () => {
     if (lastSnapped && map) {
       map.panTo(lastSnapped);
-      // Hide button after recenter
       updateRecenterVisibility();
     }
   });
 
-  // Register
   $('#btnRegister')?.addEventListener('click', () => {
     setSidebarExpanded(true);
     showSidebarView('register');
@@ -378,26 +384,33 @@ function renderInfoPanel({ sixD, regionName, districtName }) {
     }
   });
 
-  // Ensure proper initial visibility for recenter
   updateRecenterVisibility();
 }
 
-// ------------ Selection flow (unchanged except final render call)
+// ----------------------------
+// Selection flow (FIXED: always pass LatLng-like into snapToGridCenter)
+// ----------------------------
 async function handleSelectLatLng(rawLatLng) {
   if (!rawLatLng) return;
-  const lat = typeof rawLatLng.lat === 'function' ? rawLatLng.lat() : rawLatLng.lat;
-  const lng = typeof rawLatLng.lng === 'function' ? rawLatLng.lng() : rawLatLng.lng;
 
-  const snapped = snapToGridCenter({ lat, lng });
+  // 1) Ensure LatLng-like input for the core function
+  const latLngLike = toLatLngLike(rawLatLng);
+
+  // 2) Snap using core (expects lat()/lng()); then normalize result
+  const snappedAny = snapToGridCenter(latLngLike);
+  const snapped = toPlainLatLng(snappedAny);
   lastSnapped = snapped;
 
+  // 3) 6D code + visuals
   const sixD = generate6DCode(snapped.lat, snapped.lng);
   activeOverlays = drawAddressBoxes(map, snapped);
   updateDynamicGrid(map, snapped);
 
+  // 4) Marker + center
   placeMarkerLatLng(snapped, !marker);
   map.panTo(snapped);
 
+  // 5) Region/District
   let regionName = '', districtName = '';
   try {
     const rd = await reverseGeocode(snapped.lat, snapped.lng);
@@ -407,10 +420,13 @@ async function handleSelectLatLng(rawLatLng) {
     console.warn('Reverse geocoding failed:', e?.message || e);
   }
 
+  // 6) Info panel
   renderInfoPanel({ sixD, regionName, districtName });
 }
 
-// ------------ Bind + init
+// ----------------------------
+// Bind + init
+// ----------------------------
 function bindUI() {
   $('#sidebarToggle')?.addEventListener('click', () => {
     const sb = $('#sidebar');
@@ -437,7 +453,7 @@ async function initMapOnceReady() {
 
   geocoder = new google.maps.Geocoder();
 
-  const defaultCenter = { lat: 2.0469, lng: 45.3182 };
+  const defaultCenter = { lat: 2.0469, lng: 45.3182 }; // Mogadishu
   map = new google.maps.Map($('#map'), {
     center: defaultCenter, zoom: 12,
     mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
@@ -445,22 +461,16 @@ async function initMapOnceReady() {
 
   placesService = new google.maps.places.PlacesService(map);
 
-  // Keep grid reactive
-  map.addListener('zoom_changed', () => {
-    if (lastSnapped) updateDynamicGrid(map, lastSnapped);
-  });
-  map.addListener('dragend', () => {
-    if (lastSnapped) updateDynamicGrid(map, lastSnapped);
-  });
+  map.addListener('zoom_changed', () => { if (lastSnapped) updateDynamicGrid(map, lastSnapped); });
+  map.addListener('dragend', () => { if (lastSnapped) updateDynamicGrid(map, lastSnapped); });
 
-  // NEW: update recenter visibility whenever the map settles
+  // Recenter visibility when map settles
   map.addListener('idle', () => updateRecenterVisibility());
 
-  // Click → select
+  // Click to select
   map.addListener('click', (e) => handleSelectLatLng(e.latLng));
 
   setSidebarExpanded(false);
-  // No welcome panel; sidebar content per logged-out spec
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
