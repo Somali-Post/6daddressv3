@@ -18,10 +18,8 @@
 
   <!-- Sidebar overlay; default is collapsed -->
   <aside id="sidebar" class="sidebar collapsed" aria-label="Main sidebar" aria-expanded="false">
-    <!-- Header -->
     <div class="sidebar__header">
       <button class="sidebar__toggle" id="sidebarToggle" aria-label="Expand sidebar" title="Expand sidebar">
-        <!-- Hamburger icon -->
         <svg class="sidebar__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
@@ -30,31 +28,26 @@
     </div>
 
     <div class="sidebar__scroll">
-      <!-- Main Navigation Group (Logged-Out) -->
+      <!-- Main Navigation Group -->
       <nav class="sidebar__nav" aria-label="Primary">
-        <!-- 1) Global Map -->
         <a class="sidebar__link" href="/index.html">
-          <!-- Globe icon -->
+          <!-- Globe -->
           <svg class="sidebar__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
             <path d="M3 12h18M12 3a12 12 0 0 0 0 18M12 3a12 12 0 0 1 0 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
           <span class="link-text">Global Map</span>
         </a>
-
-        <!-- 2) About Us -->
         <a class="sidebar__link" href="#">
-          <!-- Info icon -->
+          <!-- Info -->
           <svg class="sidebar__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
             <path d="M12 8h.01M11 12h2v5h-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
           <span class="link-text">About Us</span>
         </a>
-
-        <!-- 3) Contact Us -->
         <a class="sidebar__link" href="#">
-          <!-- Envelope icon -->
+          <!-- Envelope -->
           <svg class="sidebar__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
             <path d="M3.5 7.5 12 13l8.5-5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -65,9 +58,8 @@
 
       <!-- Bottom Utility Group -->
       <div class="sidebar__utility" aria-label="Utilities">
-        <!-- Settings -->
         <a class="sidebar__link" href="#">
-          <!-- Gear icon -->
+          <!-- Gear -->
           <svg class="sidebar__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8z" stroke="currentColor" stroke-width="2"/>
             <path d="M19.4 15a7.97 7.97 0 0 0 .1-1 7.97 7.97 0 0 0-.1-1l2.1-1.6a.5.5 0 0 0 .1-.7l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.32 7.32 0 0 0-1.7-1l-.4-2.7a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.7a7.32 7.32 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.7L4.6 12a7.97 7.97 0 0 0-.1 1c0 .34.04.67.1 1l-2.1 1.6a.5.5 0 0 0-.1.7l2 3.5a.5.5 0 0 0 .6.2l2.5-1a7.32 7.32 0 0 0 1.7 1l.4 2.7a.5.5 0 0 0 .5.4h4a.5.5 0 0 0 .5-.4l.4-2.7a7.32 7.32 0 0 0 1.7-1l2.5 1a.5.5 0 0 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.7L19.4 15z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
@@ -75,14 +67,12 @@
           <span class="link-text">Settings</span>
         </a>
 
-        <!-- Light/Dark Mode -->
         <div class="sidebar__link sidebar__link--toggle" role="group" aria-label="Appearance">
-          <!-- Sun/Moon icon -->
+          <!-- Sun/Moon -->
           <svg class="sidebar__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M12 4V2m0 20v-2M4 12H2m20 0h-2M5 5l-1.4-1.4M20.4 20.4L19 19M19 5l1.4-1.4M5 19L3.6 20.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/>
           </svg>
-
           <div class="link-text" style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
             <span>Light/Dark Mode</span>
             <label class="switch" aria-label="Toggle dark mode">
@@ -93,41 +83,15 @@
         </div>
       </div>
 
-      <!-- Registration form stays for CTA flow (no nav link) -->
+      <!-- Registration form (kept for CTA flow, no nav link) -->
       <section id="view-register" class="sidebar-view" aria-labelledby="register-title">
         <form class="link-text" id="registerForm" novalidate>
           <h2 id="register-title" class="sr-only">Register This Address</h2>
-
-          <div class="field">
-            <label for="code">6D Code</label>
-            <input id="code" name="code" type="text" readonly />
-          </div>
-
-          <div class="field">
-            <label for="name">Name</label>
-            <input id="name" name="name" type="text" placeholder="Your full name" autocomplete="name" />
-          </div>
-
-          <div class="field">
-            <label for="phone">Phone Number</label>
-            <input id="phone" name="phone" type="tel" placeholder="+252…" autocomplete="tel" />
-          </div>
-
-          <div class="field">
-            <label for="region">Region</label>
-            <select id="region" name="region">
-              <option value="">Select a region</option>
-              <!-- Options populated from config.js (somaliRegions) -->
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="district">District</label>
-            <select id="district" name="district">
-              <option value="">Select a district</option>
-            </select>
-          </div>
-
+          <div class="field"><label for="code">6D Code</label><input id="code" name="code" type="text" readonly /></div>
+          <div class="field"><label for="name">Name</label><input id="name" name="name" type="text" placeholder="Your full name" autocomplete="name" /></div>
+          <div class="field"><label for="phone">Phone Number</label><input id="phone" name="phone" type="tel" placeholder="+252…" autocomplete="tel" /></div>
+          <div class="field"><label for="region">Region</label><select id="region" name="region"><option value="">Select a region</option></select></div>
+          <div class="field"><label for="district">District</label><select id="district" name="district"><option value="">Select a district</option></select></div>
           <button type="submit" class="btn btn--primary">Submit Registration</button>
         </form>
       </section>
