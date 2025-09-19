@@ -409,7 +409,11 @@ async function handleSelectLatLng(rawLatLng) {
         console.warn('Reverse geocoding failed:', e?.message || e);
     }
     
-    renderInfoPanel({ sixD, regionName, districtName });
+    renderInfoPanel({ 
+        sixD: sixD.code6D, // <-- THIS IS THE FIX
+        regionName, 
+        districtName 
+    });
 }
 
 function bindUI() {
