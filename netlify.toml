@@ -1,16 +1,17 @@
 # netlify.toml
 
-# This section tells Netlify how to build your site.
 [build]
-  # The command to run. We still need this for the API key injection.
-  command = "node scripts/inject-env.js"
-  
-  # The folder that contains all your live website files.
-  publish = "public"
+  # Keep your existing build step if you need it
+  command  = "node scripts/inject-env.js"
+  # Public folder for your site
+  publish  = "public"
 
-# This section is for URL rules.
+# Tell Netlify where your serverless functions live
+[functions]
+  directory = "netlify/functions"
+
+# Route /somalia to the HTML file without changing the URL
 [[redirects]]
-  # When a user goes to "/somalia", serve them the somalia.html file.
   from = "/somalia"
-  to = "/somalia.html"
-  status = 200 # This is a "rewrite", so the URL in the browser stays clean.
+  to   = "/somalia.html"
+  status = 200
