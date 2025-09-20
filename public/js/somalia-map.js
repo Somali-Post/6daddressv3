@@ -263,8 +263,8 @@ function animateToLocation(mapObj, latLng, onComplete) {
         );
 
   const startZoom = mapObj.getZoom() || 12;
-  const zoomOut  = Math.max(5, startZoom - 4);
-  const zoomIn   = Math.min(17, Math.max(startZoom + 2, 15));
+const zoomOut  = Math.max(5, startZoom - 4); // keep the swoop depth logic
+const zoomIn   = 18;                         // fixed final zoom
 
   const originalGesture = mapObj.get('gestureHandling');
   mapObj.set('gestureHandling', 'none');
