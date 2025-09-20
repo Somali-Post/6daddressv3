@@ -1,3 +1,201 @@
+/* === Floating Card Info Panel & Button === */
+:root {
+  --panel-bg: rgba(255,255,255,0.75);
+  --panel-blur: 18px;
+  --panel-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 1.5px 6px rgba(0,0,0,0.10);
+  --panel-border: 1.5px solid rgba(0,0,0,0.08);
+  --panel-radius: 22px;
+  --panel-text: #222;
+  --panel-btn-bg: #2563eb;
+  --panel-btn-text: #fff;
+  --panel-btn-radius: 12px;
+  --panel-btn-shadow: 0 2px 8px rgba(37,99,235,0.10);
+  --code-red: #ef4444;
+  --code-green: #22c55e;
+  --code-blue: #2563eb;
+  --icon-btn-bg: rgba(0,0,0,0.06);
+  --icon-btn-hover: rgba(37,99,235,0.10);
+}
+
+body.dark-mode {
+  --panel-bg: rgba(17,22,39,0.85);
+  --panel-blur: 18px;
+  --panel-shadow: 0 8px 32px rgba(0,0,0,0.38), 0 1.5px 6px rgba(0,0,0,0.18);
+  --panel-border: 1.5px solid rgba(255,255,255,0.10);
+  --panel-radius: 22px;
+  --panel-text: #fff;
+  --panel-btn-bg: #2563eb;
+  --panel-btn-text: #fff;
+  --panel-btn-radius: 12px;
+  --panel-btn-shadow: 0 2px 8px rgba(37,99,235,0.18);
+  --code-red: #f87171;
+  --code-green: #4ade80;
+  --code-blue: #60a5fa;
+  --icon-btn-bg: rgba(255,255,255,0.08);
+  --icon-btn-hover: rgba(37,99,235,0.18);
+}
+
+.floating-card {
+  background: var(--panel-bg);
+  color: var(--panel-text);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+  border: var(--panel-border);
+  backdrop-filter: blur(var(--panel-blur));
+  -webkit-backdrop-filter: blur(var(--panel-blur));
+  transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+}
+
+.floating-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: var(--panel-btn-bg);
+  color: var(--panel-btn-text);
+  border: none;
+  border-radius: var(--panel-btn-radius);
+  box-shadow: var(--panel-btn-shadow);
+  padding: 1.1em 2.2em;
+  cursor: pointer;
+  margin: 0 auto;
+  min-width: 260px;
+  margin-bottom: 1.5rem;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.floating-btn:active,
+.floating-btn:focus {
+  outline: 2px solid var(--panel-btn-bg);
+}
+
+#find-my-address-btn {
+  position: fixed;
+  left: 50%;
+  bottom: 2.5rem;
+  transform: translateX(-50%);
+  z-index: 1002;
+  opacity: 1;
+  pointer-events: auto;
+  animation: fadeInUp 0.7s cubic-bezier(.4,1.4,.6,1) 0.1s both;
+}
+
+#info-panel {
+  position: fixed;
+  left: 50%;
+  bottom: 2.5rem;
+  transform: translateX(-50%) translateY(30px);
+  min-width: 340px;
+  max-width: 96vw;
+  padding: 2.1rem 2.2rem 1.7rem 2.2rem;
+  z-index: 1001;
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  animation: none;
+}
+#info-panel.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+  animation: fadeInUp 0.7s cubic-bezier(.4,1.4,.6,1) 0.1s both;
+}
+
+.info-panel__actions {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.3rem;
+  display: flex;
+  gap: 0.5rem;
+}
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--icon-btn-bg);
+  border: none;
+  border-radius: 50%;
+  color: var(--panel-text);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  box-shadow: none;
+  font-size: 1.1rem;
+}
+.icon-btn:hover,
+.icon-btn:focus {
+  background: var(--icon-btn-hover);
+  color: var(--panel-btn-bg);
+}
+
+.info-panel__code-plaque {
+  width: 100%;
+  background: rgba(255,255,255,0.85);
+  border-radius: 14px;
+  padding: 0.7em 0.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7em;
+  font-size: 2.1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  margin-bottom: 0.7em;
+}
+body.dark-mode .info-panel__code-plaque {
+  background: rgba(17,22,39,0.92);
+}
+.code-part { font-weight: 700; font-size: 2.1rem; }
+.code-red { color: var(--code-red); }
+.code-green { color: var(--code-green); }
+.code-blue { color: var(--code-blue); }
+.code-dash { color: #b0b0b0; font-weight: 600; font-size: 2.1rem; margin: 0 0.2em; }
+
+.info-panel__district-region {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 0.7em;
+}
+.info-panel__district {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--panel-text);
+}
+.info-panel__region {
+  font-size: 1rem;
+  color: #8b8b8b;
+  margin-top: 0.1em;
+}
+
+#register-this-address-btn {
+  margin-top: 0.7em;
+  width: 100%;
+  padding: 1.1em 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: var(--panel-btn-bg);
+  color: var(--panel-btn-text);
+  border: none;
+  border-radius: var(--panel-btn-radius);
+  box-shadow: var(--panel-btn-shadow);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+#register-this-address-btn:active,
+#register-this-address-btn:focus {
+  outline: 2px solid var(--panel-btn-bg);
+}
+
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(40px) scale(0.98); }
+  60% { opacity: 1; transform: translateY(-6px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
 /* ==========================================================================
    Somalia Registration Map — Sidebar on RIGHT, Logged-Out content groups
    with Light/Dark Theme Support

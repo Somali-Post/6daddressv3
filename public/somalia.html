@@ -105,11 +105,38 @@
     </div>
   </div>
 
-  <!-- Info panel -->
-  <div id="infoPanel" class="info-panel">
-    <div class="info-panel__row">
-      <button class="btn btn--primary" id="ctaFind">Find My 6D Address</button>
+
+  <!-- Floating Find My 6D Address Button (initial state) -->
+  <button id="find-my-address-btn" class="floating-card floating-btn" type="button">Find My 6D Address</button>
+
+  <!-- Floating Info Panel (hidden by default) -->
+  <div id="info-panel" class="floating-card info-panel" style="display:none;">
+    <div class="info-panel__actions">
+      <button id="recenter-btn" class="icon-btn" title="Recenter" style="display:none;">
+        <!-- Recenter SVG -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 8v4l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="copy-btn" class="icon-btn" title="Copy Address">
+        <!-- Copy SVG -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><rect x="2" y="2" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+      <button id="share-btn" class="icon-btn" title="Share">
+        <!-- Share SVG -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="18" cy="5" r="3" stroke="currentColor" stroke-width="2"/><circle cx="6" cy="12" r="3" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="19" r="3" stroke="currentColor" stroke-width="2"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
     </div>
+    <div class="info-panel__code-plaque">
+      <span id="code-part-1" class="code-part code-red">45</span>
+      <span class="code-dash">-</span>
+      <span id="code-part-2" class="code-part code-green">78</span>
+      <span class="code-dash">-</span>
+      <span id="code-part-3" class="code-part code-blue">12</span>
+    </div>
+    <div class="info-panel__district-region">
+      <div id="district-name" class="info-panel__district">Shangaani</div>
+      <div id="region-name" class="info-panel__region">Banaadir 03</div>
+    </div>
+    <button id="register-this-address-btn" class="floating-btn primary-btn" type="button">Register This Address</button>
   </div>
 
   <!-- Load Google Maps using the injected key from config.js -->
