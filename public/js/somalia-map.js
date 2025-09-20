@@ -438,21 +438,32 @@ async function initMapOnceReady() {
   const defaultCenter = { lat: 2.0469, lng: 45.3182 }; // Mogadishu
 
   map = new google.maps.Map($('#map'), {
-    center: defaultCenter, zoom: 12,
-    mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
+    center: defaultCenter,
+    zoom: 12,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+
+    // PRD FR-S2 — match Global Map navigation
+    draggableCursor: 'pointer',
+    gestureHandling: 'greedy',
   });
 
   placesService = new google.maps.places.PlacesService(map);
 
-  map.addListener('zoom_changed', () => { if (lastSnapped) updateDynamicGrid(map, new google.maps.LatLng(lastSnapped.lat, lastSnapped.lng)); });
-  map.addListener('dragend', () => { if (lastSnapped) updateDynamicGrid(map, new google.maps.LatLng(lastSnapped.lat, lastSnapped.lng)); });
+  map.addListener('zoom_changed', () => {
+    if (lastSnapped) updateDynamicGrid(map, new google.maps.LatLng(lastSnapped.lat, lastSnapped.lng));
+  });
+  map.addListener('dragend', () => {
+    if (lastSnapped) updateDynamicGrid(map, new google.maps.LatLng(lastSnapped.lat, lastSnapped.lng));
+  });
   map.addListener('idle', () => updateRecenterVisibility());
 
-  // Map click gives a Google LatLng already
   map.addListener('click', (e) => handleSelectLatLng(e.latLng));
 
   setSidebarExpanded(false);
 }
+
 
 document.addEventListener('DOMContentLoaded', async () => {
   SOMALI_REGIONS = resolveSomaliRegions();
