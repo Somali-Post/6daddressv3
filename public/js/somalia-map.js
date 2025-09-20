@@ -23,7 +23,8 @@ function showInfoPanel({ code6D, regionName, districtName }) {
   const panel = document.getElementById('info-panel');
   if (panel) {
     // Populate code
-    const [c1, c2, c3] = (code6D || '').split('-');
+    const codeStr = typeof code6D === 'string' ? code6D : (code6D?.code6D || '');
+    const [c1, c2, c3] = codeStr.split('-');
     document.getElementById('code-part-1').textContent = c1 || '';
     document.getElementById('code-part-2').textContent = c2 || '';
     document.getElementById('code-part-3').textContent = c3 || '';
