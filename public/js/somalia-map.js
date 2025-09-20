@@ -1,4 +1,5 @@
 // public/js/somalia-map.js
+// ES-module UI glue; core logic stays in map-core.js
 
 import {
   generate6DCode,
@@ -9,7 +10,7 @@ import {
 import * as CONFIG from './config.js';
 
 // ----------------------------
-// Helpers
+// Small helpers
 // ----------------------------
 const $ = (sel, root = document) => root.querySelector(sel);
 const normalize = (s) =>
@@ -23,29 +24,8 @@ const normalize = (s) =>
 const REGION_SYNONYMS = new Map([['benadir', 'banaadir'], ['banadir', 'banaadir']]);
 const DISTRICT_SYNONYMS = new Map([]);
 
-// Ensure we PASS a LatLng-like (with lat()/lng()) to functions that expect it
-function toLatLngLike(raw) {
-  if (!raw) return new google.maps.LatLng(0, 0);
-  if (typeof raw.lat === 'function' && typeof raw.lng === 'function') return raw;
-  // If Google is available, create a proper LatLng; otherwise, stub methods
-  if (typeof google !== 'undefined' && google.maps && typeof google.maps.LatLng === 'function') {
-    return new google.maps.LatLng(Number(raw.lat), Number(raw.lng));
-  }
-  return { lat: () => Number(raw.lat), lng: () => Number(raw.lng) };
-}
-
-// Ensure we GET a plain {lat, lng} back for UI code
-function toPlainLatLng(val) {
-  if (!val) return { lat: 0, lng: 0 };
-  if (typeof val.lat === 'function' && typeof val.lng === 'function') {
-    return { lat: Number(val.lat()), lng: Number(val.lng()) };
-  }
-  if (typeof val.lat === 'number' && typeof val.lng === 'number') return val;
-  return { lat: Number(val.lat || 0), lng: Number(val.lng || 0) };
-}
-
 // ----------------------------
-// Config normalization
+// Config normalization (supports array/object/default export)
 // ----------------------------
 function coerceRegionsShape(input) {
   if (!input) return [];
@@ -148,7 +128,7 @@ function autoSelectRegion(regionName) {
   const regionObj = findRegionByName(regionName);
   if (regionObj) {
     regionSel.value = regionObj.name;
-    regionSel.disabled = true;
+    regionSel.disabled = true;          // Region is reliable → lock
     populateDistrictsDropdown(regionObj.name);
   } else {
     regionSel.value = '';
@@ -171,7 +151,7 @@ function autoSelectDistrict(regionName, districtName) {
 }
 
 // ----------------------------
-// Geocoding
+// Geocoding / Places
 // ----------------------------
 function getComponentLongName(components, type) {
   const c = (components || []).find((comp) => comp.types?.includes(type));
@@ -199,12 +179,14 @@ function placesGetDetails(placeId) {
 async function reverseGeocode(lat, lng) {
   const geoResults = await geocoderGeocode({ lat, lng });
 
+  // Region: admin level 1
   let regionName = '';
   for (const res of geoResults) {
     const a1 = getComponentLongName(res.address_components, 'administrative_area_level_1');
     if (a1) { regionName = a1; break; }
   }
 
+  // District priority
   let districtName = '';
   const sublocalityResult = geoResults.find((r) => r.types?.some((t) => t.startsWith('sublocality')));
   if (sublocalityResult?.place_id && placesService) {
@@ -232,7 +214,7 @@ async function reverseGeocode(lat, lng) {
 }
 
 // ----------------------------
-// Map utilities
+// Map helpers
 // ----------------------------
 function waitForGoogleMaps(timeoutMs = 15000) {
   const startedAt = Date.now();
@@ -279,7 +261,7 @@ function showSidebarView(viewId) {
   if (currentBtn) currentBtn.classList.add('is-active');
 }
 
-// Recenter visibility
+// Recenter button visibility
 function updateRecenterVisibility() {
   const btn = $('#btnRecenter');
   if (!btn || !map || !lastSnapped) return;
@@ -294,7 +276,9 @@ function updateRecenterVisibility() {
   btn.style.display = dist > 350 ? 'inline-flex' : 'none';
 }
 
-// Info panel
+// ----------------------------
+// Info panel renderer (with copy/share/recenter)
+// ----------------------------
 function renderInfoPanel({ sixD, regionName, districtName }) {
   const info = $('#infoPanel');
   if (!info) return;
@@ -345,6 +329,7 @@ function renderInfoPanel({ sixD, regionName, districtName }) {
     </div>
   `;
 
+  // Copy
   $('#btnCopy')?.addEventListener('click', async () => {
     const fullText = `${line1}${line2 ? ' — ' + line2 : ''}${line3 ? ', ' + line3 : ''}`;
     try {
@@ -360,8 +345,10 @@ function renderInfoPanel({ sixD, regionName, districtName }) {
     } catch (e) { console.warn('Copy failed:', e); }
   });
 
-  $('#btnShare')?.addEventListener('click', () => { /* placeholder */ });
+  // Share (placeholder)
+  $('#btnShare')?.addEventListener('click', () => {});
 
+  // Recenter
   $('#btnRecenter')?.addEventListener('click', () => {
     if (lastSnapped && map) {
       map.panTo(lastSnapped);
@@ -369,6 +356,7 @@ function renderInfoPanel({ sixD, regionName, districtName }) {
     }
   });
 
+  // Register
   $('#btnRegister')?.addEventListener('click', () => {
     setSidebarExpanded(true);
     showSidebarView('register');
@@ -388,29 +376,33 @@ function renderInfoPanel({ sixD, regionName, districtName }) {
 }
 
 // ----------------------------
-// Selection flow (FIXED: always pass LatLng-like into snapToGridCenter)
+// Selection flow — ALWAYS pass LatLng to core
 // ----------------------------
 async function handleSelectLatLng(rawLatLng) {
   if (!rawLatLng) return;
 
-  // 1) Ensure LatLng-like input for the core function
-  const latLngLike = toLatLngLike(rawLatLng);
+  const lat = typeof rawLatLng.lat === 'function' ? rawLatLng.lat() : rawLatLng.lat;
+  const lng = typeof rawLatLng.lng === 'function' ? rawLatLng.lng() : rawLatLng.lng;
 
-  // 2) Snap using core (expects lat()/lng()); then normalize result
-  const snappedAny = snapToGridCenter(latLngLike);
-  const snapped = toPlainLatLng(snappedAny);
+  // ✅ Ensure proper type for snapToGridCenter
+  const latLngLike = new google.maps.LatLng(lat, lng);
+  const snappedAny  = snapToGridCenter(latLngLike);
+
+  // normalize to plain for UI
+  const snapped = {
+    lat: typeof snappedAny.lat === 'function' ? snappedAny.lat() : snappedAny.lat,
+    lng: typeof snappedAny.lng === 'function' ? snappedAny.lng() : snappedAny.lng,
+  };
   lastSnapped = snapped;
 
-  // 3) 6D code + visuals
+  // 6D + visuals
   const sixD = generate6DCode(snapped.lat, snapped.lng);
   activeOverlays = drawAddressBoxes(map, snapped);
   updateDynamicGrid(map, snapped);
 
-  // 4) Marker + center
   placeMarkerLatLng(snapped, !marker);
   map.panTo(snapped);
 
-  // 5) Region/District
   let regionName = '', districtName = '';
   try {
     const rd = await reverseGeocode(snapped.lat, snapped.lng);
@@ -420,7 +412,6 @@ async function handleSelectLatLng(rawLatLng) {
     console.warn('Reverse geocoding failed:', e?.message || e);
   }
 
-  // 6) Info panel
   renderInfoPanel({ sixD, regionName, districtName });
 }
 
@@ -434,10 +425,14 @@ function bindUI() {
     setSidebarExpanded(!!willExpand);
   });
 
+  // ✅ Geolocation now passes a Google LatLng object
   $('#ctaFind')?.addEventListener('click', () => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => handleSelectLatLng({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) => {
+        const gLL = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+        handleSelectLatLng(gLL);
+      },
       () => console.warn('Geolocation unavailable')
     );
   });
@@ -453,7 +448,7 @@ async function initMapOnceReady() {
 
   geocoder = new google.maps.Geocoder();
 
-  const defaultCenter = { lat: 2.0469, lng: 45.3182 }; // Mogadishu
+  const defaultCenter = { lat: 2.0469, lng: 45.3182 };
   map = new google.maps.Map($('#map'), {
     center: defaultCenter, zoom: 12,
     mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
@@ -463,12 +458,9 @@ async function initMapOnceReady() {
 
   map.addListener('zoom_changed', () => { if (lastSnapped) updateDynamicGrid(map, lastSnapped); });
   map.addListener('dragend', () => { if (lastSnapped) updateDynamicGrid(map, lastSnapped); });
-
-  // Recenter visibility when map settles
   map.addListener('idle', () => updateRecenterVisibility());
 
-  // Click to select
-  map.addListener('click', (e) => handleSelectLatLng(e.latLng));
+  map.addListener('click', (e) => handleSelectLatLng(e.latLng)); // e.latLng is already a Google LatLng
 
   setSidebarExpanded(false);
 }
