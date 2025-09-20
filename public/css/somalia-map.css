@@ -419,21 +419,7 @@ html, body {
 .switch .switch__label { font-size: 14px; }
 
 /* Info panel */
-.info-panel {
-  position: fixed;
-  left: 50%;
-  bottom: var(--gap);
-  transform: translateX(-50%);
-  min-width: min(92vw, 720px);
-  max-width: 92vw;
-  background: var(--color-bg);
-  color: var(--color-text);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-strong);
-  padding: 12px 14px;
-  z-index: var(--z-info);
-}
-.info-panel__row { display: flex; gap: 10px; justify-content: center; align-items: center; }
+
 
 /* SR-only helper */
 .sr-only {
