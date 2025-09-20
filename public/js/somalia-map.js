@@ -382,26 +382,31 @@ async function handleSelectLatLng(rawLatLng) {
   if (!rawLatLng) return;
 
   const lat = typeof rawLatLng.lat === 'function' ? rawLatLng.lat() : rawLatLng.lat;
-  const lng = typeof rawLatLng.lng === 'function' ? rawLatLng.lng() : rawLatLng.lng;
+const lng = typeof rawLatLng.lng === 'function' ? rawLatLng.lng() : rawLatLng.lng;
 
-  // ✅ Ensure proper type for snapToGridCenter
-  const latLngLike = new google.maps.LatLng(lat, lng);
-  const snappedAny  = snapToGridCenter(latLngLike);
+const latLngLike = new google.maps.LatLng(lat, lng);
+const snappedAny = snapToGridCenter(latLngLike);
 
-  // normalize to plain for UI
-  const snapped = {
-    lat: typeof snappedAny.lat === 'function' ? snappedAny.lat() : snappedAny.lat,
-    lng: typeof snappedAny.lng === 'function' ? snappedAny.lng() : snappedAny.lng,
-  };
-  lastSnapped = snapped;
+// ensure we have a proper Google LatLng for core functions
+const snappedLL = (typeof snappedAny.lat === 'function' && typeof snappedAny.lng === 'function')
+  ? snappedAny
+  : new google.maps.LatLng(
+      typeof snappedAny.lat === 'function' ? snappedAny.lat() : snappedAny.lat,
+      typeof snappedAny.lng === 'function' ? snappedAny.lng() : snappedAny.lng
+    );
 
-  // 6D + visuals
-  const sixD = generate6DCode(snapped.lat, snapped.lng);
-  activeOverlays = drawAddressBoxes(map, snapped);
-  updateDynamicGrid(map, snapped);
+// plain object for UI/reg-form values
+const snapped = { lat: snappedLL.lat(), lng: snappedLL.lng() };
+lastSnapped = snapped;
 
-  placeMarkerLatLng(snapped, !marker);
-  map.panTo(snapped);
+// 6D + visuals
+const sixD = generate6DCode(snapped.lat, snapped.lng);
+activeOverlays = drawAddressBoxes(map, snappedLL);   // ✅ pass LatLng
+updateDynamicGrid(map, snappedLL);                   // ✅ pass LatLng
+
+placeMarkerLatLng(snappedLL, !marker);               // accepts LatLng
+map.panTo(snappedLL);                                // accepts LatLng
+
 
   let regionName = '', districtName = '';
   try {
