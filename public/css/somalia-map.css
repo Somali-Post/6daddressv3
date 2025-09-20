@@ -73,34 +73,40 @@ body.dark-mode {
   position: fixed;
   left: 50%;
   bottom: 2.5rem;
-  transform: translateX(-50%);
+  transform: translate(-50%, 0);
   z-index: 1002;
   opacity: 1;
   pointer-events: auto;
   animation: fadeInUp 0.7s cubic-bezier(.4,1.4,.6,1) 0.1s both;
+  min-width: 220px;
+  max-width: 340px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 #info-panel {
   position: fixed;
   left: 50%;
   bottom: 2.5rem;
-  transform: translateX(-50%) translateY(30px);
-  min-width: 340px;
-  max-width: 96vw;
-  padding: 2.1rem 2.2rem 1.7rem 2.2rem;
+  transform: translate(-50%, 30px);
+  min-width: 0;
+  max-width: 370px;
+  width: 100%;
+  padding: 1.3rem 1.5rem 1.1rem 1.5rem;
   z-index: 1001;
   opacity: 0;
   pointer-events: none;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.2rem;
+  gap: 1.0rem;
   animation: none;
+  box-sizing: border-box;
 }
 #info-panel.visible {
   opacity: 1;
   pointer-events: auto;
-  transform: translateX(-50%) translateY(0);
+  transform: translate(-50%, 0);
   animation: fadeInUp 0.7s cubic-bezier(.4,1.4,.6,1) 0.1s both;
 }
 
