@@ -21,6 +21,7 @@ const normalize = (s) =>
 const REGION_SYNONYMS = new Map([['benadir', 'banaadir'], ['banadir', 'banaadir']]);
 const DISTRICT_SYNONYMS = new Map([]);
 
+/* ---------- Config normalization ---------- */
 function coerceRegionsShape(input) {
   if (!input) return [];
   if (Array.isArray(input)) {
@@ -65,10 +66,11 @@ function canonicalDistrictName(name) {
   return DISTRICT_SYNONYMS.get(n) || n;
 }
 
+/* ---------- State ---------- */
 let SOMALI_REGIONS = [];
 let map;
-let marker;
-let lastSnapped = null;      // plain {lat,lng} for UI
+// (marker removed)
+let lastSnapped = null;      // plain {lat,lng} for UI/form
 let geocoder;
 let placesService;
 
@@ -116,7 +118,7 @@ function autoSelectRegion(regionName) {
   const regionObj = findRegionByName(regionName);
   if (regionObj) {
     regionSel.value = regionObj.name;
-    regionSel.disabled = true;
+    regionSel.disabled = true;          // lock Region
     populateDistrictsDropdown(regionObj.name);
   } else {
     regionSel.value = '';
@@ -138,7 +140,7 @@ function autoSelectDistrict(regionName, districtName) {
   districtSel.value = match || '';
 }
 
-/* ---------- Geocoding ---------- */
+/* ---------- Geocoding / Places ---------- */
 function getComponentLongName(components, type) {
   const c = (components || []).find((comp) => comp.types?.includes(type));
   return c ? c.long_name : '';
@@ -213,16 +215,6 @@ function waitForGoogleMaps(timeoutMs = 15000) {
     })();
   });
 }
-function placeMarkerLatLng(latLng, withDrop = false) {
-  if (!marker) {
-    marker = new google.maps.Marker({
-      position: latLng, map,
-      animation: withDrop ? google.maps.Animation.DROP : null,
-    });
-  } else {
-    marker.setPosition(latLng);
-  }
-}
 function setSidebarExpanded(expanded) {
   const sidebar = $('#sidebar');
   if (!sidebar) return;
@@ -257,8 +249,10 @@ function updateRecenterVisibility() {
   );
   btn.style.display = dist > 350 ? 'inline-flex' : 'none';
 }
-function animateToLocation(map, latLng, onComplete) {
-  if (!map || !latLng) { if (onComplete) onComplete(); return; }
+
+/* ---------- “Swoop” animation (zoom out → pan → zoom in) ---------- */
+function animateToLocation(mapObj, latLng, onComplete) {
+  if (!mapObj || !latLng) { if (onComplete) onComplete(); return; }
 
   const targetLL =
     (typeof latLng.lat === 'function' && typeof latLng.lng === 'function')
@@ -268,41 +262,26 @@ function animateToLocation(map, latLng, onComplete) {
           typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng
         );
 
-  const startZoom = map.getZoom() || 12;
+  const startZoom = mapObj.getZoom() || 12;
   const zoomOut  = Math.max(5, startZoom - 4);
   const zoomIn   = Math.min(17, Math.max(startZoom + 2, 15));
 
-  // prevent user gestures from interrupting the sequence
-  const originalGesture = map.get('gestureHandling');
-  map.set('gestureHandling', 'none');
+  const originalGesture = mapObj.get('gestureHandling');
+  mapObj.set('gestureHandling', 'none');
 
-  const onceIdle = (fn) => google.maps.event.addListenerOnce(map, 'idle', () => setTimeout(fn, 0));
+  const onceIdle = (fn) => google.maps.event.addListenerOnce(mapObj, 'idle', () => setTimeout(fn, 0));
 
-  // Step 1: zoom out
-  map.setZoom(zoomOut);
+  mapObj.setZoom(zoomOut);
   onceIdle(() => {
-    // Step 2: pan to target
-    map.panTo(targetLL);
+    mapObj.panTo(targetLL);
     onceIdle(() => {
-      // Step 3: zoom in
-      map.setZoom(zoomIn);
+      mapObj.setZoom(zoomIn);
       onceIdle(() => {
-        map.set('gestureHandling', originalGesture || 'greedy');
+        mapObj.set('gestureHandling', originalGesture || 'greedy');
         if (typeof onComplete === 'function') onComplete();
       });
     });
   });
-}
-function handleFindMyLocation() {
-  if (!navigator.geolocation) return;
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const gLL = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-      // Swoop animation, then perform the 6D select/render
-      animateToLocation(map, gLL, () => handleSelectLatLng(gLL));
-    },
-    () => console.warn('Geolocation unavailable')
-  );
 }
 
 /* ---------- Info panel renderer ---------- */
@@ -356,7 +335,6 @@ function renderInfoPanel({ sixD, regionName, districtName }) {
     </div>
   `;
 
-  // Copy
   $('#btnCopy')?.addEventListener('click', async () => {
     const fullText = `${line1}${line2 ? ' — ' + line2 : ''}${line3 ? ', ' + line3 : ''}`;
     try {
@@ -372,10 +350,7 @@ function renderInfoPanel({ sixD, regionName, districtName }) {
     } catch (e) { console.warn('Copy failed:', e); }
   });
 
-  // Share (placeholder)
   $('#btnShare')?.addEventListener('click', () => {});
-
-  // Recenter
   $('#btnRecenter')?.addEventListener('click', () => {
     if (lastSnapped && map) {
       map.panTo(new google.maps.LatLng(lastSnapped.lat, lastSnapped.lng));
@@ -383,7 +358,6 @@ function renderInfoPanel({ sixD, regionName, districtName }) {
     }
   });
 
-  // Register
   $('#btnRegister')?.addEventListener('click', () => {
     setSidebarExpanded(true);
     showSidebarView('register');
@@ -422,11 +396,11 @@ async function handleSelectLatLng(rawLatLng) {
   const snapped = { lat: snappedLL.lat(), lng: snappedLL.lng() };
   lastSnapped = snapped;
 
-  const sixD = generate6DCode(snapped.lat, snapped.lng);
+  // Visual feedback: 6D boxes only
   drawAddressBoxes(map, snappedLL);
   updateDynamicGrid(map, snappedLL);
 
-  placeMarkerLatLng(snappedLL, !marker);
+  // Center the map (no marker)
   map.panTo(snappedLL);
 
   let regionName = '', districtName = '';
@@ -438,7 +412,20 @@ async function handleSelectLatLng(rawLatLng) {
     console.warn('Reverse geocoding failed:', e?.message || e);
   }
 
+  const sixD = generate6DCode(snapped.lat, snapped.lng);
   renderInfoPanel({ sixD, regionName, districtName });
+}
+
+/* ---------- Find My Location uses “swoop” ---------- */
+function handleFindMyLocation() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const gLL = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+      animateToLocation(map, gLL, () => handleSelectLatLng(gLL));
+    },
+    () => console.warn('Geolocation unavailable')
+  );
 }
 
 /* ---------- Bind + init ---------- */
@@ -449,9 +436,7 @@ function bindUI() {
     setSidebarExpanded(!!willExpand);
   });
 
-  // Geolocation → pass Google LatLng
   $('#ctaFind')?.addEventListener('click', handleFindMyLocation);
-
 
   $('#region')?.addEventListener('change', (e) => {
     const regionName = e.target.value;
@@ -498,11 +483,11 @@ async function initMapOnceReady() {
   });
   map.addListener('idle', () => updateRecenterVisibility());
 
+  // Map click gives a Google LatLng
   map.addListener('click', (e) => handleSelectLatLng(e.latLng));
 
   setSidebarExpanded(false);
 }
-
 
 document.addEventListener('DOMContentLoaded', async () => {
   SOMALI_REGIONS = resolveSomaliRegions();
