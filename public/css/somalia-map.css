@@ -169,11 +169,11 @@ html, body {
   width: 100% !important;
 
   /* compact spacing */
-  padding: 0.9rem 1rem 0.8rem 1rem !important;
+  padding: 1rem 1.2rem 1.2rem 1.2rem !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 0.7rem !important;
+  gap: 0.9rem !important;
 
   /* visibility state */
   opacity: 0 !important;
@@ -200,10 +200,10 @@ html, body {
 /* top-right icon group */
 .info-panel__actions {
   position: absolute;
-  top: 0.8rem;        /* was 1.1rem */
+  top: 0.9rem;        /* was 1.1rem */
   right: 0.9rem;      /* was 1.3rem */
   display: flex;
-  gap: 0.5rem;
+  gap: 0.7rem;
 }
 .icon-btn {
   width: 26px;        /* was 38px */
@@ -269,10 +269,11 @@ body.dark-mode .info-panel__code-plaque {
 
 /* register button in panel */
 #register-this-address-btn {
-  margin-top: 0.5em;
+  margin-top: 0.8em;
   width: 100%;
-  padding: 0.8em 0;      /* was 1.1em */
+  padding: 0.9em 0;      /* was 1.1em */
   font-size: 0.8rem;     /* was 1.1rem */
+  display: block;
   font-weight: 600;
   background: var(--panel-btn-bg);
   color: var(--panel-btn-text);
