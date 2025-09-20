@@ -529,7 +529,7 @@ async function handleSelectLatLng(rawLatLng) {
   }
 
   const sixD = generate6DCode(snapped.lat, snapped.lng);
-  renderInfoPanel({ sixD, regionName, districtName });
+  showInfoPanel({ code6D: sixD, regionName, districtName });
 }
 
 /* ---------- Find My Location uses “swoop” ---------- */
@@ -609,6 +609,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   SOMALI_REGIONS = resolveSomaliRegions();
   populateRegionsDropdown();
   bindUI();
+  setupThemeToggler();
+  showFindMyAddressBtn();
+  bindFloatingPanelUI(
+    map,
+    () => {
+      // Return current 6D code as string
+      const c1 = document.getElementById('code-part-1')?.textContent || '';
+      const c2 = document.getElementById('code-part-2')?.textContent || '';
+      const c3 = document.getElementById('code-part-3')?.textContent || '';
+      return [c1, c2, c3].filter(Boolean).join('-');
+    },
+    () => lastSnapped ? new google.maps.LatLng(lastSnapped.lat, lastSnapped.lng) : null
+  );
   try {
     await initMapOnceReady();
   } catch (err) {
