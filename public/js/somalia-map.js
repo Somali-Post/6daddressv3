@@ -257,6 +257,53 @@ function updateRecenterVisibility() {
   );
   btn.style.display = dist > 350 ? 'inline-flex' : 'none';
 }
+function animateToLocation(map, latLng, onComplete) {
+  if (!map || !latLng) { if (onComplete) onComplete(); return; }
+
+  const targetLL =
+    (typeof latLng.lat === 'function' && typeof latLng.lng === 'function')
+      ? latLng
+      : new google.maps.LatLng(
+          typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat,
+          typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng
+        );
+
+  const startZoom = map.getZoom() || 12;
+  const zoomOut  = Math.max(5, startZoom - 4);
+  const zoomIn   = Math.min(17, Math.max(startZoom + 2, 15));
+
+  // prevent user gestures from interrupting the sequence
+  const originalGesture = map.get('gestureHandling');
+  map.set('gestureHandling', 'none');
+
+  const onceIdle = (fn) => google.maps.event.addListenerOnce(map, 'idle', () => setTimeout(fn, 0));
+
+  // Step 1: zoom out
+  map.setZoom(zoomOut);
+  onceIdle(() => {
+    // Step 2: pan to target
+    map.panTo(targetLL);
+    onceIdle(() => {
+      // Step 3: zoom in
+      map.setZoom(zoomIn);
+      onceIdle(() => {
+        map.set('gestureHandling', originalGesture || 'greedy');
+        if (typeof onComplete === 'function') onComplete();
+      });
+    });
+  });
+}
+function handleFindMyLocation() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const gLL = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+      // Swoop animation, then perform the 6D select/render
+      animateToLocation(map, gLL, () => handleSelectLatLng(gLL));
+    },
+    () => console.warn('Geolocation unavailable')
+  );
+}
 
 /* ---------- Info panel renderer ---------- */
 function renderInfoPanel({ sixD, regionName, districtName }) {
@@ -403,16 +450,8 @@ function bindUI() {
   });
 
   // Geolocation → pass Google LatLng
-  $('#ctaFind')?.addEventListener('click', () => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const gLL = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-        handleSelectLatLng(gLL);
-      },
-      () => console.warn('Geolocation unavailable')
-    );
-  });
+  $('#ctaFind')?.addEventListener('click', handleFindMyLocation);
+
 
   $('#region')?.addEventListener('change', (e) => {
     const regionName = e.target.value;
