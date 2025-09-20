@@ -9,9 +9,6 @@ import {
 } from './map-core.js';
 import * as CONFIG from './config.js';
 
-// ----------------------------
-// Small helpers
-// ----------------------------
 const $ = (sel, root = document) => root.querySelector(sel);
 const normalize = (s) =>
   (s || '')
@@ -24,9 +21,6 @@ const normalize = (s) =>
 const REGION_SYNONYMS = new Map([['benadir', 'banaadir'], ['banadir', 'banaadir']]);
 const DISTRICT_SYNONYMS = new Map([]);
 
-// ----------------------------
-// Config normalization (supports array/object/default export)
-// ----------------------------
 function coerceRegionsShape(input) {
   if (!input) return [];
   if (Array.isArray(input)) {
@@ -71,20 +65,14 @@ function canonicalDistrictName(name) {
   return DISTRICT_SYNONYMS.get(n) || n;
 }
 
-// ----------------------------
-// State
-// ----------------------------
 let SOMALI_REGIONS = [];
 let map;
 let marker;
-let lastSnapped = null;
-let activeOverlays = null;
+let lastSnapped = null;      // plain {lat,lng} for UI
 let geocoder;
 let placesService;
 
-// ----------------------------
-// Dropdown population
-// ----------------------------
+/* ---------- Dropdowns ---------- */
 function findRegionByName(name) {
   if (!name) return null;
   const canon = canonicalRegionName(name);
@@ -128,7 +116,7 @@ function autoSelectRegion(regionName) {
   const regionObj = findRegionByName(regionName);
   if (regionObj) {
     regionSel.value = regionObj.name;
-    regionSel.disabled = true;          // Region is reliable → lock
+    regionSel.disabled = true;
     populateDistrictsDropdown(regionObj.name);
   } else {
     regionSel.value = '';
@@ -150,9 +138,7 @@ function autoSelectDistrict(regionName, districtName) {
   districtSel.value = match || '';
 }
 
-// ----------------------------
-// Geocoding / Places
-// ----------------------------
+/* ---------- Geocoding ---------- */
 function getComponentLongName(components, type) {
   const c = (components || []).find((comp) => comp.types?.includes(type));
   return c ? c.long_name : '';
@@ -179,14 +165,12 @@ function placesGetDetails(placeId) {
 async function reverseGeocode(lat, lng) {
   const geoResults = await geocoderGeocode({ lat, lng });
 
-  // Region: admin level 1
   let regionName = '';
   for (const res of geoResults) {
     const a1 = getComponentLongName(res.address_components, 'administrative_area_level_1');
     if (a1) { regionName = a1; break; }
   }
 
-  // District priority
   let districtName = '';
   const sublocalityResult = geoResults.find((r) => r.types?.some((t) => t.startsWith('sublocality')));
   if (sublocalityResult?.place_id && placesService) {
@@ -213,9 +197,7 @@ async function reverseGeocode(lat, lng) {
   return { regionName, districtName };
 }
 
-// ----------------------------
-// Map helpers
-// ----------------------------
+/* ---------- Map helpers ---------- */
 function waitForGoogleMaps(timeoutMs = 15000) {
   const startedAt = Date.now();
   return new Promise((resolve, reject) => {
@@ -261,7 +243,7 @@ function showSidebarView(viewId) {
   if (currentBtn) currentBtn.classList.add('is-active');
 }
 
-// Recenter button visibility
+/* Recenter visibility */
 function updateRecenterVisibility() {
   const btn = $('#btnRecenter');
   if (!btn || !map || !lastSnapped) return;
@@ -276,9 +258,7 @@ function updateRecenterVisibility() {
   btn.style.display = dist > 350 ? 'inline-flex' : 'none';
 }
 
-// ----------------------------
-// Info panel renderer (with copy/share/recenter)
-// ----------------------------
+/* ---------- Info panel renderer ---------- */
 function renderInfoPanel({ sixD, regionName, districtName }) {
   const info = $('#infoPanel');
   if (!info) return;
@@ -290,8 +270,8 @@ function renderInfoPanel({ sixD, regionName, districtName }) {
 
   const iconBtnStyle = `
     display:inline-flex;align-items:center;justify-content:center;
-    width:32px;height:32px;border:1px solid rgba(255,255,255,0.15);
-    border-radius:8px;background:rgba(255,255,255,0.04);cursor:pointer
+    width:32px;height:32px;border:1px solid var(--panel-border);
+    border-radius:8px;background: var(--surface-1);cursor:pointer
   `;
 
   info.innerHTML = `
@@ -351,7 +331,7 @@ function renderInfoPanel({ sixD, regionName, districtName }) {
   // Recenter
   $('#btnRecenter')?.addEventListener('click', () => {
     if (lastSnapped && map) {
-      map.panTo(lastSnapped);
+      map.panTo(new google.maps.LatLng(lastSnapped.lat, lastSnapped.lng));
       updateRecenterVisibility();
     }
   });
@@ -375,38 +355,32 @@ function renderInfoPanel({ sixD, regionName, districtName }) {
   updateRecenterVisibility();
 }
 
-// ----------------------------
-// Selection flow — ALWAYS pass LatLng to core
-// ----------------------------
+/* ---------- Selection flow (ensure LatLng to core) ---------- */
 async function handleSelectLatLng(rawLatLng) {
   if (!rawLatLng) return;
 
   const lat = typeof rawLatLng.lat === 'function' ? rawLatLng.lat() : rawLatLng.lat;
-const lng = typeof rawLatLng.lng === 'function' ? rawLatLng.lng() : rawLatLng.lng;
+  const lng = typeof rawLatLng.lng === 'function' ? rawLatLng.lng() : rawLatLng.lng;
 
-const latLngLike = new google.maps.LatLng(lat, lng);
-const snappedAny = snapToGridCenter(latLngLike);
+  const latLngLike = new google.maps.LatLng(lat, lng);
+  const snappedAny = snapToGridCenter(latLngLike);
 
-// ensure we have a proper Google LatLng for core functions
-const snappedLL = (typeof snappedAny.lat === 'function' && typeof snappedAny.lng === 'function')
-  ? snappedAny
-  : new google.maps.LatLng(
-      typeof snappedAny.lat === 'function' ? snappedAny.lat() : snappedAny.lat,
-      typeof snappedAny.lng === 'function' ? snappedAny.lng() : snappedAny.lng
-    );
+  const snappedLL = (typeof snappedAny.lat === 'function' && typeof snappedAny.lng === 'function')
+    ? snappedAny
+    : new google.maps.LatLng(
+        typeof snappedAny.lat === 'function' ? snappedAny.lat() : snappedAny.lat,
+        typeof snappedAny.lng === 'function' ? snappedAny.lng() : snappedAny.lng
+      );
 
-// plain object for UI/reg-form values
-const snapped = { lat: snappedLL.lat(), lng: snappedLL.lng() };
-lastSnapped = snapped;
+  const snapped = { lat: snappedLL.lat(), lng: snappedLL.lng() };
+  lastSnapped = snapped;
 
-// 6D + visuals
-const sixD = generate6DCode(snapped.lat, snapped.lng);
-activeOverlays = drawAddressBoxes(map, snappedLL);   // ✅ pass LatLng
-updateDynamicGrid(map, snappedLL);                   // ✅ pass LatLng
+  const sixD = generate6DCode(snapped.lat, snapped.lng);
+  drawAddressBoxes(map, snappedLL);
+  updateDynamicGrid(map, snappedLL);
 
-placeMarkerLatLng(snappedLL, !marker);               // accepts LatLng
-map.panTo(snappedLL);                                // accepts LatLng
-
+  placeMarkerLatLng(snappedLL, !marker);
+  map.panTo(snappedLL);
 
   let regionName = '', districtName = '';
   try {
@@ -420,9 +394,7 @@ map.panTo(snappedLL);                                // accepts LatLng
   renderInfoPanel({ sixD, regionName, districtName });
 }
 
-// ----------------------------
-// Bind + init
-// ----------------------------
+/* ---------- Bind + init ---------- */
 function bindUI() {
   $('#sidebarToggle')?.addEventListener('click', () => {
     const sb = $('#sidebar');
@@ -430,7 +402,7 @@ function bindUI() {
     setSidebarExpanded(!!willExpand);
   });
 
-  // ✅ Geolocation now passes a Google LatLng object
+  // Geolocation → pass Google LatLng
   $('#ctaFind')?.addEventListener('click', () => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
@@ -446,14 +418,25 @@ function bindUI() {
     const regionName = e.target.value;
     populateDistrictsDropdown(regionName);
   });
+
+  // Theme toggle (default dark)
+  const themeTgl = document.querySelector('#themeToggle');
+  if (themeTgl) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    themeTgl.checked = false;
+    themeTgl.addEventListener('change', (e) => {
+      const light = e.target.checked;
+      document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
+    });
+  }
 }
 
 async function initMapOnceReady() {
   await waitForGoogleMaps();
 
   geocoder = new google.maps.Geocoder();
+  const defaultCenter = { lat: 2.0469, lng: 45.3182 }; // Mogadishu
 
-  const defaultCenter = { lat: 2.0469, lng: 45.3182 };
   map = new google.maps.Map($('#map'), {
     center: defaultCenter, zoom: 12,
     mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
@@ -461,11 +444,12 @@ async function initMapOnceReady() {
 
   placesService = new google.maps.places.PlacesService(map);
 
-  map.addListener('zoom_changed', () => { if (lastSnapped) updateDynamicGrid(map, lastSnapped); });
-  map.addListener('dragend', () => { if (lastSnapped) updateDynamicGrid(map, lastSnapped); });
+  map.addListener('zoom_changed', () => { if (lastSnapped) updateDynamicGrid(map, new google.maps.LatLng(lastSnapped.lat, lastSnapped.lng)); });
+  map.addListener('dragend', () => { if (lastSnapped) updateDynamicGrid(map, new google.maps.LatLng(lastSnapped.lat, lastSnapped.lng)); });
   map.addListener('idle', () => updateRecenterVisibility());
 
-  map.addListener('click', (e) => handleSelectLatLng(e.latLng)); // e.latLng is already a Google LatLng
+  // Map click gives a Google LatLng already
+  map.addListener('click', (e) => handleSelectLatLng(e.latLng));
 
   setSidebarExpanded(false);
 }
