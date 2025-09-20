@@ -70,44 +70,44 @@ body.dark-mode {
 }
 
 #find-my-address-btn {
-  position: fixed;
-  left: 50%;
-  bottom: 2.5rem;
-  transform: translate(-50%, 0);
-  z-index: 1002;
-  opacity: 1;
-  pointer-events: auto;
-  animation: fadeInUp 0.7s cubic-bezier(.4,1.4,.6,1) 0.1s both;
-  min-width: 220px;
-  max-width: 340px;
-  width: 100%;
-  box-sizing: border-box;
+  position: fixed !important;
+  left: 50% !important;
+  bottom: 2.5rem !important;
+  transform: translate(-50%, 0) !important;
+  z-index: 1002 !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  animation: fadeInUp 0.7s cubic-bezier(.4,1.4,.6,1) 0.1s both !important;
+  min-width: 220px !important;
+  max-width: 340px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 #info-panel {
-  position: fixed;
-  left: 50%;
-  bottom: 2.5rem;
-  transform: translate(-50%, 30px);
-  min-width: 0;
-  max-width: 370px;
-  width: 100%;
-  padding: 1.3rem 1.5rem 1.1rem 1.5rem;
-  z-index: 1001;
-  opacity: 0;
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.0rem;
-  animation: none;
-  box-sizing: border-box;
+  position: fixed !important;
+  left: 50% !important;
+  bottom: 2.5rem !important;
+  transform: translate(-50%, 30px) !important;
+  min-width: 0 !important;
+  max-width: 370px !important;
+  width: 100% !important;
+  padding: 1.3rem 1.5rem 1.1rem 1.5rem !important;
+  z-index: 1001 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 1.0rem !important;
+  animation: none !important;
+  box-sizing: border-box !important;
 }
 #info-panel.visible {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translate(-50%, 0);
-  animation: fadeInUp 0.7s cubic-bezier(.4,1.4,.6,1) 0.1s both;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translate(-50%, 0) !important;
+  animation: fadeInUp 0.7s cubic-bezier(.4,1.4,.6,1) 0.1s both !important;
 }
 
 .info-panel__actions {
