@@ -1,3 +1,119 @@
+// === Floating Info Panel & Button Logic ===
+function showFindMyAddressBtn() {
+  const btn = document.getElementById('find-my-address-btn');
+  if (btn) {
+    btn.style.display = 'flex';
+    btn.style.opacity = '1';
+    btn.classList.remove('fade-out');
+  }
+  const panel = document.getElementById('info-panel');
+  if (panel) {
+    panel.classList.remove('visible');
+    setTimeout(() => { panel.style.display = 'none'; }, 350);
+  }
+}
+
+function showInfoPanel({ code6D, regionName, districtName }) {
+  const btn = document.getElementById('find-my-address-btn');
+  if (btn) {
+    btn.classList.add('fade-out');
+    btn.style.opacity = '0';
+    setTimeout(() => { btn.style.display = 'none'; }, 350);
+  }
+  const panel = document.getElementById('info-panel');
+  if (panel) {
+    // Populate code
+    const [c1, c2, c3] = (code6D || '').split('-');
+    document.getElementById('code-part-1').textContent = c1 || '';
+    document.getElementById('code-part-2').textContent = c2 || '';
+    document.getElementById('code-part-3').textContent = c3 || '';
+    // Populate district/region
+    const districtDiv = document.getElementById('district-name');
+    const regionDiv = document.getElementById('region-name');
+    if (districtDiv) {
+      if (districtName) { districtDiv.textContent = districtName; districtDiv.style.display = ''; }
+      else { districtDiv.style.display = 'none'; }
+    }
+    if (regionDiv) {
+      if (regionName) { regionDiv.textContent = regionName; regionDiv.style.display = ''; }
+      else { regionDiv.style.display = 'none'; }
+    }
+    panel.style.display = 'flex';
+    setTimeout(() => { panel.classList.add('visible'); }, 10);
+  }
+}
+
+function bindFloatingPanelUI(map, getCurrent6D, getCurrentLatLng) {
+  // Find button triggers geolocation
+  const findBtn = document.getElementById('find-my-address-btn');
+  if (findBtn) {
+    findBtn.addEventListener('click', () => {
+      if (typeof handleFindMyLocation === 'function') handleFindMyLocation();
+    });
+  }
+  // Copy
+  const copyBtn = document.getElementById('copy-btn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      const code = getCurrent6D();
+      const district = document.getElementById('district-name')?.textContent || '';
+      const region = document.getElementById('region-name')?.textContent || '';
+      const full = [code, district, region].filter(Boolean).join(' - ');
+      try {
+        await navigator.clipboard.writeText(full);
+        copyBtn.classList.add('copied');
+        setTimeout(() => copyBtn.classList.remove('copied'), 800);
+      } catch {}
+    });
+  }
+  // Share
+  const shareBtn = document.getElementById('share-btn');
+  if (shareBtn) {
+    shareBtn.addEventListener('click', async () => {
+      const code = getCurrent6D();
+      const url = window.location.href.split('#')[0] + '?code=' + encodeURIComponent(code);
+      if (navigator.share) {
+        try { await navigator.share({ title: '6D Address', text: code, url }); } catch {}
+      } else {
+        await navigator.clipboard.writeText(url);
+      }
+    });
+  }
+  // Recenter
+  const recenterBtn = document.getElementById('recenter-btn');
+  if (recenterBtn) {
+    recenterBtn.addEventListener('click', () => {
+      if (typeof getCurrentLatLng === 'function') {
+        const latlng = getCurrentLatLng();
+        if (latlng && map) map.panTo(latlng);
+      }
+    });
+  }
+  // Register
+  const regBtn = document.getElementById('register-this-address-btn');
+  if (regBtn) {
+    regBtn.addEventListener('click', () => {
+      setSidebarExpanded(true);
+      showSidebarView('register');
+      const codeInput = document.getElementById('code');
+      if (codeInput) codeInput.value = getCurrent6D();
+    });
+  }
+}
+
+// Theme toggler: live update
+function setupThemeToggler() {
+  const themeTgl = document.querySelector('#themeToggle');
+  if (themeTgl) {
+    const setTheme = (light) => {
+      document.body.classList.toggle('dark-mode', !light);
+      document.body.classList.toggle('light-mode', !!light);
+      document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
+    };
+    setTheme(themeTgl.checked);
+    themeTgl.addEventListener('change', (e) => setTheme(e.target.checked));
+  }
+}
 // public/js/somalia-map.js
 // ES-module UI glue; core logic stays in map-core.js
 
