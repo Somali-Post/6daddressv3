@@ -11,19 +11,18 @@
   <link rel="stylesheet" href="/css/somalia-map.css" />
 </head>
 <body>
-  <!-- Map -->
+  <!-- Map canvas -->
   <div id="map"></div>
 
-  <!-- NEW: floating brand plaque -->
+  <!-- Floating brand plaque -->
   <div id="logo-container">
     <img src="assets/logo-somalia.png" alt="6D Address Somalia" />
   </div>
 
-  <!-- Sidebar (unchanged structure) -->
+  <!-- Sidebar -->
   <div id="sidebar" class="sidebar collapsed" aria-expanded="false">
     <div class="sidebar__header">
       <button id="sidebarToggle" class="sidebar__toggle" aria-label="Toggle sidebar">
-        <!-- menu icon -->
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </button>
       <div class="sidebar__title link-text">6D Address Somalia</div>
@@ -77,7 +76,7 @@
         </label>
       </div>
 
-      <!-- Registration view kept for JS flow -->
+      <!-- Registration view -->
       <section id="view-register" class="sidebar-view">
         <form id="registerForm">
           <div class="field">
@@ -113,8 +112,17 @@
     </div>
   </div>
 
-  <!-- Google Maps loader (simple loader; your build provides the key) -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&libraries=geometry,places" async defer></script>
+  <!-- Load Google Maps using the injected key from config.js -->
+  <script type="module">
+    import { GOOGLE_MAPS_API_KEY } from '/js/config.js';
+    const s = document.createElement('script');
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}&libraries=geometry,places`;
+    s.async = true;
+    s.defer = true;
+    document.head.appendChild(s);
+  </script>
+
+  <!-- App code (waits for Maps via waitForGoogleMaps) -->
   <script type="module" src="/js/somalia-map.js"></script>
 </body>
 </html>
