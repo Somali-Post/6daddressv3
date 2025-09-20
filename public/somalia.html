@@ -1,114 +1,120 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Somalia Registration Map — 6D Address</title>
+  <title>6D Address — Somalia</title>
 
-  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="css/somalia-map.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/somalia-map.css" />
 </head>
 <body>
-  <!-- Map base layer -->
-  <div id="map" aria-label="Somalia map"></div>
+  <!-- Map -->
+  <div id="map"></div>
 
-  <!-- Sidebar overlay; default is collapsed -->
-  <aside id="sidebar" class="sidebar collapsed" aria-label="Main sidebar" aria-expanded="false">
+  <!-- NEW: floating brand plaque -->
+  <div id="logo-container">
+    <img src="assets/logo-somalia.png" alt="6D Address Somalia" />
+  </div>
+
+  <!-- Sidebar (unchanged structure) -->
+  <div id="sidebar" class="sidebar collapsed" aria-expanded="false">
     <div class="sidebar__header">
-      <button class="sidebar__toggle" id="sidebarToggle" aria-label="Expand sidebar" title="Expand sidebar">
-        <svg class="sidebar__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
+      <button id="sidebarToggle" class="sidebar__toggle" aria-label="Toggle sidebar">
+        <!-- menu icon -->
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </button>
-      <span class="sidebar__title link-text">6D Address</span>
+      <div class="sidebar__title link-text">6D Address Somalia</div>
     </div>
 
     <div class="sidebar__scroll">
-      <!-- Main Navigation Group -->
-      <nav class="sidebar__nav" aria-label="Primary">
+      <nav class="sidebar__nav" aria-label="Main">
         <a class="sidebar__link" href="/index.html">
-          <!-- Globe -->
-          <svg class="sidebar__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
-            <path d="M3 12h18M12 3a12 12 0 0 0 0 18M12 3a12 12 0 0 1 0 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
+          <span class="sidebar__icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 2a10 10 0 100 20 10 10 0 000-20Zm0 0c3 3 3 15 0 20m0-20C9 5 9 19 12 22M2 12h20M4 7h16M4 17h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+          </span>
           <span class="link-text">Global Map</span>
         </a>
         <a class="sidebar__link" href="#">
-          <!-- Info -->
-          <svg class="sidebar__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
-            <path d="M12 8h.01M11 12h2v5h-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
+          <span class="sidebar__icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M12 7v6m0 4h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </span>
           <span class="link-text">About Us</span>
         </a>
         <a class="sidebar__link" href="#">
-          <!-- Envelope -->
-          <svg class="sidebar__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M3.5 7.5 12 13l8.5-5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <span class="sidebar__icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="1.5" />
+              <path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+          </span>
           <span class="link-text">Contact Us</span>
         </a>
       </nav>
 
-      <!-- Bottom Utility Group -->
-      <div class="sidebar__utility" aria-label="Utilities">
+      <div class="sidebar__utility">
         <a class="sidebar__link" href="#">
-          <!-- Gear -->
-          <svg class="sidebar__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8z" stroke="currentColor" stroke-width="2"/>
-            <path d="M19.4 15a7.97 7.97 0 0 0 .1-1 7.97 7.97 0 0 0-.1-1l2.1-1.6a.5.5 0 0 0 .1-.7l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.32 7.32 0 0 0-1.7-1l-.4-2.7a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.7a7.32 7.32 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.7L4.6 12a7.97 7.97 0 0 0-.1 1c0 .34.04.67.1 1l-2.1 1.6a.5.5 0 0 0-.1.7l2 3.5a.5.5 0 0 0 .6.2l2.5-1a7.32 7.32 0 0 0 1.7 1l.4 2.7a.5.5 0 0 0 .5.4h4a.5.5 0 0 0 .5-.4l.4-2.7a7.32 7.32 0 0 0 1.7-1l2.5 1a.5.5 0 0 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.7L19.4 15z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-          </svg>
+          <span class="sidebar__icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M19.4 15a1.5 1.5 0 010-1.9l1.7-2.9-1.7-2.9a1.5 1.5 0 01.6-2l-2.8-1.6a1.5 1.5 0 01-2 .6L12 2.6l-2.9 1.7a1.5 1.5 0 01-2-.6L4.3 5.6a1.5 1.5 0 01.6 2L3.2 10.5l1.7 2.9a1.5 1.5 0 010 1.9l-1.7 2.9 2.9 1.7a1.5 1.5 0 012-.6L12 21.4l2.9-1.7a1.5 1.5 0 012 .6l2.8-1.6a1.5 1.5 0 01-.6-2L21.1 12l-1.7-2.9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </span>
           <span class="link-text">Settings</span>
         </a>
 
-        <div class="sidebar__link sidebar__link--toggle" role="group" aria-label="Appearance">
-          <!-- Sun/Moon -->
-          <svg class="sidebar__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 4V2m0 20v-2M4 12H2m20 0h-2M5 5l-1.4-1.4M20.4 20.4L19 19M19 5l1.4-1.4M5 19L3.6 20.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/>
-          </svg>
-          <div class="link-text" style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-            <span>Light/Dark Mode</span>
-            <label class="switch" aria-label="Toggle dark mode">
-              <input type="checkbox" id="themeToggle" />
-              <span class="slider" aria-hidden="true"></span>
-            </label>
-          </div>
-        </div>
+        <label class="sidebar__link sidebar__link--toggle switch">
+          <input id="themeToggle" type="checkbox" aria-label="Toggle light mode" />
+          <span class="slider" aria-hidden="true"></span>
+          <span class="switch__label link-text">Light mode</span>
+        </label>
       </div>
 
-      <!-- Registration form (kept for CTA flow, no nav link) -->
-      <section id="view-register" class="sidebar-view" aria-labelledby="register-title">
-        <form class="link-text" id="registerForm" novalidate>
-          <h2 id="register-title" class="sr-only">Register This Address</h2>
-          <div class="field"><label for="code">6D Code</label><input id="code" name="code" type="text" readonly /></div>
-          <div class="field"><label for="name">Name</label><input id="name" name="name" type="text" placeholder="Your full name" autocomplete="name" /></div>
-          <div class="field"><label for="phone">Phone Number</label><input id="phone" name="phone" type="tel" placeholder="+252…" autocomplete="tel" /></div>
-          <div class="field"><label for="region">Region</label><select id="region" name="region"><option value="">Select a region</option></select></div>
-          <div class="field"><label for="district">District</label><select id="district" name="district"><option value="">Select a district</option></select></div>
-          <button type="submit" class="btn btn--primary">Submit Registration</button>
+      <!-- Registration view kept for JS flow -->
+      <section id="view-register" class="sidebar-view">
+        <form id="registerForm">
+          <div class="field">
+            <label for="code">6D Code</label>
+            <input id="code" type="text" readonly />
+          </div>
+          <div class="field">
+            <label for="name">Name</label>
+            <input id="name" type="text" autocomplete="name" />
+          </div>
+          <div class="field">
+            <label for="phone">Phone Number</label>
+            <input id="phone" type="tel" autocomplete="tel" />
+          </div>
+          <div class="field">
+            <label for="region">Region</label>
+            <select id="region"></select>
+          </div>
+          <div class="field">
+            <label for="district">District</label>
+            <select id="district"></select>
+          </div>
+          <button type="submit" class="btn btn--primary">Submit</button>
         </form>
       </section>
     </div>
-  </aside>
+  </div>
 
-  <!-- Floating info panel -->
-  <div id="infoPanel" class="info-panel" role="region" aria-live="polite">
+  <!-- Info panel -->
+  <div id="infoPanel" class="info-panel">
     <div class="info-panel__row">
       <button class="btn btn--primary" id="ctaFind">Find My 6D Address</button>
     </div>
   </div>
 
-  <!-- Google Maps (placeholder is replaced at build time) -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=__GOOGLE_MAPS_API_KEY_PLACEHOLDER__&libraries=geometry,places" async defer></script>
-
-  <!-- App (ES module) -->
+  <!-- Google Maps loader (simple loader; your build provides the key) -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&libraries=geometry,places" async defer></script>
   <script type="module" src="/js/somalia-map.js"></script>
 </body>
 </html>
