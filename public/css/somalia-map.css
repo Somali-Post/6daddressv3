@@ -1,4 +1,6 @@
-/* === Floating Card Info Panel & Button === */
+/* ================================
+   Global Tokens & Themes
+   ================================ */
 :root {
   --panel-bg: rgba(255,255,255,0.75);
   --panel-blur: 18px;
@@ -6,35 +8,105 @@
   --panel-border: 1.5px solid rgba(0,0,0,0.08);
   --panel-radius: 22px;
   --panel-text: #222;
+
   --panel-btn-bg: #2563eb;
   --panel-btn-text: #fff;
   --panel-btn-radius: 12px;
   --panel-btn-shadow: 0 2px 8px rgba(37,99,235,0.10);
+
   --code-red: #ef4444;
   --code-green: #22c55e;
   --code-blue: #2563eb;
+
   --icon-btn-bg: rgba(0,0,0,0.06);
   --icon-btn-hover: rgba(37,99,235,0.10);
+
+  --color-bg: #0c111f;
+  --color-text: #ffffff;
+  --color-accent: #007aff;
+  --radius-md: 12px;
+
+  --gap: 16px;
+  --sidebar-width-expanded: 350px;
+  --sidebar-width-collapsed: 80px;
+
+  --z-map: 0;
+  --z-info: 900;
+  --z-sidebar: 1000;
+
+  --surface-1: rgba(255,255,255,0.04);
+  --surface-2: rgba(255,255,255,0.08);
+  --border-subtle: rgba(255,255,255,0.12);
+  --border-muted: rgba(255,255,255,0.16);
+  --switch-track: rgba(255,255,255,0.25);
+  --shadow-strong: 0 10px 30px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.25);
 }
 
 body.dark-mode {
   --panel-bg: rgba(17,22,39,0.85);
-  --panel-blur: 18px;
   --panel-shadow: 0 8px 32px rgba(0,0,0,0.38), 0 1.5px 6px rgba(0,0,0,0.18);
   --panel-border: 1.5px solid rgba(255,255,255,0.10);
-  --panel-radius: 22px;
   --panel-text: #fff;
-  --panel-btn-bg: #2563eb;
-  --panel-btn-text: #fff;
-  --panel-btn-radius: 12px;
   --panel-btn-shadow: 0 2px 8px rgba(37,99,235,0.18);
+
   --code-red: #f87171;
   --code-green: #4ade80;
   --code-blue: #60a5fa;
+
   --icon-btn-bg: rgba(255,255,255,0.08);
   --icon-btn-hover: rgba(37,99,235,0.18);
 }
 
+/* Light theme override via [data-theme="light"] attribute */
+[data-theme="light"] {
+  --color-bg: #ffffff;
+  --color-text: #0c111f;
+
+  --surface-1: rgba(0,0,0,0.04);
+  --surface-2: rgba(0,0,0,0.08);
+  --border-subtle: rgba(0,0,0,0.12);
+  --border-muted: rgba(0,0,0,0.16);
+  --switch-track: rgba(0,0,0,0.25);
+  --shadow-strong: 0 10px 30px rgba(0,0,0,0.20), 0 2px 8px rgba(0,0,0,0.10);
+}
+
+/* ================================
+   Base & Utilities
+   ================================ */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: #000;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  color: var(--color-text);
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}
+
+/* ================================
+   Map
+   ================================ */
+#map {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  z-index: var(--z-map);
+}
+
+/* ================================
+   Floating Styles (generic)
+   ================================ */
 .floating-card {
   background: var(--panel-bg);
   color: var(--panel-text);
@@ -59,16 +131,14 @@ body.dark-mode {
   box-shadow: var(--panel-btn-shadow);
   padding: 1.1em 2.2em;
   cursor: pointer;
-  margin: 0 auto;
+  margin: 0 auto 1.5rem;
   min-width: 260px;
-  margin-bottom: 1.5rem;
   transition: background 0.2s, color 0.2s, box-shadow 0.2s;
 }
 .floating-btn:active,
-.floating-btn:focus {
-  outline: 2px solid var(--panel-btn-bg);
-}
+.floating-btn:focus { outline: 2px solid var(--panel-btn-bg); }
 
+/* Optional global CTA (unchanged size) */
 #find-my-address-btn {
   position: fixed !important;
   left: 50% !important;
@@ -84,24 +154,41 @@ body.dark-mode {
   box-sizing: border-box !important;
 }
 
+/* ================================
+   INFO PANEL (30% smaller, cleaned)
+   ================================ */
 #info-panel {
   position: fixed !important;
   left: 50% !important;
   bottom: 2.5rem !important;
   transform: translate(-50%, 30px) !important;
-  min-width: 0 !important;
-  max-width: 370px !important;
+  z-index: var(--z-info) !important;
+
+  /* size reduced ~30% */
+  max-width: 260px !important;      /* was 370px */
   width: 100% !important;
-  padding: 1.3rem 1.5rem 1.1rem 1.5rem !important;
-  z-index: 1001 !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
+
+  /* compact spacing */
+  padding: 0.9rem 1rem 0.8rem 1rem !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 1.0rem !important;
-  animation: none !important;
+  gap: 0.7rem !important;
+
+  /* visibility state */
+  opacity: 0 !important;
+  pointer-events: none !important;
+
+  /* card visuals */
+  background: var(--panel-bg);
+  color: var(--panel-text);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+  border: var(--panel-border);
+  backdrop-filter: blur(var(--panel-blur));
+  -webkit-backdrop-filter: blur(var(--panel-blur));
   box-sizing: border-box !important;
+  animation: none !important;
 }
 #info-panel.visible {
   opacity: 1 !important;
@@ -110,16 +197,17 @@ body.dark-mode {
   animation: fadeInUp 0.7s cubic-bezier(.4,1.4,.6,1) 0.1s both !important;
 }
 
+/* top-right icon group */
 .info-panel__actions {
   position: absolute;
-  top: 1.1rem;
-  right: 1.3rem;
+  top: 0.8rem;        /* was 1.1rem */
+  right: 0.9rem;      /* was 1.3rem */
   display: flex;
   gap: 0.5rem;
 }
 .icon-btn {
-  width: 38px;
-  height: 38px;
+  width: 26px;        /* was 38px */
+  height: 26px;       /* was 38px */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -129,8 +217,7 @@ body.dark-mode {
   color: var(--panel-text);
   cursor: pointer;
   transition: background 0.18s, color 0.18s;
-  box-shadow: none;
-  font-size: 1.1rem;
+  font-size: 0.8rem;  /* was 1.1rem */
 }
 .icon-btn:hover,
 .icon-btn:focus {
@@ -138,137 +225,69 @@ body.dark-mode {
   color: var(--panel-btn-bg);
 }
 
+/* code plaque */
 .info-panel__code-plaque {
   width: 100%;
   background: rgba(255,255,255,0.85);
-  border-radius: 14px;
-  padding: 0.7em 0.5em;
+  border-radius: 10px;            /* was 14px */
+  padding: 0.5em 0.4em;           /* was 0.7em 0.5em */
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.7em;
-  font-size: 2.1rem;
+  gap: 0.5em;                     /* was 0.7em */
+  font-size: 1.5rem;              /* was 2.1rem */
   font-weight: 700;
   letter-spacing: 0.04em;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  margin-bottom: 0.7em;
+  margin-bottom: 0.5em;           /* was 0.7em */
 }
 body.dark-mode .info-panel__code-plaque {
   background: rgba(17,22,39,0.92);
 }
-.code-part { font-weight: 700; font-size: 2.1rem; }
+.code-part { font-weight: 700; font-size: 1.5rem; }  /* was 2.1rem */
 .code-red { color: var(--code-red); }
 .code-green { color: var(--code-green); }
 .code-blue { color: var(--code-blue); }
-.code-dash { color: #b0b0b0; font-weight: 600; font-size: 2.1rem; margin: 0 0.2em; }
+.code-dash { color: #b0b0b0; font-weight: 600; font-size: 1.5rem; margin: 0 0.2em; }
 
+/* district + region */
 .info-panel__district-region {
   width: 100%;
   text-align: center;
-  margin-bottom: 0.7em;
+  margin-bottom: 0.5em;  /* slightly tighter */
 }
 .info-panel__district {
-  font-size: 1.15rem;
+  font-size: 0.8rem;     /* was 1.15rem */
   font-weight: 600;
   color: var(--panel-text);
 }
 .info-panel__region {
-  font-size: 1rem;
+  font-size: 0.7rem;     /* was 1rem */
   color: #8b8b8b;
-  margin-top: 0.1em;
+  margin-top: 0.08em;
 }
 
+/* register button in panel */
 #register-this-address-btn {
-  margin-top: 0.7em;
+  margin-top: 0.5em;
   width: 100%;
-  padding: 1.1em 0;
-  font-size: 1.1rem;
+  padding: 0.8em 0;      /* was 1.1em */
+  font-size: 0.8rem;     /* was 1.1rem */
   font-weight: 600;
   background: var(--panel-btn-bg);
   color: var(--panel-btn-text);
   border: none;
-  border-radius: var(--panel-btn-radius);
+  border-radius: 8px;    /* was 12px */
   box-shadow: var(--panel-btn-shadow);
   cursor: pointer;
   transition: background 0.2s, color 0.2s, box-shadow 0.2s;
 }
 #register-this-address-btn:active,
-#register-this-address-btn:focus {
-  outline: 2px solid var(--panel-btn-bg);
-}
+#register-this-address-btn:focus { outline: 2px solid var(--panel-btn-bg); }
 
-@keyframes fadeInUp {
-  0% { opacity: 0; transform: translateY(40px) scale(0.98); }
-  60% { opacity: 1; transform: translateY(-6px) scale(1.01); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-}
-/* ==========================================================================
-   Somalia Registration Map — Sidebar on RIGHT, Logged-Out content groups
-   with Light/Dark Theme Support
-   ========================================================================== */
-
-:root{
-  --color-bg: #0c111f;           /* dark navy (default theme surface) */
-  --color-text: #ffffff;
-  --color-accent: #007aff;
-  --radius-md: 12px;
-
-  --gap: 16px;
-  --sidebar-width-expanded: 350px;
-  --sidebar-width-collapsed: 80px;
-
-  --z-map: 0;
-  --z-info: 900;
-  --z-sidebar: 1000;
-}
-
-/* THEME TOKENS (default = dark) */
-:root {
-  --surface-1: rgba(255,255,255,0.04);
-  --surface-2: rgba(255,255,255,0.08);
-  --border-subtle: rgba(255,255,255,0.12);
-  --border-muted: rgba(255,255,255,0.16);
-  --panel-border: rgba(255,255,255,0.15);
-  --switch-track: rgba(255,255,255,0.25);
-  --shadow-strong: 0 10px 30px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.25);
-}
-
-/* Light theme overrides */
-[data-theme="light"] {
-  --color-bg: #ffffff;
-  --color-text: #0c111f;
-
-  --surface-1: rgba(0,0,0,0.04);
-  --surface-2: rgba(0,0,0,0.08);
-  --border-subtle: rgba(0,0,0,0.12);
-  --border-muted: rgba(0,0,0,0.16);
-  --panel-border: rgba(0,0,0,0.15);
-  --switch-track: rgba(0,0,0,0.25);
-  --shadow-strong: 0 10px 30px rgba(0,0,0,0.20), 0 2px 8px rgba(0,0,0,0.10);
-}
-
-*,
-*::before,
-*::after { box-sizing: border-box; }
-
-html, body {
-  height: 100%;
-  margin: 0;
-  background: #000;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
-  color: var(--color-text);
-}
-
-/* Map base */
-#map {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100dvh;
-  z-index: var(--z-map);
-}
-
-/* Sidebar overlay (RIGHT; expands LEFT) */
+/* ================================
+   Sidebar (Right)
+   ================================ */
 .sidebar {
   position: fixed;
   top: var(--gap);
@@ -286,8 +305,6 @@ html, body {
   flex-direction: column;
   transition: width 220ms ease, transform 220ms ease, opacity 200ms ease;
 }
-
-/* Collapsed: hide only text/toggles (icons stay) */
 .sidebar.collapsed { width: var(--sidebar-width-collapsed); }
 .sidebar.collapsed .link-text { display: none !important; }
 .sidebar.collapsed .sidebar__header { justify-content: center; }
@@ -343,7 +360,7 @@ html, body {
 .sidebar .sidebar__link:hover { background: var(--surface-2); }
 .sidebar .sidebar__icon { display: inline-block; line-height: 0; }
 
-/* Bottom utility group: separator + stick to bottom */
+/* Bottom utility group */
 .sidebar .sidebar__utility {
   margin-top: auto;
   padding-top: 10px;
@@ -352,12 +369,10 @@ html, body {
   gap: 8px;
 }
 
-/* Toggle row can reuse .sidebar__link layout */
-.sidebar .sidebar__link--toggle {
-  background: var(--surface-1);
-}
+/* Toggle row */
+.sidebar .sidebar__link--toggle { background: var(--surface-1); }
 
-/* Views (register kept for JS flow) */
+/* Views */
 .sidebar .sidebar-view { display: none; }
 .sidebar .sidebar-view.is-active { display: block; }
 
@@ -418,19 +433,18 @@ html, body {
 .switch input:checked + .slider::after { transform: translateX(18px); }
 .switch .switch__label { font-size: 14px; }
 
-/* Info panel */
-
-
-/* SR-only helper */
-.sr-only {
-  position: absolute !important;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0,0,0,0);
-  white-space: nowrap; border: 0;
+/* ================================
+   Animations
+   ================================ */
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(40px) scale(0.98); }
+  60% { opacity: 1; transform: translateY(-6px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Mobile ≤ 768px: bottom sheet */
+/* ================================
+   Mobile ≤ 768px
+   ================================ */
 @media (max-width: 768px) {
   .sidebar {
     top: auto;
@@ -453,16 +467,22 @@ html, body {
   .sidebar .sidebar__header::before {
     content: "";
     position: absolute;
-    top: 8px;
-    width: 40px; height: 4px;
+    top: 8px; width: 40px; height: 4px;
     border-radius: 999px;
     background: var(--surface-2);
   }
-  .info-panel { bottom: calc(var(--gap) + 72px); max-width: 94vw; min-width: min(94vw, 720px); }
-}
-/* ... existing styles above ... */
 
-/* === 6D Somalia brand plaque (matches Global Map) === */
+  /* keep the panel readable on small screens */
+  #info-panel {
+    bottom: calc(var(--gap) + 72px) !important;
+    max-width: 94vw !important;
+    padding: 1rem 1.1rem 0.9rem 1.1rem !important; /* slight bump for touch */
+  }
+}
+
+/* ================================
+   Brand Plaque (Top-Left)
+   ================================ */
 #logo-container {
   position: absolute;
   top: 20px;
@@ -472,9 +492,8 @@ html, body {
   padding: 8px;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-  width: 150px;            /* fixed width for consistent sizing */
+  width: 150px;
 }
-
 #logo-container img {
   width: 100%;
   height: auto;
