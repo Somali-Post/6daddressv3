@@ -264,7 +264,8 @@ html, body {
 #info-panel {
   position: fixed !important;
   left: 50% !important;
-  top: 60px !important;
+  bottom: 2.5rem !important;
+  top: auto !important;
   transform: translateX(-50%) !important;
   z-index: var(--z-info) !important;
   width: 340px !important;
@@ -341,13 +342,13 @@ body.dark-mode .info-panel__code-plaque { background: rgba(17,22,39,0.92); }
   display: flex;
   justify-content: center; /* center horizontally */
   align-items: center;
-  gap: 0.35rem;            /* reduced space between icons */
+  gap: 0.12rem;            /* minimal space between icons */
   width: 100%;
-  margin-top: 0.2rem;      /* less breathing room below the button */
+  margin-top: 0.02rem;     /* minimal breathing room below the button */
 }
 .icon-btn {
-  width: 26px;
-  height: 26px;
+  width: 20px;
+  height: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
