@@ -341,13 +341,13 @@ body.dark-mode .info-panel__code-plaque { background: rgba(17,22,39,0.92); }
   display: flex;
   justify-content: center; /* center horizontally */
   align-items: center;
-  gap: 0.85rem;            /* space between icons */
+  gap: 0.35rem;            /* reduced space between icons */
   width: 100%;
-  margin-top: 0.6rem;      /* breathing room below the button */
+  margin-top: 0.2rem;      /* less breathing room below the button */
 }
 .icon-btn {
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
