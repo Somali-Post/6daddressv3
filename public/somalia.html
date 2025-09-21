@@ -106,7 +106,14 @@
         <form id="registerForm">
           <div class="field">
             <label for="code">6D Code</label>
-            <input id="code" type="text" readonly />
+            <div id="register-code-plaque" class="register-code-plaque">
+              <span id="register-code-part-1" class="register-code-part register-code-red">44</span>
+              <span class="register-code-dash">-</span>
+              <span id="register-code-part-2" class="register-code-part register-code-green">06</span>
+              <span class="register-code-dash">-</span>
+              <span id="register-code-part-3" class="register-code-part register-code-blue">33</span>
+            </div>
+            <input id="code" type="hidden" />
           </div>
           <div class="field">
             <label for="name">Name</label>

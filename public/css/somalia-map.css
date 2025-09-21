@@ -1,3 +1,27 @@
+/* Registration 6D code plaque */
+#registerForm .register-code-plaque {
+  width: 100%;
+  background: rgba(255,255,255,0.08);
+  border-radius: 12px;
+  border: 1.5px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.7em;
+  margin-top: 0.2em;
+  color: var(--panel-text);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 0.45em 0.3em;
+}
+#registerForm .register-code-part { font-weight: 700; }
+#registerForm .register-code-red { color: var(--code-red); }
+#registerForm .register-code-green { color: var(--code-green); }
+#registerForm .register-code-blue { color: var(--code-blue); }
+#registerForm .register-code-dash { color: #b0b0b0; font-weight: 600; margin: 0 0.13em; }
 .sidebar.collapsed .sidebar__section-heading {
   display: none !important;
 }

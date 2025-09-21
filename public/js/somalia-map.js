@@ -119,9 +119,17 @@ function bindFloatingPanelUI(map, getCurrent6D, getCurrentLatLng) {
             backBtn.remove();
           });
         }
-      // Set code value
-      const codeInput = document.getElementById('code');
-      if (codeInput) codeInput.value = getCurrent6D();
+  // Set code value and update colored code plaque
+  const codeInput = document.getElementById('code');
+  const code = getCurrent6D();
+  if (codeInput) codeInput.value = code;
+  const [rc1, rc2, rc3] = (code || '').split('-');
+  const p1 = document.getElementById('register-code-part-1');
+  const p2 = document.getElementById('register-code-part-2');
+  const p3 = document.getElementById('register-code-part-3');
+  if (p1) p1.textContent = rc1 || '';
+  if (p2) p2.textContent = rc2 || '';
+  if (p3) p3.textContent = rc3 || '';
     });
   }
 }
