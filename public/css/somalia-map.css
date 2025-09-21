@@ -1,39 +1,50 @@
-/* ================================
-   Global Tokens & Themes
-   ================================ */
+/* =========================================================
+   6D Somalia — Full UI Styles (Info Panel fix + Sidebar + Logo)
+   ========================================================= */
+
+/* ---------- Design Tokens ---------- */
 :root {
+  /* Panels / cards */
   --panel-bg: rgba(255,255,255,0.75);
+  --panel-text: #222;
   --panel-blur: 18px;
   --panel-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 1.5px 6px rgba(0,0,0,0.10);
   --panel-border: 1.5px solid rgba(0,0,0,0.08);
   --panel-radius: 22px;
-  --panel-text: #222;
 
+  /* Buttons */
   --panel-btn-bg: #2563eb;
   --panel-btn-text: #fff;
-  --panel-btn-radius: 10px;
+  --panel-btn-radius: 12px;
   --panel-btn-shadow: 0 2px 8px rgba(37,99,235,0.10);
 
+  /* 6D code colors */
   --code-red: #ef4444;
   --code-green: #22c55e;
   --code-blue: #2563eb;
 
+  /* Icon chips */
   --icon-btn-bg: rgba(0,0,0,0.06);
   --icon-btn-hover: rgba(37,99,235,0.10);
 
+  /* App chrome */
   --color-bg: #0c111f;
   --color-text: #ffffff;
   --color-accent: #007aff;
-  --radius-md: 12px;
 
+  /* Layout */
+  --radius-md: 12px;
   --gap: 16px;
   --sidebar-width-expanded: 350px;
   --sidebar-width-collapsed: 80px;
 
+  /* Z-layers (map lowest) */
   --z-map: 0;
   --z-info: 900;
   --z-sidebar: 1000;
+  --z-logo: 1100;
 
+  /* Surfaces / borders / shadows */
   --surface-1: rgba(255,255,255,0.04);
   --surface-2: rgba(255,255,255,0.08);
   --border-subtle: rgba(255,255,255,0.12);
@@ -44,9 +55,9 @@
 
 body.dark-mode {
   --panel-bg: rgba(17,22,39,0.85);
+  --panel-text: #fff;
   --panel-shadow: 0 8px 32px rgba(0,0,0,0.38), 0 1.5px 6px rgba(0,0,0,0.18);
   --panel-border: 1.5px solid rgba(255,255,255,0.10);
-  --panel-text: #fff;
   --panel-btn-shadow: 0 2px 8px rgba(37,99,235,0.18);
 
   --code-red: #f87171;
@@ -70,9 +81,7 @@ body.dark-mode {
   --shadow-strong: 0 10px 30px rgba(0,0,0,0.20), 0 2px 8px rgba(0,0,0,0.10);
 }
 
-/* ================================
-   Base
-   ================================ */
+/* ---------- Base ---------- */
 *,
 *::before,
 *::after { box-sizing: border-box; }
@@ -85,9 +94,7 @@ html, body {
   color: var(--color-text);
 }
 
-/* ================================
-   Map
-   ================================ */
+/* ---------- Map (bottom layer) ---------- */
 #map {
   position: fixed;
   inset: 0;
@@ -96,9 +103,73 @@ html, body {
   z-index: var(--z-map);
 }
 
-/* ================================
-   Info Panel (30% smaller, fixed)
-   ================================ */
+/* ---------- Branding plaque (top-left) ---------- */
+#logo-container {
+  position: fixed;      /* fixed so it stays on top of map */
+  top: 20px;
+  left: 20px;
+  z-index: var(--z-logo);
+  background-color: #ffffff;
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  width: 150px;         /* constant, crisp */
+}
+#logo-container img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ---------- Generic floating card/btn ---------- */
+.floating-card {
+  background: var(--panel-bg);
+  color: var(--panel-text);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+  border: var(--panel-border);
+  backdrop-filter: blur(var(--panel-blur));
+  -webkit-backdrop-filter: blur(var(--panel-blur));
+  transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+}
+
+.floating-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: var(--panel-btn-bg);
+  color: var(--panel-btn-text);
+  border: none;
+  border-radius: var(--panel-btn-radius);
+  box-shadow: var(--panel-btn-shadow);
+  padding: 1.1em 2.2em;
+  cursor: pointer;
+  margin: 0 auto 1.5rem;
+  min-width: 260px;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.floating-btn:active,
+.floating-btn:focus { outline: 2px solid var(--panel-btn-bg); }
+
+/* If you use a global CTA button */
+#find-my-address-btn {
+  position: fixed !important;
+  left: 50% !important;
+  bottom: 2.5rem !important;
+  transform: translate(-50%, 0) !important;
+  z-index: 1002 !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  animation: fadeInUp 0.7s cubic-bezier(.4,1.4,.6,1) 0.1s both !important;
+  min-width: 220px !important;
+  max-width: 340px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* ---------- INFO PANEL (30% smaller + spacing fix) ---------- */
 #info-panel {
   position: fixed !important;
   left: 50% !important;
@@ -106,14 +177,14 @@ html, body {
   transform: translate(-50%, 30px) !important;
   z-index: var(--z-info) !important;
 
-  max-width: 260px !important;   /* smaller */
+  max-width: 260px !important;          /* smaller */
   width: 100% !important;
 
-  padding: 1rem 1.2rem 1.6rem 1.2rem !important; /* extra bottom padding */
+  padding: 1.25rem 1.25rem 1.75rem 1.25rem !important; /* extra bottom padding */
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 0.9rem !important;
+  gap: 0.95rem !important;
 
   opacity: 0 !important;
   pointer-events: none !important;
@@ -134,18 +205,18 @@ html, body {
   animation: fadeInUp 0.7s cubic-bezier(.4,1.4,.6,1) 0.1s both !important;
 }
 
-/* copy + share buttons */
+/* actions (copy/share) */
 .info-panel__actions {
   position: absolute;
   top: 0.9rem;
   right: 1rem;
   display: flex;
-  gap: 0.9rem; /* more spacing */
+  gap: 0.85rem;     /* more breathing room */
 }
 .icon-btn {
   width: 28px;
   height: 28px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--icon-btn-bg);
@@ -162,31 +233,29 @@ html, body {
   color: var(--panel-btn-bg);
 }
 
-/* 6D code plaque */
+/* 6D plaque */
 .info-panel__code-plaque {
   width: 100%;
   background: rgba(255,255,255,0.85);
-  border-radius: 10px;
-  padding: 0.5em 0.4em;
+  border-radius: 10px;                 /* smaller radius to match scale */
+  padding: 0.5em 0.45em;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5em;
-  font-size: 1.5rem;
+  font-size: 1.5rem;                   /* was ~2.1rem */
   font-weight: 700;
   letter-spacing: 0.04em;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
 }
-body.dark-mode .info-panel__code-plaque {
-  background: rgba(17,22,39,0.92);
-}
-.code-part, .code-dash { font-size: 1.5rem; font-weight: 700; }
-.code-red { color: var(--code-red); }
-.code-green { color: var(--code-green); }
+body.dark-mode .info-panel__code-plaque { background: rgba(17,22,39,0.92); }
+.code-part { font-weight: 700; font-size: 1.5rem; }
+.code-red  { color: var(--code-red); }
+.code-green{ color: var(--code-green); }
 .code-blue { color: var(--code-blue); }
-.code-dash { color: #b0b0b0; font-weight: 600; margin: 0 0.2em; }
+.code-dash { color: #b0b0b0; font-weight: 600; font-size: 1.5rem; margin: 0 0.2em; }
 
-/* district + region */
+/* district/region */
 .info-panel__district-region {
   width: 100%;
   text-align: center;
@@ -199,44 +268,203 @@ body.dark-mode .info-panel__code-plaque {
 .info-panel__region {
   font-size: 0.75rem;
   color: #8b8b8b;
-  margin-top: 0.1em;
+  margin-top: 0.08em;
 }
 
-/* register button */
+/* register button (no overlap, fills inner width) */
 #register-this-address-btn {
-  margin-top: 1rem;   /* spacing from text */
+  display: block;
+  align-self: stretch;     /* respects panel padding for full-width look */
   width: 100%;
+  min-width: 0;
+  margin-top: 1rem;
   padding: 0.9em 0;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
   background: var(--panel-btn-bg);
   color: var(--panel-btn-text);
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;     /* slightly less than panel radius */
   box-shadow: var(--panel-btn-shadow);
   cursor: pointer;
-  display: block;
 }
 #register-this-address-btn:active,
-#register-this-address-btn:focus {
-  outline: 2px solid var(--panel-btn-bg);
+#register-this-address-btn:focus { outline: 2px solid var(--panel-btn-bg); }
+
+/* ---------- Sidebar (RIGHT) ---------- */
+.sidebar {
+  position: fixed;
+  top: var(--gap);
+  right: var(--gap);
+  left: auto;
+  height: calc(100dvh - (var(--gap) * 2));
+  width: var(--sidebar-width-expanded);
+  background: var(--color-bg);
+  color: var(--color-text);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-strong);
+  overflow: hidden;
+  z-index: var(--z-sidebar);        /* above map & info panel */
+  display: flex;
+  flex-direction: column;
+  transition: width 220ms ease, transform 220ms ease, opacity 200ms ease;
 }
 
-/* ================================
-   Animations
-   ================================ */
+/* collapsed state keeps icons visible */
+.sidebar.collapsed { width: var(--sidebar-width-collapsed); }
+.sidebar.collapsed .link-text { display: none !important; }
+.sidebar.collapsed .sidebar__header { justify-content: center; }
+.sidebar.collapsed .sidebar__link { grid-template-columns: 24px; justify-content: center; }
+
+/* header */
+.sidebar .sidebar__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.sidebar .sidebar__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-1);
+  border-radius: 8px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+.sidebar .sidebar__toggle:hover { background: var(--surface-2); }
+.sidebar .sidebar__title { font-weight: 600; }
+
+/* scroll area */
+.sidebar .sidebar__scroll {
+  overflow: auto;
+  padding: 10px;
+  scrollbar-width: thin;
+  display: flex;
+  flex-direction: column;
+}
+
+/* nav links */
+.sidebar .sidebar__nav {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.sidebar .sidebar__link {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: var(--surface-1);
+  color: var(--color-text);
+  text-decoration: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.sidebar .sidebar__link:hover { background: var(--surface-2); }
+.sidebar .sidebar__icon { display: inline-block; line-height: 0; }
+
+/* bottom utilities */
+.sidebar .sidebar__utility {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+  display: grid;
+  gap: 8px;
+}
+
+/* toggle row */
+.sidebar .sidebar__link--toggle { background: var(--surface-1); }
+
+/* views */
+.sidebar .sidebar-view { display: none; }
+.sidebar .sidebar-view.is-active { display: block; }
+
+/* simple form */
+.field { display: grid; gap: 6px; margin-bottom: 10px; }
+.field label { font-size: 13px; opacity: 0.9; }
+.field input, .field select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-muted);
+  background: var(--surface-1);
+  color: var(--color-text);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-1);
+  color: var(--color-text);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 160ms ease, filter 120ms ease;
+}
+.btn:hover { background: var(--surface-2); }
+.btn--primary { background: var(--color-accent); border-color: transparent; color: #fff; }
+
+/* ---------- Animations ---------- */
 @keyframes fadeInUp {
   0% { opacity: 0; transform: translateY(40px) scale(0.98); }
   60% { opacity: 1; transform: translateY(-6px) scale(1.01); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ================================
-   Mobile Adjustments
-   ================================ */
+/* ---------- Mobile (≤768px) ---------- */
 @media (max-width: 768px) {
+  /* Sidebar becomes a bottom sheet */
+  .sidebar {
+    top: auto;
+    bottom: 0;
+    left: 0; right: 0;
+    height: 64px;
+    width: 100%;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    transform: translateY(calc(100% - 64px));
+  }
+  .sidebar:not(.collapsed) {
+    height: min(78vh, 640px);
+    transform: translateY(0);
+    width: 100%;
+  }
+  .sidebar .sidebar__header {
+    justify-content: center;
+    position: relative;
+  }
+  .sidebar .sidebar__header::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    width: 40px; height: 4px;
+    border-radius: 999px;
+    background: var(--surface-2);
+  }
+
+  /* Info panel stays above the bottom sheet */
   #info-panel {
     bottom: calc(var(--gap) + 72px) !important;
     max-width: 94vw !important;
+    padding-bottom: 1.9rem !important; /* a bit more space for the button */
+  }
+
+  /* Keep logo visible */
+  #logo-container {
+    top: 14px;
+    left: 14px;
+    width: 140px;
   }
 }
