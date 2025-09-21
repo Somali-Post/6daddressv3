@@ -1,3 +1,37 @@
+/* Input group for phone number */
+.input-group {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+.input-group-addon {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid var(--panel-border, #e5e7eb);
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  padding: 0.6em 1em;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  min-width: 56px;
+  justify-content: center;
+}
+.input-group-field {
+  border: 1px solid var(--panel-border, #e5e7eb);
+  border-radius: 0 8px 8px 0;
+  border-left: none;
+  padding: 0.6em 1em;
+  font-size: 1rem;
+  width: 100%;
+  background: var(--panel-bg, #181c23);
+  color: var(--panel-fg, #fff);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input-group-field:focus {
+  border-color: #2563eb;
+}
 /* Registration 6D code plaque */
 #registerForm .register-code-plaque {
   width: 100%;
