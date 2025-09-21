@@ -342,14 +342,16 @@ body.dark-mode .info-panel__code-plaque { background: rgba(17,22,39,0.92); }
   display: flex;
   justify-content: center; /* center horizontally */
   align-items: center;
-  gap: 0.12rem;            /* minimal space between icons */
+  gap: 0.5rem;             /* more space between larger icons */
   width: 100%;
-  margin-top: 0;
+  margin-top: 0.2rem;
   margin-bottom: 0;
+  justify-content: center;
 }
 .icon-btn {
-  width: 20px;
-  height: 20px;
+  width: 36px;
+  height: 36px;
+  font-size: 1.35rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
