@@ -424,11 +424,22 @@ const zoomIn   = 18;                         // fixed final zoom
   onceIdle(() => {
     mapObj.panTo(targetLL);
     onceIdle(() => {
-      mapObj.setZoom(zoomIn);
-      onceIdle(() => {
-        mapObj.set('gestureHandling', originalGesture || 'greedy');
-        if (typeof onComplete === 'function') onComplete();
-      });
+      // Animate zoom in slowly
+      let currentZoom = mapObj.getZoom();
+      const zoomStep = 0.25; // smaller step for slower animation
+      const zoomInterval = setInterval(() => {
+        if (currentZoom < zoomIn) {
+          currentZoom = Math.min(zoomIn, currentZoom + zoomStep);
+          mapObj.setZoom(currentZoom);
+        } else {
+          clearInterval(zoomInterval);
+          mapObj.setZoom(zoomIn);
+          onceIdle(() => {
+            mapObj.set('gestureHandling', originalGesture || 'greedy');
+            if (typeof onComplete === 'function') onComplete();
+          });
+        }
+      }, 40); // 40ms per step for smoothness
     });
   });
 }
