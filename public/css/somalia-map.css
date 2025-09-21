@@ -1,3 +1,33 @@
+/* Sidebar section headings */
+.sidebar__section-heading {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #b3b8c5;
+  letter-spacing: 0.04em;
+  margin: 18px 0 6px 2px;
+  text-transform: uppercase;
+}
+
+/* Sidebar group spacing */
+.sidebar__nav,
+.sidebar__utility {
+  background: none;
+  box-shadow: none;
+  margin-bottom: 18px;
+  padding: 0;
+}
+
+/* Sidebar link active style (for Register) */
+.sidebar__link.active,
+.sidebar__link[aria-current="page"] {
+  background: var(--panel-btn-bg);
+  color: #fff;
+  font-weight: 600;
+}
+.sidebar__link.active .sidebar__icon,
+.sidebar__link[aria-current="page"] .sidebar__icon {
+  color: #fff;
+}
 /* =========================================================
    6D Somalia — Full UI Styles (Info Panel bottom actions)
    ========================================================= */
