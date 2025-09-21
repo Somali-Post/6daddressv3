@@ -95,7 +95,31 @@ function bindFloatingPanelUI(map, getCurrent6D, getCurrentLatLng) {
   if (regBtn) {
     regBtn.addEventListener('click', () => {
       setSidebarExpanded(true);
-      showSidebarView('register');
+      // Hide all sidebar content except registration view
+      document.querySelectorAll('.sidebar__section-heading, .sidebar__nav, .sidebar__utility').forEach(el => el.style.display = 'none');
+      const regView = document.getElementById('view-register');
+      if (regView) regView.classList.add('is-active');
+      // Add back button if not present
+      let backBtn = document.getElementById('sidebar-back-btn');
+      if (!backBtn) {
+        const sidebarHeader = document.querySelector('.sidebar__header');
+        backBtn = document.createElement('button');
+        backBtn.id = 'sidebar-back-btn';
+        backBtn.title = 'Back to menu';
+        backBtn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M15 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        backBtn.style.background = 'none';
+        backBtn.style.border = 'none';
+        backBtn.style.marginRight = '8px';
+        backBtn.style.cursor = 'pointer';
+        sidebarHeader.insertBefore(backBtn, sidebarHeader.firstChild);
+        backBtn.addEventListener('click', () => {
+          // Restore menu/groups
+          document.querySelectorAll('.sidebar__section-heading, .sidebar__nav, .sidebar__utility').forEach(el => el.style.display = '');
+          if (regView) regView.classList.remove('is-active');
+          backBtn.remove();
+        });
+      }
+      // Set code value
       const codeInput = document.getElementById('code');
       if (codeInput) codeInput.value = getCurrent6D();
     });
