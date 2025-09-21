@@ -5,9 +5,9 @@
   width: 100%;
 }
 .input-group-addon {
-  background: #f3f4f6;
-  color: #6b7280;
-  border: 1px solid var(--panel-border, #e5e7eb);
+  background: var(--panel-bg, #181c23);
+  color: #fff;
+  border: 1px solid var(--panel-border, #232733);
   border-right: none;
   border-radius: 8px 0 0 8px;
   padding: 0.6em 1em;
