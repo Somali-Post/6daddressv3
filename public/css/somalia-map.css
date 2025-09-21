@@ -1,5 +1,5 @@
 /* =========================================================
-   6D Somalia — Full UI Styles (Info Panel fix + Sidebar + Logo)
+   6D Somalia — Full UI Styles (Info Panel bottom actions)
    ========================================================= */
 
 /* ---------- Design Tokens ---------- */
@@ -38,7 +38,7 @@
   --sidebar-width-expanded: 350px;
   --sidebar-width-collapsed: 80px;
 
-  /* Z-layers (map lowest) */
+  /* Z-layers */
   --z-map: 0;
   --z-info: 900;
   --z-sidebar: 1000;
@@ -94,7 +94,7 @@ html, body {
   color: var(--color-text);
 }
 
-/* ---------- Map (bottom layer) ---------- */
+/* ---------- Map ---------- */
 #map {
   position: fixed;
   inset: 0;
@@ -105,7 +105,7 @@ html, body {
 
 /* ---------- Branding plaque (top-left) ---------- */
 #logo-container {
-  position: fixed;      /* fixed so it stays on top of map */
+  position: fixed;
   top: 20px;
   left: 20px;
   z-index: var(--z-logo);
@@ -113,7 +113,7 @@ html, body {
   padding: 8px;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-  width: 150px;         /* constant, crisp */
+  width: 150px;
 }
 #logo-container img {
   width: 100%;
@@ -153,7 +153,7 @@ html, body {
 .floating-btn:active,
 .floating-btn:focus { outline: 2px solid var(--panel-btn-bg); }
 
-/* If you use a global CTA button */
+/* Optional global CTA */
 #find-my-address-btn {
   position: fixed !important;
   left: 50% !important;
@@ -169,7 +169,7 @@ html, body {
   box-sizing: border-box !important;
 }
 
-/* ---------- INFO PANEL (30% smaller + spacing fix) ---------- */
+/* ---------- INFO PANEL (30% smaller + actions at bottom) ---------- */
 #info-panel {
   position: fixed !important;
   left: 50% !important;
@@ -177,10 +177,12 @@ html, body {
   transform: translate(-50%, 30px) !important;
   z-index: var(--z-info) !important;
 
-  max-width: 260px !important;          /* smaller */
+  max-width: 260px !important;
   width: 100% !important;
 
-  padding: 1.25rem 1.25rem 1.75rem 1.25rem !important; /* extra bottom padding */
+  /* extra bottom padding so nothing collides with the rounded edge */
+  padding: 1.25rem 1.25rem 1.85rem 1.25rem !important;
+
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
@@ -205,45 +207,17 @@ html, body {
   animation: fadeInUp 0.7s cubic-bezier(.4,1.4,.6,1) 0.1s both !important;
 }
 
-/* actions (copy/share) */
-.info-panel__actions {
-  position: absolute;
-  top: 0.9rem;
-  right: 1rem;
-  display: flex;
-  gap: 0.85rem;     /* more breathing room */
-}
-.icon-btn {
-  width: 28px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--icon-btn-bg);
-  border: none;
-  border-radius: 50%;
-  color: var(--panel-text);
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background 0.18s, color 0.18s;
-}
-.icon-btn:hover,
-.icon-btn:focus {
-  background: var(--icon-btn-hover);
-  color: var(--panel-btn-bg);
-}
-
 /* 6D plaque */
 .info-panel__code-plaque {
   width: 100%;
   background: rgba(255,255,255,0.85);
-  border-radius: 10px;                 /* smaller radius to match scale */
+  border-radius: 10px;
   padding: 0.5em 0.45em;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5em;
-  font-size: 1.5rem;                   /* was ~2.1rem */
+  font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
@@ -271,10 +245,11 @@ body.dark-mode .info-panel__code-plaque { background: rgba(17,22,39,0.92); }
   margin-top: 0.08em;
 }
 
-/* register button (no overlap, fills inner width) */
+/* register button */
 #register-this-address-btn {
+  order: 90;               /* ensure it appears before actions even if DOM differs */
   display: block;
-  align-self: stretch;     /* respects panel padding for full-width look */
+  align-self: stretch;
   width: 100%;
   min-width: 0;
   margin-top: 1rem;
@@ -284,12 +259,44 @@ body.dark-mode .info-panel__code-plaque { background: rgba(17,22,39,0.92); }
   background: var(--panel-btn-bg);
   color: var(--panel-btn-text);
   border: none;
-  border-radius: 10px;     /* slightly less than panel radius */
+  border-radius: 10px;
   box-shadow: var(--panel-btn-shadow);
   cursor: pointer;
 }
 #register-this-address-btn:active,
 #register-this-address-btn:focus { outline: 2px solid var(--panel-btn-bg); }
+
+/* actions (copy/share) — centered UNDER the button */
+.info-panel__actions {
+  order: 99;               /* comes after the register button regardless of DOM order */
+  position: static;        /* remove absolute positioning */
+  display: flex;
+  justify-content: center; /* center horizontally */
+  align-items: center;
+  gap: 0.85rem;            /* space between icons */
+  width: 100%;
+  margin-top: 0.6rem;      /* breathing room below the button */
+}
+.icon-btn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--icon-btn-bg);
+  border: none;
+  border-radius: 999px;
+  color: var(--panel-text);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.18s, color 0.18s, transform 0.08s ease;
+}
+.icon-btn:hover,
+.icon-btn:focus {
+  background: var(--icon-btn-hover);
+  color: var(--panel-btn-bg);
+}
+.icon-btn:active { transform: scale(0.96); }
 
 /* ---------- Sidebar (RIGHT) ---------- */
 .sidebar {
@@ -304,13 +311,11 @@ body.dark-mode .info-panel__code-plaque { background: rgba(17,22,39,0.92); }
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-strong);
   overflow: hidden;
-  z-index: var(--z-sidebar);        /* above map & info panel */
+  z-index: var(--z-sidebar);
   display: flex;
   flex-direction: column;
   transition: width 220ms ease, transform 220ms ease, opacity 200ms ease;
 }
-
-/* collapsed state keeps icons visible */
 .sidebar.collapsed { width: var(--sidebar-width-collapsed); }
 .sidebar.collapsed .link-text { display: none !important; }
 .sidebar.collapsed .sidebar__header { justify-content: center; }
@@ -426,7 +431,7 @@ body.dark-mode .info-panel__code-plaque { background: rgba(17,22,39,0.92); }
 
 /* ---------- Mobile (≤768px) ---------- */
 @media (max-width: 768px) {
-  /* Sidebar becomes a bottom sheet */
+  /* Sidebar → bottom sheet */
   .sidebar {
     top: auto;
     bottom: 0;
@@ -454,11 +459,11 @@ body.dark-mode .info-panel__code-plaque { background: rgba(17,22,39,0.92); }
     background: var(--surface-2);
   }
 
-  /* Info panel stays above the bottom sheet */
+  /* Info panel stays clear of sheet */
   #info-panel {
     bottom: calc(var(--gap) + 72px) !important;
     max-width: 94vw !important;
-    padding-bottom: 1.9rem !important; /* a bit more space for the button */
+    padding-bottom: 2rem !important;
   }
 
   /* Keep logo visible */
@@ -467,4 +472,7 @@ body.dark-mode .info-panel__code-plaque { background: rgba(17,22,39,0.92); }
     left: 14px;
     width: 140px;
   }
+
+  /* Finger-friendly icons */
+  .icon-btn { width: 34px; height: 34px; font-size: 1.05rem; }
 }
