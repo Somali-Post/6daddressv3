@@ -294,12 +294,12 @@ html, body {
   opacity: 1 !important;
   pointer-events: auto !important;
   animation: fadeInUp 0.7s cubic-bezier(.4,1.4,.6,1) 0.1s both !important;
-}
-
-/* 6D plaque */
-.info-panel__code-plaque {
-  width: 100%;
-  background: rgba(255,255,255,0.85);
+  width: auto !important;
+  min-width: 260px !important;
+  max-width: 380px !important;
+  min-height: 0 !important;
+  max-height: 90vh !important;
+  padding: 1.1rem 1.1rem 0.5rem 1.1rem !important;
   border-radius: 10px;
   padding: 0.5em 0.45em;
   display: flex;
