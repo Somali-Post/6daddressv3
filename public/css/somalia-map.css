@@ -1,3 +1,9 @@
+/* Fade-out animation for Find My 6D Address button */
+.fade-out {
+  transition: opacity 0.35s cubic-bezier(.4,1.4,.6,1);
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
 /* Info panel 6D code plaque (pill, standout) */
 .info-panel__code-plaque {
   background: rgba(255,255,255,0.18);

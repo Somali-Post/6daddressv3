@@ -39,8 +39,11 @@ function showInfoPanel({ code6D, regionName, districtName }) {
       if (regionName) { regionDiv.textContent = regionName; regionDiv.style.display = ''; }
       else { regionDiv.style.display = 'none'; }
     }
-    panel.style.display = 'flex';
-    setTimeout(() => { panel.classList.add('visible'); }, 10);
+    // Delay showing the info panel until the button fade-out is done
+    setTimeout(() => {
+      panel.style.display = 'flex';
+      setTimeout(() => { panel.classList.add('visible'); }, 10);
+    }, 350);
   }
 }
 
