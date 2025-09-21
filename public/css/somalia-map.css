@@ -1,3 +1,26 @@
+/* Info panel 6D code plaque (pill, standout) */
+.info-panel__code-plaque {
+  background: rgba(255,255,255,0.18);
+  border-radius: 999px;
+  padding: 0.48em 1.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--panel-text);
+  border: 1.5px solid rgba(255,255,255,0.22);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+  margin-bottom: 0.7em;
+  margin-top: 0.2em;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+body.dark-mode .info-panel__code-plaque {
+  background: rgba(255,255,255,0.10);
+  border: 1.5px solid rgba(255,255,255,0.13);
+}
 /* Input group for phone number */
 .input-group {
   display: flex;
