@@ -228,17 +228,17 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   background: var(--panel-btn-bg);
   color: var(--panel-btn-text);
   border: none;
   border-radius: var(--panel-btn-radius);
   box-shadow: var(--panel-btn-shadow);
-  padding: 1.1em 2.2em;
+  padding: 0.7em 1.3em;
   cursor: pointer;
-  margin: 0 auto 1.5rem;
-  min-width: 260px;
+  margin: 0 auto 1.1rem;
+  min-width: 160px;
   transition: background 0.2s, color 0.2s, box-shadow 0.2s;
 }
 .floating-btn:active,
