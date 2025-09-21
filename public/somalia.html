@@ -121,7 +121,10 @@
           </div>
           <div class="field">
             <label for="phone">Phone Number</label>
-            <input id="phone" type="tel" autocomplete="tel" />
+            <div style="display: flex; align-items: center;">
+              <span style="background: rgba(255,255,255,0.08); border: 1px solid var(--panel-border); border-radius: 8px 0 0 8px; padding: 0.6em 0.7em; font-size: 1rem; color: #b3b8c5;">+252</span>
+              <input id="phone" type="tel" autocomplete="tel" style="border-radius: 0 8px 8px 0; border-left: none; flex: 1;" placeholder="6XXXXXXXX" />
+            </div>
           </div>
           <div class="field">
             <label for="region">Region</label>
