@@ -1,3 +1,6 @@
+.sidebar.collapsed .sidebar__section-heading {
+  display: none !important;
+}
 /* Sidebar section headings */
 .sidebar__section-heading {
   font-size: 0.92rem;
