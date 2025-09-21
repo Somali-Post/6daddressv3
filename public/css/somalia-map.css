@@ -264,37 +264,34 @@ html, body {
 #info-panel {
   position: fixed !important;
   left: 50% !important;
-  bottom: 2.5rem !important;
-  transform: translate(-50%, 30px) !important;
+  top: 60px !important;
+  transform: translateX(-50%) !important;
   z-index: var(--z-info) !important;
-
-  max-width: 260px !important;
-  width: 100% !important;
-
-  /* extra bottom padding so nothing collides with the rounded edge */
-  padding: 1.25rem 1.25rem 1.85rem 1.25rem !important;
-
+  width: 340px !important;
+  min-width: 0 !important;
+  max-width: 360px !important;
+  min-height: 340px !important;
+  max-height: 380px !important;
+  background: var(--sidebar-bg, #10131a) !important;
+  color: var(--sidebar-fg, #b3b8c5) !important;
+  border-radius: 22px !important;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.22) !important;
+  padding: 1.5rem 1.2rem 1.2rem 1.2rem !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   gap: 0.95rem !important;
-
+  border: 1.5px solid var(--sidebar-border, #232733) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  box-sizing: border-box !important;
   opacity: 0 !important;
   pointer-events: none !important;
-
-  background: var(--panel-bg);
-  color: var(--panel-text);
-  border-radius: var(--panel-radius);
-  box-shadow: var(--panel-shadow);
-  border: var(--panel-border);
-  backdrop-filter: blur(var(--panel-blur));
-  -webkit-backdrop-filter: blur(var(--panel-blur));
-  box-sizing: border-box !important;
+  transition: box-shadow 0.2s, background 0.2s;
 }
 #info-panel.visible {
   opacity: 1 !important;
   pointer-events: auto !important;
-  transform: translate(-50%, 0) !important;
   animation: fadeInUp 0.7s cubic-bezier(.4,1.4,.6,1) 0.1s both !important;
 }
 
@@ -333,29 +330,6 @@ body.dark-mode .info-panel__code-plaque { background: rgba(17,22,39,0.92); }
 .info-panel__region {
   font-size: 0.75rem;
   color: #8b8b8b;
-    position: absolute;
-    top: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 320px;
-    min-width: 0;
-    max-width: 340px;
-    min-height: 320px;
-    max-height: 360px;
-    background: var(--sidebar-bg, #10131a);
-    color: var(--sidebar-fg, #b3b8c5);
-    border-radius: 22px;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.22);
-    padding: 1.5rem 1.2rem 1.2rem 1.2rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    z-index: 100;
-    border: 1.5px solid var(--sidebar-border, #232733);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    transition: box-shadow 0.2s, background 0.2s;
-  cursor: pointer;
 }
 #register-this-address-btn:active,
 #register-this-address-btn:focus { outline: 2px solid var(--panel-btn-bg); }
