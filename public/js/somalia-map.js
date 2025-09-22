@@ -1,3 +1,24 @@
+// --- GPS Accuracy Panel Logic ---
+function showGpsAccuracyPanel(message) {
+  const panel = document.getElementById('gps-accuracy-panel');
+  const msg = document.getElementById('gps-accuracy-message');
+  if (panel && msg) {
+    msg.textContent = message || 'GPS accuracy: --';
+    panel.style.display = 'flex';
+  }
+}
+
+function hideGpsAccuracyPanel() {
+  const panel = document.getElementById('gps-accuracy-panel');
+  if (panel) panel.style.display = 'none';
+}
+
+function setupGpsAccuracyPanel(retryHandler) {
+  const retryBtn = document.getElementById('gps-accuracy-retry');
+  if (retryBtn) {
+    retryBtn.onclick = retryHandler;
+  }
+}
 // === Floating Info Panel & Button Logic ===
 function showFindMyAddressBtn() {
   const btn = document.getElementById('find-my-address-btn');
@@ -582,13 +603,26 @@ async function handleSelectLatLng(rawLatLng) {
 /* ---------- Find My Location uses “swoop” ---------- */
 function handleFindMyLocation() {
   if (!navigator.geolocation) return;
+  showGpsAccuracyPanel('Getting GPS fix...');
   navigator.geolocation.getCurrentPosition(
     (pos) => {
+      const accuracy = pos.coords.accuracy;
+      showGpsAccuracyPanel(`GPS accuracy: ±${Math.round(accuracy)}m`);
       const gLL = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-      animateToLocation(map, gLL, () => handleSelectLatLng(gLL));
+      animateToLocation(map, gLL, () => {
+        handleSelectLatLng(gLL);
+        setTimeout(() => hideGpsAccuracyPanel(), 1200);
+      });
     },
-    () => console.warn('Geolocation unavailable')
+    (err) => {
+      showGpsAccuracyPanel('Unable to get location');
+      setTimeout(() => hideGpsAccuracyPanel(), 2000);
+    }
   );
+// Setup GPS accuracy panel retry on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+  setupGpsAccuracyPanel(handleFindMyLocation);
+});
 }
 
 /* ---------- Bind + init ---------- */
