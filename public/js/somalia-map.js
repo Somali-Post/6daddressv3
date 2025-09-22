@@ -1,3 +1,38 @@
+// --- OTP Verification and Session Logic ---
+function handleOtpSuccess(token) {
+  // Store session token in localStorage
+  localStorage.setItem('sessionToken', token);
+  closeAuthModal();
+  // TODO: updateSidebarUI('in') and show dashboard
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // OTP form submit
+  const otpForm = document.getElementById('otp-form');
+  if (otpForm) {
+    otpForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAuthError();
+      const otp = document.getElementById('otp-input').value.trim();
+      if (!/^\d{6}$/.test(otp)) {
+        showAuthError('Please enter the 6-digit code.');
+        return;
+      }
+      // Simulate API call
+      otpForm.querySelector('button[type="submit"]').disabled = true;
+      otpForm.querySelector('button[type="submit"]').textContent = 'Verifying...';
+      await new Promise(r => setTimeout(r, 900)); // mock delay
+      // Mock: accept 123456 as valid, else error
+      if (otp === '123456') {
+        handleOtpSuccess('mock-session-token');
+      } else {
+        showAuthError('The code you entered is incorrect or has expired. Please try again.');
+      }
+      otpForm.querySelector('button[type="submit"]').disabled = false;
+      otpForm.querySelector('button[type="submit"]').textContent = 'Verify & Login';
+    });
+  }
+});
 // --- Auth Modal: Login/OTP Logic ---
 let resendTimer = null;
 let resendCountdown = 60;
