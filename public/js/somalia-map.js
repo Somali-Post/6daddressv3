@@ -919,8 +919,8 @@ function bindUI() {
   // Theme toggle (default dark)
   const themeTgl = document.querySelector('#themeToggle');
   if (themeTgl) {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    themeTgl.checked = false;
+    document.documentElement.setAttribute('data-theme', 'light'); // Default to light mode
+    themeTgl.checked = true;
     themeTgl.addEventListener('change', (e) => {
       const light = e.target.checked;
       document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
