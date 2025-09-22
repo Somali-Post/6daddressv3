@@ -981,7 +981,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   );
   try {
     await initMapOnceReady();
+    // Hide 6D loader overlay
+    const loader = document.getElementById('sixd-loading');
+    if (loader) loader.classList.add('sixd-hide');
   } catch (err) {
     console.error('[Maps init] ', err);
+    // Hide loader even on error
+    const loader = document.getElementById('sixd-loading');
+    if (loader) loader.classList.add('sixd-hide');
   }
 });

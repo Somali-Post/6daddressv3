@@ -750,57 +750,34 @@ body.dark-mode .info-panel__code-plaque { background: rgba(17,22,39,0.92); }
 .btn:hover { background: var(--surface-2); }
 .btn--primary { background: var(--color-accent); border-color: transparent; color: #fff; }
 
-/* ---------- Animations ---------- */
-@keyframes fadeInUp {
-  0% { opacity: 0; transform: translateY(40px) scale(0.98); }
-  60% { opacity: 1; transform: translateY(-6px) scale(1.01); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+/* === 6D LOADER (namespaced) === */
+#sixd-loading {
+  position: fixed;
+  inset: 0;
+  background: #0c111f;
+  display: grid;
+  place-items: center;
+  z-index: 9999;
+  transition: opacity .3s ease, visibility .3s ease;
 }
-
-/* ---------- Mobile (≤768px) ---------- */
-@media (max-width: 768px) {
-  /* Sidebar → bottom sheet */
-  .sidebar {
-    top: auto;
-    bottom: 0;
-    left: 0; right: 0;
-    height: 64px;
-    width: 100%;
-    border-radius: var(--radius-md) var(--radius-md) 0 0;
-    transform: translateY(calc(100% - 64px));
-  }
-  .sidebar:not(.collapsed) {
-    height: min(78vh, 640px);
-    transform: translateY(0);
-    width: 100%;
-  }
-  .sidebar .sidebar__header {
-    justify-content: center;
-    position: relative;
-  }
-  .sidebar .sidebar__header::before {
-    content: "";
-    position: absolute;
-    top: 8px;
-    width: 40px; height: 4px;
-    border-radius: 999px;
-    background: var(--surface-2);
-  }
-
-  /* Info panel stays clear of sheet */
-  #info-panel {
-    bottom: calc(var(--gap) + 72px) !important;
-    max-width: 94vw !important;
-    padding-bottom: 2rem !important;
-  }
-
-  /* Keep logo visible */
-  #logo-container {
-    top: 14px;
-    left: 14px;
-    width: 140px;
-  }
-
-  /* Finger-friendly icons */
-  .icon-btn { width: 34px; height: 34px; font-size: 1.05rem; }
+#sixd-loading.sixd-hide {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
+#sixd-loading .sixd-wrap { text-align: center; color: #fff; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+#sixd-loading .sixd-spinner { width: 64px; height: 64px; display: inline-block; position: relative; }
+#sixd-loading .sixd-spinner::after, #sixd-loading .sixd-spinner::before { content: ""; position: absolute; inset: 0; margin: auto; }
+#sixd-loading .sixd-spinner::after { width: 64px; height: 64px; border: 3px solid #ff0000; animation: sixd-spin 2s linear infinite; }
+#sixd-loading .sixd-spinner::before { width: 40px; height: 40px; border: 3px solid #00ff00; animation: sixd-spin-back 1.5s linear infinite; }
+#sixd-loading .sixd-spinner > span { position: absolute; top: 50%; left: 50%; width: 16px; height: 16px; border-radius: 2px; background: #007bff; transform: translate(-50%, -50%); animation: sixd-pulse 1.1s ease-in-out infinite; }
+#sixd-loading .sixd-text { margin-top: 24px; font-size: 16px; font-weight: 600; letter-spacing: .4px; color: #fff; white-space: nowrap; }
+#sixd-loading .sixd-dots { display: inline-block; width: 2.2em; text-align: left; }
+#sixd-loading .sixd-dot { opacity: 0; font-weight: 700; display: inline-block; transform: translateY(-1px); animation: sixd-dot 1.8s infinite; }
+#sixd-loading .sixd-red   { color: #ff0000; animation-delay: 0s;   }
+#sixd-loading .sixd-green { color: #00ff00; animation-delay: .3s; }
+#sixd-loading .sixd-blue  { color: #007bff; animation-delay: .6s; }
+@keyframes sixd-spin     { to { transform: rotate(360deg); } }
+@keyframes sixd-spin-back{ to { transform: rotate(-360deg); } }
+@keyframes sixd-pulse    { 0%,100%{ transform: translate(-50%,-50%) scale(1);} 50%{ transform: translate(-50%,-50%) scale(1.28);} }
+@keyframes sixd-dot      { 0%{opacity:0;} 20%{opacity:1;} 85%{opacity:1;} 100%{opacity:0;} }
