@@ -58,14 +58,18 @@ function trapModalFocus(e) {
 }
 
 // Modal open triggers (sidebar login/register link)
+
 document.addEventListener('DOMContentLoaded', () => {
-  // Sidebar link: Register/Login
-  const sidebarLogin = document.querySelector('.sidebar__link[href="#"], .sidebar__link:contains("Register")');
-  if (sidebarLogin) {
-    sidebarLogin.addEventListener('click', (e) => {
-      e.preventDefault();
-      openAuthModal('login');
-    });
+  // Sidebar Login button (by text content)
+  const sidebarLinks = document.querySelectorAll('.sidebar__link');
+  for (const link of sidebarLinks) {
+    if (link.textContent && link.textContent.trim().toLowerCase() === 'login') {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        openAuthModal('login');
+      });
+      break;
+    }
   }
   // Modal close (X)
   document.getElementById('auth-modal-close')?.addEventListener('click', closeAuthModal);
