@@ -1,3 +1,13 @@
+#logo-container {
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.7em 1.1em;
+  display: inline-block;
+  transition: background 0.2s;
+}
+[data-theme="dark"] #logo-container {
+  background: #0c111f;
+}
 /* Theme logo switching */
 #logo-container .logo-dark { display: none; }
 #logo-container .logo-light { display: block; }
