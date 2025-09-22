@@ -1,3 +1,8 @@
+// Hide dashboard by default on page load
+document.addEventListener('DOMContentLoaded', () => {
+  const dash = document.getElementById('dashboard');
+  if (dash) dash.style.display = 'none';
+});
 // --- Sidebar transformation and session persistence ---
 let appState = { isAuthenticated: false, user: null };
 
@@ -17,17 +22,33 @@ function renderSidebarLoggedIn() {
       <div class="profile-phone" style="font-size:0.97rem;color:#888;">+252 ••••••••</div>
     </div>
   `;
-  // Logout handler
-  document.getElementById('sidebar-logout')?.addEventListener('click', () => {
-    localStorage.removeItem('sessionToken');
-    appState.isAuthenticated = false;
-    renderSidebarLoggedOut();
-  });
+    // Show dashboard
+    document.getElementById('dashboard').style.display = 'flex';
+    // Hide info panel if open
+    const infoPanel = document.getElementById('info-panel');
+    if (infoPanel) infoPanel.style.display = 'none';
+    // Sidebar nav handlers
+    document.getElementById('sidebar-dashboard')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('dashboard').style.display = 'flex';
+    });
+    document.getElementById('sidebar-logout')?.addEventListener('click', () => {
+      localStorage.removeItem('sessionToken');
+      appState.isAuthenticated = false;
+      document.getElementById('dashboard').style.display = 'none';
+      renderSidebarLoggedOut();
+    });
 }
 
 function renderSidebarLoggedOut() {
   window.location.reload(); // simplest: reload to restore original sidebar
 }
+  function renderSidebarLoggedOut() {
+    // Hide dashboard
+    const dash = document.getElementById('dashboard');
+    if (dash) dash.style.display = 'none';
+    window.location.reload(); // simplest: reload to restore original sidebar
+  }
 
 function checkSessionOnLoad() {
   const token = localStorage.getItem('sessionToken');

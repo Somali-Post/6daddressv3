@@ -1,3 +1,76 @@
+/* === Dashboard Styles === */
+.dashboard {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 900;
+  width: 370px;
+  max-width: 98vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dashboard-card {
+  width: 100%;
+  background: var(--panel-bg, #fff);
+  color: var(--panel-text, #222);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+  padding: 2.1rem 2rem 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.1em;
+}
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  gap: 1.1em;
+}
+.dashboard-avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.1rem;
+}
+.dashboard-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+}
+.dashboard-name {
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+.dashboard-phone {
+  font-size: 0.98rem;
+  color: #888;
+}
+.dashboard-6d {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  gap: 0.3em;
+  margin-bottom: 0.2em;
+}
+.dashboard-address {
+  text-align: center;
+  font-size: 1.05rem;
+  color: #444;
+  margin-bottom: 0.7em;
+}
+.dashboard-actions {
+  display: flex;
+  gap: 0.7em;
+  justify-content: center;
+}
 /* === Auth Modal Styles === */
 .modal-overlay {
   position: fixed;
