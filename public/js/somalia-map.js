@@ -1,3 +1,79 @@
+// === Auth Modal State & Accessibility ===
+let authModalOpen = false;
+let lastFocusedElement = null;
+
+function openAuthModal(step = 'login') {
+  const overlay = document.getElementById('auth-modal-overlay');
+  const modal = document.getElementById('auth-modal');
+  if (!modal || !overlay) return;
+  overlay.classList.add('active');
+  overlay.setAttribute('aria-hidden', 'false');
+  modal.style.display = 'block';
+  modal.setAttribute('aria-hidden', 'false');
+  authModalOpen = true;
+  lastFocusedElement = document.activeElement;
+  // Show correct step
+  document.getElementById('auth-step-login').style.display = (step === 'login') ? 'block' : 'none';
+  document.getElementById('auth-step-otp').style.display = (step === 'otp') ? 'block' : 'none';
+  document.getElementById('auth-error').style.display = 'none';
+  // Focus first input
+  setTimeout(() => {
+    const firstInput = modal.querySelector('input:not([type=hidden]):not([disabled])');
+    if (firstInput) firstInput.focus();
+  }, 10);
+  // Trap focus
+  document.addEventListener('keydown', trapModalFocus, true);
+}
+
+function closeAuthModal() {
+  const overlay = document.getElementById('auth-modal-overlay');
+  const modal = document.getElementById('auth-modal');
+  if (!modal || !overlay) return;
+  overlay.classList.remove('active');
+  overlay.setAttribute('aria-hidden', 'true');
+  modal.style.display = 'none';
+  modal.setAttribute('aria-hidden', 'true');
+  authModalOpen = false;
+  document.removeEventListener('keydown', trapModalFocus, true);
+  if (lastFocusedElement) lastFocusedElement.focus();
+}
+
+function trapModalFocus(e) {
+  if (!authModalOpen) return;
+  const modal = document.getElementById('auth-modal');
+  if (!modal) return;
+  const focusable = modal.querySelectorAll('a, button:not([disabled]), input:not([type=hidden]):not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])');
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (e.key === 'Tab') {
+    if (e.shiftKey) {
+      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+    } else {
+      if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  } else if (e.key === 'Escape') {
+    closeAuthModal();
+  }
+}
+
+// Modal open triggers (sidebar login/register link)
+document.addEventListener('DOMContentLoaded', () => {
+  // Sidebar link: Register/Login
+  const sidebarLogin = document.querySelector('.sidebar__link[href="#"], .sidebar__link:contains("Register")');
+  if (sidebarLogin) {
+    sidebarLogin.addEventListener('click', (e) => {
+      e.preventDefault();
+      openAuthModal('login');
+    });
+  }
+  // Modal close (X)
+  document.getElementById('auth-modal-close')?.addEventListener('click', closeAuthModal);
+  // Overlay click
+  document.getElementById('auth-modal-overlay')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeAuthModal();
+  });
+});
 // --- GPS Accuracy Panel Logic ---
 function showGpsAccuracyPanel(message) {
   const panel = document.getElementById('gps-accuracy-panel');

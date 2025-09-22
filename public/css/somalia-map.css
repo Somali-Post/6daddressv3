@@ -1,3 +1,113 @@
+/* === Auth Modal Styles === */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.48);
+  z-index: 2000;
+  display: none;
+  transition: opacity 0.2s;
+}
+.modal-overlay.active {
+  display: block;
+  opacity: 1;
+}
+.auth-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2001;
+  background: var(--panel-bg, #fff);
+  color: var(--panel-text, #222);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+  min-width: 340px;
+  max-width: 94vw;
+  width: 100%;
+  max-height: 98vh;
+  padding: 2.2rem 2rem 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+.auth-modal[aria-hidden="true"] { display: none; }
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #888;
+  cursor: pointer;
+  z-index: 1;
+}
+.auth-step { display: block; }
+.auth-step[style*="display:none"] { display: none !important; }
+.auth-modal h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 1.1rem;
+  text-align: center;
+}
+.auth-modal label {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+}
+.auth-modal .input-group {
+  margin-bottom: 1.1em;
+}
+.auth-modal .btn {
+  width: 100%;
+  margin-top: 0.7em;
+}
+.auth-modal-footer {
+  margin-top: 1.2em;
+  text-align: center;
+  font-size: 0.97rem;
+}
+.auth-modal-footer a {
+  color: var(--color-accent, #2563eb);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.auth-error {
+  color: #e53e3e;
+  background: #fff0f0;
+  border-radius: 8px;
+  padding: 0.7em 1em;
+  margin-top: 1em;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 500;
+  display: block;
+}
+.otp-input-group {
+  display: flex;
+  justify-content: center;
+  gap: 0.5em;
+  margin-bottom: 1em;
+}
+#otp-input {
+  font-size: 1.5rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+  width: 8.5em;
+  padding: 0.6em 0.5em;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-muted, #e5e7eb);
+  background: var(--surface-1, #f8f8f8);
+  color: var(--panel-text, #222);
+}
+.btn--small {
+  font-size: 0.98rem;
+  padding: 7px 12px;
+  min-width: 0;
+  width: auto;
+  margin-top: 0.5em;
+}
 /* GPS Accuracy Info Panel (bottom left) */
 .gps-accuracy-panel {
   position: fixed;

@@ -1,3 +1,42 @@
+  <!-- Authentication Modal (Login/OTP) -->
+  <div id="auth-modal-overlay" class="modal-overlay" tabindex="-1" aria-hidden="true"></div>
+  <div id="auth-modal" class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title" style="display:none;">
+    <button id="auth-modal-close" class="modal-close" aria-label="Close authentication dialog">&times;</button>
+    <div id="auth-modal-content">
+      <!-- Login Step (default) -->
+      <div id="auth-step-login" class="auth-step">
+        <h2 id="auth-modal-title">Login to Your Account</h2>
+        <form id="login-form" autocomplete="off">
+          <label for="login-phone">Phone Number</label>
+          <div class="input-group">
+            <span class="input-group-addon">+252</span>
+            <input id="login-phone" name="phone" type="tel" pattern="[0-9]{9}" maxlength="9" required autocomplete="tel" placeholder="61xxxxxxxx" />
+          </div>
+          <button type="submit" class="btn btn--primary" id="send-otp-btn">Send Verification Code</button>
+        </form>
+        <div class="auth-modal-footer">
+          <a href="#" id="switch-to-register">Don't have an account? Register now.</a>
+        </div>
+      </div>
+      <!-- OTP Step (hidden by default) -->
+      <div id="auth-step-otp" class="auth-step" style="display:none;">
+        <h2>Enter Your Code</h2>
+        <div id="otp-message">We've sent a 6-digit code to <span id="otp-phone-display">+252 XXXXXXXX</span>.</div>
+        <form id="otp-form" autocomplete="off">
+          <label for="otp-input">Verification Code</label>
+          <div class="otp-input-group">
+            <input id="otp-input" name="otp" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autocomplete="one-time-code" />
+          </div>
+          <button type="submit" class="btn btn--primary" id="verify-otp-btn">Verify & Login</button>
+        </form>
+        <div class="auth-modal-footer">
+          <button id="resend-otp-btn" class="btn btn--primary btn--small" type="button" disabled>Resend Code <span id="resend-timer">60</span>s</button>
+        </div>
+      </div>
+      <!-- Error Message -->
+      <div id="auth-error" class="auth-error" role="alert" style="display:none;"></div>
+    </div>
+  </div>
 <!DOCTYPE html>
 <html lang="en">
 <head>
