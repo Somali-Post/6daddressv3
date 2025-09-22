@@ -1,3 +1,32 @@
+// Render dashboard content inside sidebar
+function renderDashboardInSidebar() {
+  let dash = document.getElementById('sidebar-dashboard-panel');
+  if (!dash) {
+    dash = document.createElement('div');
+    dash.id = 'sidebar-dashboard-panel';
+    dash.className = 'dashboard-card';
+    const sidebarScroll = document.querySelector('.sidebar__scroll');
+    sidebarScroll.appendChild(dash);
+  }
+  dash.innerHTML = `
+    <div class="dashboard-header">
+      <div class="dashboard-avatar">👤</div>
+      <div class="dashboard-user-info">
+        <div class="dashboard-name">User</div>
+        <div class="dashboard-phone">+252 ••••••••</div>
+      </div>
+    </div>
+    <div class="dashboard-map" id="dashboard-mini-map" style="width:100%;height:160px;border-radius:12px;margin:1em 0;background:#e5e7eb;"></div>
+    <div class="dashboard-6d">
+      <span class="code-part code-red">45</span><span class="code-dash">-</span><span class="code-part code-green">78</span><span class="code-dash">-</span><span class="code-part code-blue">12</span>
+    </div>
+    <div class="dashboard-address">Shangaani, Banaadir 03</div>
+    <div class="dashboard-actions">
+      <button class="btn btn--primary" id="dashboard-update-btn">Update My Address</button>
+      <button class="btn" id="dashboard-share-btn">Share My Address</button>
+    </div>
+  `;
+}
 // Hide dashboard by default on page load
 document.addEventListener('DOMContentLoaded', () => {
   const dash = document.getElementById('dashboard');
