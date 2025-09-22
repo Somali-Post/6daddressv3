@@ -1,9 +1,50 @@
+// --- Sidebar transformation and session persistence ---
+let appState = { isAuthenticated: false, user: null };
+
+function renderSidebarLoggedIn() {
+  const sidebarScroll = document.querySelector('.sidebar__scroll');
+  if (!sidebarScroll) return;
+  sidebarScroll.innerHTML = `
+    <nav class="sidebar__nav" aria-label="Main">
+      <a class="sidebar__link active" id="sidebar-dashboard" href="#"><span class="sidebar__icon">🏠</span><span class="link-text">Dashboard</span></a>
+      <a class="sidebar__link" id="sidebar-history" href="#"><span class="sidebar__icon">🕑</span><span class="link-text">History</span></a>
+      <a class="sidebar__link" id="sidebar-settings" href="#"><span class="sidebar__icon">⚙️</span><span class="link-text">Settings</span></a>
+      <a class="sidebar__link" id="sidebar-logout" href="#"><span class="sidebar__icon">🚪</span><span class="link-text">Logout</span></a>
+    </nav>
+    <div class="sidebar__profile" style="margin-top:2.5em;display:flex;flex-direction:column;align-items:center;gap:0.5em;">
+      <div class="profile-avatar" style="width:48px;height:48px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:1.7rem;">👤</div>
+      <div class="profile-name" style="font-weight:600;">User</div>
+      <div class="profile-phone" style="font-size:0.97rem;color:#888;">+252 ••••••••</div>
+    </div>
+  `;
+  // Logout handler
+  document.getElementById('sidebar-logout')?.addEventListener('click', () => {
+    localStorage.removeItem('sessionToken');
+    appState.isAuthenticated = false;
+    renderSidebarLoggedOut();
+  });
+}
+
+function renderSidebarLoggedOut() {
+  window.location.reload(); // simplest: reload to restore original sidebar
+}
+
+function checkSessionOnLoad() {
+  const token = localStorage.getItem('sessionToken');
+  if (token) {
+    appState.isAuthenticated = true;
+    renderSidebarLoggedIn();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', checkSessionOnLoad);
 // --- OTP Verification and Session Logic ---
 function handleOtpSuccess(token) {
   // Store session token in localStorage
   localStorage.setItem('sessionToken', token);
   closeAuthModal();
-  // TODO: updateSidebarUI('in') and show dashboard
+  appState.isAuthenticated = true;
+  renderSidebarLoggedIn();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
