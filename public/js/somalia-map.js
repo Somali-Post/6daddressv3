@@ -435,8 +435,8 @@ function animateToLocation(mapObj, latLng, onComplete) {
         );
 
   const startZoom = mapObj.getZoom() || 12;
-const zoomOut  = Math.max(5, startZoom - 4); // keep the swoop depth logic
-const zoomIn   = 18;                         // fixed final zoom
+  const zoomOut  = Math.max(5, startZoom - 4);
+  const zoomIn   = 18;
 
   const originalGesture = mapObj.get('gestureHandling');
   mapObj.set('gestureHandling', 'none');
@@ -447,22 +447,11 @@ const zoomIn   = 18;                         // fixed final zoom
   onceIdle(() => {
     mapObj.panTo(targetLL);
     onceIdle(() => {
-      // Animate zoom in slowly
-      let currentZoom = mapObj.getZoom();
-      const zoomStep = 0.25; // smaller step for slower animation
-      const zoomInterval = setInterval(() => {
-        if (currentZoom < zoomIn) {
-          currentZoom = Math.min(zoomIn, currentZoom + zoomStep);
-          mapObj.setZoom(currentZoom);
-        } else {
-          clearInterval(zoomInterval);
-          mapObj.setZoom(zoomIn);
-          onceIdle(() => {
-            mapObj.set('gestureHandling', originalGesture || 'greedy');
-            if (typeof onComplete === 'function') onComplete();
-          });
-        }
-      }, 40); // 40ms per step for smoothness
+      mapObj.setZoom(zoomIn);
+      onceIdle(() => {
+        mapObj.set('gestureHandling', originalGesture || 'greedy');
+        if (typeof onComplete === 'function') onComplete();
+      });
     });
   });
 }
