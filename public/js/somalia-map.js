@@ -1,3 +1,83 @@
+// --- Auth Modal: Login/OTP Logic ---
+let resendTimer = null;
+let resendCountdown = 60;
+let lastLoginPhone = '';
+
+function showAuthError(msg) {
+  const err = document.getElementById('auth-error');
+  if (err) {
+    err.textContent = msg;
+    err.style.display = 'block';
+  }
+}
+function clearAuthError() {
+  const err = document.getElementById('auth-error');
+  if (err) err.style.display = 'none';
+}
+function switchToOtpStep(phone) {
+  document.getElementById('auth-step-login').style.display = 'none';
+  document.getElementById('auth-step-otp').style.display = 'block';
+  document.getElementById('otp-phone-display').textContent = '+252 ' + phone;
+  document.getElementById('otp-input').value = '';
+  clearAuthError();
+  startResendTimer();
+}
+function startResendTimer() {
+  const btn = document.getElementById('resend-otp-btn');
+  const timer = document.getElementById('resend-timer');
+  resendCountdown = 60;
+  btn.disabled = true;
+  timer.textContent = resendCountdown;
+  if (resendTimer) clearInterval(resendTimer);
+  resendTimer = setInterval(() => {
+    resendCountdown--;
+    timer.textContent = resendCountdown;
+    if (resendCountdown <= 0) {
+      clearInterval(resendTimer);
+      btn.disabled = false;
+      timer.textContent = '';
+    }
+  }, 1000);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Login form submit
+  const loginForm = document.getElementById('login-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAuthError();
+      const phone = document.getElementById('login-phone').value.trim();
+      if (!/^\d{9}$/.test(phone)) {
+        showAuthError('Please enter a valid Somali phone number.');
+        return;
+      }
+      // Simulate API call
+      loginForm.querySelector('button[type="submit"]').disabled = true;
+      loginForm.querySelector('button[type="submit"]').textContent = 'Sending...';
+      await new Promise(r => setTimeout(r, 900)); // mock delay
+      // Mock: always success
+      lastLoginPhone = phone;
+      switchToOtpStep(phone);
+      loginForm.querySelector('button[type="submit"]').disabled = false;
+      loginForm.querySelector('button[type="submit"]').textContent = 'Send Verification Code';
+    });
+  }
+  // Resend OTP
+  const resendBtn = document.getElementById('resend-otp-btn');
+  if (resendBtn) {
+    resendBtn.addEventListener('click', async () => {
+      if (resendBtn.disabled) return;
+      clearAuthError();
+      resendBtn.disabled = true;
+      resendBtn.textContent = 'Resending...';
+      await new Promise(r => setTimeout(r, 900)); // mock delay
+      resendBtn.textContent = 'Resend Code ';
+      document.getElementById('resend-timer').textContent = resendCountdown;
+      startResendTimer();
+    });
+  }
+});
 // === Auth Modal State & Accessibility ===
 let authModalOpen = false;
 let lastFocusedElement = null;
