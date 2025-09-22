@@ -41,14 +41,11 @@ function renderSidebarLoggedIn() {
 }
 
 function renderSidebarLoggedOut() {
+  // Hide dashboard
+  const dash = document.getElementById('dashboard');
+  if (dash) dash.style.display = 'none';
   window.location.reload(); // simplest: reload to restore original sidebar
 }
-  function renderSidebarLoggedOut() {
-    // Hide dashboard
-    const dash = document.getElementById('dashboard');
-    if (dash) dash.style.display = 'none';
-    window.location.reload(); // simplest: reload to restore original sidebar
-  }
 
 function checkSessionOnLoad() {
   const token = localStorage.getItem('sessionToken');
