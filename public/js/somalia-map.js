@@ -22,28 +22,30 @@ function renderSidebarLoggedIn() {
       <div class="profile-phone" style="font-size:0.97rem;color:#888;">+252 ••••••••</div>
     </div>
   `;
-    // Show dashboard
-    document.getElementById('dashboard').style.display = 'flex';
+    // Render dashboard in sidebar
+    renderDashboardInSidebar();
     // Hide info panel if open
     const infoPanel = document.getElementById('info-panel');
     if (infoPanel) infoPanel.style.display = 'none';
     // Sidebar nav handlers
     document.getElementById('sidebar-dashboard')?.addEventListener('click', (e) => {
       e.preventDefault();
-      document.getElementById('dashboard').style.display = 'flex';
+      renderDashboardInSidebar();
     });
     document.getElementById('sidebar-logout')?.addEventListener('click', () => {
       localStorage.removeItem('sessionToken');
       appState.isAuthenticated = false;
-      document.getElementById('dashboard').style.display = 'none';
+      // Remove dashboard from sidebar
+      const dash = document.getElementById('sidebar-dashboard-panel');
+      if (dash) dash.remove();
       renderSidebarLoggedOut();
     });
 }
 
 function renderSidebarLoggedOut() {
-  // Hide dashboard
-  const dash = document.getElementById('dashboard');
-  if (dash) dash.style.display = 'none';
+  // Remove dashboard from sidebar if present
+  const dash = document.getElementById('sidebar-dashboard-panel');
+  if (dash) dash.remove();
   window.location.reload(); // simplest: reload to restore original sidebar
 }
 
