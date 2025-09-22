@@ -1,3 +1,9 @@
+/* Theme logo switching */
+#logo-container .logo-dark { display: none; }
+#logo-container .logo-light { display: block; }
+
+[data-theme="dark"] #logo-container .logo-dark { display: block; }
+[data-theme="dark"] #logo-container .logo-light { display: none; }
 /* === Dashboard Styles === */
 .dashboard {
   position: fixed;
