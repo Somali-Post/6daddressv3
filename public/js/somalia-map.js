@@ -9,8 +9,7 @@ function showGpsAccuracyPanel(message) {
 }
 
 function hideGpsAccuracyPanel() {
-  const panel = document.getElementById('gps-accuracy-panel');
-  if (panel) panel.style.display = 'none';
+  // No-op: panel should always be visible
 }
 
 function setupGpsAccuracyPanel(retryHandler) {
@@ -611,14 +610,17 @@ function handleFindMyLocation() {
       const gLL = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
       animateToLocation(map, gLL, () => {
         handleSelectLatLng(gLL);
-        setTimeout(() => hideGpsAccuracyPanel(), 1200);
       });
     },
     (err) => {
       showGpsAccuracyPanel('Unable to get location');
-      setTimeout(() => hideGpsAccuracyPanel(), 2000);
     }
   );
+// Ensure GPS panel is always visible on load
+document.addEventListener('DOMContentLoaded', () => {
+  const panel = document.getElementById('gps-accuracy-panel');
+  if (panel) panel.style.display = 'flex';
+});
 // Setup GPS accuracy panel retry on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
   setupGpsAccuracyPanel(handleFindMyLocation);
