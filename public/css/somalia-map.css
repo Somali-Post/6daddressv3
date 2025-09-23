@@ -163,7 +163,7 @@
   max-width: 400px;
   width: 100%;
   max-height: 98vh;
-  padding: 2.2rem 2rem 1.5rem 2rem;
+  padding: 2.1rem 1.5rem 1.5rem 1.5rem;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -186,7 +186,7 @@
 .auth-modal h2 {
   font-size: 1.35rem;
   font-weight: 700;
-  margin-bottom: 1.1rem;
+  margin-bottom: 0.9rem;
   text-align: center;
 }
 .auth-modal label {
@@ -195,6 +195,9 @@
   margin-bottom: 0.3em;
 }
 .auth-modal .input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
   margin-bottom: 1.1em;
 }
 .auth-modal .btn {
@@ -323,29 +326,31 @@ body.dark-mode .info-panel__code-plaque {
   width: 100%;
 }
 .input-group-addon {
-  background: var(--panel-bg, #181c23);
-  color: #fff;
-  border: 1px solid var(--panel-border, #232733);
+  background: #f3f4f6;
+  color: #222;
+  border: 1px solid #e5e7eb;
   border-right: none;
   border-radius: 8px 0 0 8px;
-  padding: 0.6em 1em;
+  padding: 0.6em 0.9em;
   font-size: 1rem;
   display: flex;
   align-items: center;
-  min-width: 56px;
+  min-width: 48px;
   justify-content: center;
+  height: 44px;
 }
-.input-group-field {
-  border: 1px solid var(--panel-border, #e5e7eb);
+.input-group-field, #login-phone {
+  border: 1px solid #e5e7eb;
   border-radius: 0 8px 8px 0;
   border-left: none;
   padding: 0.6em 1em;
   font-size: 1rem;
   width: 100%;
-  background: var(--panel-bg, #181c23);
-  color: var(--panel-fg, #fff);
+  background: #fff;
+  color: #222;
   outline: none;
   transition: border-color 0.2s;
+  height: 44px;
 }
 .input-group-field:focus {
   border-color: #2563eb;
