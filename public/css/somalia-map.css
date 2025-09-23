@@ -7,7 +7,6 @@
   user-select: none;
 .switch input[type="checkbox"] {
   display: none;
-}
 .slider {
   width: 38px;
   height: 22px;
@@ -612,7 +611,6 @@ html, body {
   background: #0c111f !important;
   color: #b3b8c5 !important;
 }
-}
 #info-panel.visible {
   opacity: 1 !important;
   pointer-events: auto !important;
@@ -851,3 +849,5 @@ body.dark-mode .info-panel__code-plaque { background: rgba(17,22,39,0.92); }
 @keyframes sixd-spin-back{ to { transform: rotate(-360deg); } }
 @keyframes sixd-pulse    { 0%,100%{ transform: translate(-50%,-50%) scale(1);} 50%{ transform: translate(-50%,-50%) scale(1.28);} }
 @keyframes sixd-dot      { 0%{opacity:0;} 20%{opacity:1;} 85%{opacity:1;} 100%{opacity:0;} }
+}
+}
