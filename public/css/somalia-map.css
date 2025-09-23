@@ -595,7 +595,7 @@ html, body {
   color: #232733 !important;
 [data-theme="dark"] #info-panel {
   background: #0c111f !important;
-  color: #b3b8c5 !important;
+  color: #0c111f !important;
 }
   border-radius: 22px !important;
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.22) !important;
