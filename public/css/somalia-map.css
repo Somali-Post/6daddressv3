@@ -5,7 +5,6 @@
   gap: 0.7em;
   cursor: pointer;
   user-select: none;
-}
 .switch input[type="checkbox"] {
   display: none;
 }
@@ -593,10 +592,6 @@ html, body {
   max-height: 380px !important;
   background: #fff !important;
   color: #232733 !important;
-[data-theme="dark"] #info-panel {
-  background: #0c111f !important;
-  color: #0c111f !important;
-}
   border-radius: 22px !important;
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.22) !important;
   padding: 1.5rem 1.2rem 0.1rem 1.2rem !important;
@@ -611,6 +606,12 @@ html, body {
   opacity: 0 !important;
   pointer-events: none !important;
   transition: box-shadow 0.2s, background 0.2s;
+}
+
+[data-theme="dark"] #info-panel {
+  background: #0c111f !important;
+  color: #b3b8c5 !important;
+}
 }
 #info-panel.visible {
   opacity: 1 !important;
