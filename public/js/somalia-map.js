@@ -318,7 +318,7 @@ function showFindMyAddressBtn() {
   }
 }
 
-function showInfoPanel({ code6D, regionName, districtName }) {
+function showInfoPanel({ sixD, regionName, districtName }) {
   const btn = document.getElementById('find-my-address-btn');
   if (btn) {
     btn.classList.add('fade-out');
@@ -328,7 +328,7 @@ function showInfoPanel({ code6D, regionName, districtName }) {
   const panel = document.getElementById('info-panel');
   if (panel) {
     // Populate code
-    const codeStr = typeof code6D === 'string' ? code6D : (code6D?.code6D || '');
+    const codeStr = typeof sixD === 'string' ? sixD : (sixD?.code6D || '');
     const [c1, c2, c3] = codeStr.split('-');
     document.getElementById('code-part-1').textContent = c1 || '';
     document.getElementById('code-part-2').textContent = c2 || '';
@@ -350,6 +350,64 @@ function showInfoPanel({ code6D, regionName, districtName }) {
       setTimeout(() => { panel.classList.add('visible'); }, 10);
     }, 350);
   }
+}
+
+function styleRegistrationForm() {
+    const view = document.getElementById('view-register');
+    if (!view) return;
+
+    // Using a small delay to ensure view is rendered and transitions are complete
+    setTimeout(() => {
+        view.style.padding = '1.5em 2em';
+        view.style.color = 'var(--text-primary)';
+
+        const form = view.querySelector('form');
+        if (form) {
+            form.style.display = 'flex';
+            form.style.flexDirection = 'column';
+            form.style.gap = '1.5em';
+        }
+
+        const labels = view.querySelectorAll('label');
+        labels.forEach(label => {
+            label.style.fontWeight = '600';
+            label.style.fontSize = '0.9em';
+            label.style.color = 'var(--text-secondary)';
+            label.style.textTransform = 'uppercase';
+            label.style.letterSpacing = '0.5px';
+        });
+
+        const inputs = view.querySelectorAll('input[type="text"], input[type="tel"], select');
+        inputs.forEach(input => {
+            input.style.width = '100%';
+            input.style.padding = '1em';
+            input.style.border = '1px solid var(--panel-border)';
+            input.style.borderRadius = '8px';
+            input.style.backgroundColor = 'var(--surface-2)';
+            input.style.fontSize = '1em';
+            input.style.color = 'var(--text-primary)';
+            input.style.marginTop = '0.5em';
+        });
+
+        const districtMsg = document.getElementById('district-detected');
+        if (districtMsg) {
+            districtMsg.style.padding = '1em';
+            districtMsg.style.backgroundColor = 'var(--surface-1)';
+            districtMsg.style.borderRadius = '8px';
+            districtMsg.style.fontSize = '0.95em';
+            districtMsg.style.lineHeight = '1.5';
+            districtMsg.style.border = '1px solid var(--panel-border)';
+            districtMsg.style.marginBottom = '0.5em';
+        }
+
+        const submitBtn = view.querySelector('button[type="submit"]');
+        if(submitBtn) {
+            submitBtn.style.padding = '1em';
+            submitBtn.style.fontSize = '1.1em';
+            submitBtn.style.fontWeight = '700';
+            submitBtn.style.borderRadius = '8px';
+        }
+    }, 50);
 }
 
 function bindFloatingPanelUI(map, getCurrent6D, getCurrentLatLng) {
@@ -427,17 +485,31 @@ function bindFloatingPanelUI(map, getCurrent6D, getCurrentLatLng) {
             backBtn.remove();
           });
         }
-  // Set code value and update colored code plaque
-  const codeInput = document.getElementById('code');
-  const code = getCurrent6D();
-  if (codeInput) codeInput.value = code;
-  const [rc1, rc2, rc3] = (code || '').split('-');
-  const p1 = document.getElementById('register-code-part-1');
-  const p2 = document.getElementById('register-code-part-2');
-  const p3 = document.getElementById('register-code-part-3');
-  if (p1) p1.textContent = rc1 || '';
-  if (p2) p2.textContent = rc2 || '';
-  if (p3) p3.textContent = rc3 || '';
+        // Set code value and update colored code plaque
+        const codeInput = document.getElementById('code');
+        const code = getCurrent6D();
+        if (codeInput) codeInput.value = code;
+        const [rc1, rc2, rc3] = (code || '').split('-');
+        const p1 = document.getElementById('register-code-part-1');
+        const p2 = document.getElementById('register-code-part-2');
+        const p3 = document.getElementById('register-code-part-3');
+        if (p1) p1.textContent = rc1 || '';
+        if (p2) p2.textContent = rc2 || '';
+        if (p3) p3.textContent = rc3 || '';
+
+        const { regionName, districtName } = lastAddressDetails;
+
+        const districtMsg = document.getElementById('district-detected');
+        if (districtMsg) {
+          if (districtName) {
+            districtMsg.innerHTML = `Your district is <strong>${districtName}</strong>. If this is not correct, please choose from the dropdown.`;
+          } else {
+            districtMsg.textContent = 'Could not detect your district. Please select it from the dropdown.';
+          }
+        }
+        
+        populateDistrictsDropdown(regionName, districtName);
+        styleRegistrationForm();
     });
   }
 }
@@ -528,6 +600,7 @@ let SOMALI_REGIONS = [];
 let map;
 // (marker removed)
 let lastSnapped = null;      // plain {lat,lng} for UI/form
+let lastAddressDetails = {}; // To store region and district
 let geocoder;
 let placesService;
 
@@ -741,98 +814,6 @@ function animateToLocation(mapObj, latLng, onComplete) {
   });
 }
 
-/* ---------- Info panel renderer ---------- */
-function renderInfoPanel({ sixD, regionName, districtName }) {
-  const info = $('#infoPanel');
-  if (!info) return;
-
-  const codeText = typeof sixD === 'string' ? sixD : (sixD?.code6D || '');
-  const line1 = codeText || '';
-  const line2 = districtName || '';
-  const line3 = regionName || 'Somalia';
-
-  const iconBtnStyle = `
-    display:inline-flex;align-items:center;justify-content:center;
-    width:32px;height:32px;border:1px solid var(--panel-border);
-    border-radius:8px;background: var(--surface-1);cursor:pointer
-  `;
-
-  info.innerHTML = `
-    <div class="info-panel__row" style="justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-      <div style="display:flex;flex-direction:column;gap:4px;min-width:220px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div id="codeText" style="font-weight:600;font-size:16px;">${line1}</div>
-          <div style="display:flex;gap:6px;">
-            <button id="btnCopy" title="Copy address" aria-label="Copy address" style="${iconBtnStyle}">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="2"/>
-                <rect x="4" y="4" width="11" height="11" rx="2" stroke="currentColor" stroke-width="2" opacity="0.8"/>
-              </svg>
-            </button>
-            <button id="btnShare" title="Share" aria-label="Share" style="${iconBtnStyle}">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="18" cy="5" r="3" stroke="currentColor" stroke-width="2"/>
-                <circle cx="6" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                <circle cx="18" cy="19" r="3" stroke="currentColor" stroke-width="2"/>
-                <path d="M8.9 11l6.2-4.2M8.9 13l6.2 4.2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-            </button>
-            <button id="btnRecenter" title="Recenter" aria-label="Recenter" style="${iconBtnStyle};display:none;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                <path d="M12 2v4M22 12h-4M12 22v-4M2 12h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div style="opacity:.9;">${line2}</div>
-        <div style="opacity:.7;">${line3}</div>
-      </div>
-      <button class="btn btn--primary" id="btnRegister">Register This Address</button>
-    </div>
-  `;
-
-  $('#btnCopy')?.addEventListener('click', async () => {
-    const fullText = `${line1}${line2 ? ' — ' + line2 : ''}${line3 ? ', ' + line3 : ''}`;
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(fullText);
-      } else {
-        const ta = document.createElement('textarea');
-        ta.value = fullText; document.body.appendChild(ta);
-        ta.select(); document.execCommand('copy');
-        document.body.removeChild(ta);
-      }
-      const el = $('#codeText'); if (el) { el.style.opacity = '0.6'; setTimeout(() => (el.style.opacity = '1'), 180); }
-    } catch (e) { console.warn('Copy failed:', e); }
-  });
-
-  $('#btnShare')?.addEventListener('click', () => {});
-  $('#btnRecenter')?.addEventListener('click', () => {
-    if (lastSnapped && map) {
-      map.panTo(new google.maps.LatLng(lastSnapped.lat, lastSnapped.lng));
-      updateRecenterVisibility();
-    }
-  });
-
-  $('#btnRegister')?.addEventListener('click', () => {
-    setSidebarExpanded(true);
-    showSidebarView('register');
-    const codeInput = $('#code');
-    if (codeInput) codeInput.value = line1;
-
-    if (regionName) {
-      autoSelectRegion(regionName);
-      populateDistrictsDropdown($('#region')?.value, districtName);
-      autoSelectDistrict($('#region')?.value, districtName);
-    } else {
-      $('#region')?.removeAttribute('disabled');
-    }
-  });
-
-  updateRecenterVisibility();
-}
-
 /* ---------- Selection flow (ensure LatLng to core) ---------- */
 async function handleSelectLatLng(rawLatLng) {
   if (!rawLatLng) return;
@@ -870,7 +851,8 @@ async function handleSelectLatLng(rawLatLng) {
   }
 
   const sixD = generate6DCode(snapped.lat, snapped.lng);
-  showInfoPanel({ code6D: sixD, regionName, districtName });
+  lastAddressDetails = { sixD, regionName, districtName };
+  showInfoPanel(lastAddressDetails);
 }
 
 /* ---------- Find My Location uses “swoop” ---------- */
