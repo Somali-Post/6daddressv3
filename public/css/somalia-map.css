@@ -1,3 +1,15 @@
+.auth-modal label,
+.auth-modal .input-group-addon,
+#login-phone {
+  color: #222;
+}
+[data-theme="dark"] .auth-modal label,
+[data-theme="dark"] .auth-modal .input-group-addon,
+[data-theme="dark"] #login-phone {
+  color: #fff;
+  background: #181c23;
+  border-color: #232733;
+}
 .sidebar .sidebar__link .sidebar__icon .login-icon-main {
   fill: #111;
 }
