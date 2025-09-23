@@ -718,6 +718,7 @@ body.dark-mode .info-panel__code-plaque { background: rgba(17,22,39,0.92); }
   display: flex;
   flex-direction: column;
   transition: width 220ms ease, transform 220ms ease, opacity 200ms ease;
+  padding: 0 0 18px 0;
 }
 .sidebar.collapsed { width: var(--sidebar-width-collapsed); }
 .sidebar.collapsed .link-text { display: none !important; }
@@ -728,8 +729,8 @@ body.dark-mode .info-panel__code-plaque { background: rgba(17,22,39,0.92); }
 .sidebar .sidebar__header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
+  gap: 12px;
+  padding: 20px 18px 16px 18px;
   border-bottom: 1px solid var(--border-subtle);
 }
 .sidebar .sidebar__toggle {
@@ -749,44 +750,57 @@ body.dark-mode .info-panel__code-plaque { background: rgba(17,22,39,0.92); }
 /* scroll area */
 .sidebar .sidebar__scroll {
   overflow: auto;
-  padding: 10px;
+  padding: 18px 12px 0 12px;
   scrollbar-width: thin;
   display: flex;
   flex-direction: column;
+  gap: 18px;
 }
 
 /* nav links */
 .sidebar .sidebar__nav {
   display: grid;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 .sidebar .sidebar__link {
   display: grid;
-  grid-template-columns: 24px 1fr;
+  grid-template-columns: 32px 1fr;
   align-items: center;
-  gap: 10px;
+  gap: 16px;
   width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 15px 18px;
+  border-radius: 12px;
   border: 1px solid transparent;
   background: var(--surface-1);
   color: var(--color-text);
   text-decoration: none;
   cursor: pointer;
   text-align: left;
+  font-size: 1.08rem;
   transition: background 160ms ease, border-color 160ms ease;
+  box-shadow: none;
 }
 .sidebar .sidebar__link:hover { background: var(--surface-2); }
-.sidebar .sidebar__icon { display: inline-block; line-height: 0; }
+.sidebar .sidebar__icon {
+  display: inline-block;
+  line-height: 0;
+  width: 28px;
+  height: 28px;
+}
+.sidebar .sidebar__icon svg {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
 
 /* bottom utilities */
 .sidebar .sidebar__utility {
   margin-top: auto;
-  padding-top: 10px;
+  padding-top: 18px;
   border-top: 1px solid var(--border-subtle);
   display: grid;
-  gap: 8px;
+  gap: 12px;
 }
 
 /* toggle row */
