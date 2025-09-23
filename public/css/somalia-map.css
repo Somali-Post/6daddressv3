@@ -1,3 +1,47 @@
+/* === Theme Toggle Switch === */
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  cursor: pointer;
+  user-select: none;
+}
+.switch input[type="checkbox"] {
+  display: none;
+}
+.slider {
+  width: 38px;
+  height: 22px;
+  background: #d1d5db;
+  border-radius: 22px;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.slider:before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+  transition: transform 0.2s, background 0.2s;
+}
+.switch input[type="checkbox"]:checked + .slider {
+  background: #007bff;
+}
+.switch input[type="checkbox"]:checked + .slider:before {
+  transform: translateX(16px);
+  background: #fff;
+}
+.switch__label {
+  font-size: 1em;
+  color: inherit;
+  margin-left: 0.2em;
+}
 [data-theme="dark"] .gps-accuracy-panel {
   background: #0c111f;
   color: #fff;
