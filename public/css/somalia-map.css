@@ -1,3 +1,9 @@
+.sidebar .sidebar__link .sidebar__icon .login-icon-main {
+  fill: #111;
+}
+[data-theme="dark"] .sidebar .sidebar__link .sidebar__icon .login-icon-main {
+  fill: #fff;
+}
 /* === Theme Toggle Switch === */
 .switch {
   display: flex;
