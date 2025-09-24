@@ -440,7 +440,6 @@ function styleRegistrationForm() {
             phoneContainer.style.borderRadius = '8px';
             phoneContainer.style.backgroundColor = 'var(--surface-2)';
             phoneContainer.style.marginTop = '0.5em';
-            phoneContainer.style.width = '100%'; // Match other fields
 
             const prefix = phoneContainer.querySelector('span');
             if (prefix) {
