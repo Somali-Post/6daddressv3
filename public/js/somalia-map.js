@@ -4,29 +4,41 @@ function renderDashboardInSidebar() {
   if (!dash) {
     dash = document.createElement('div');
     dash.id = 'sidebar-dashboard-panel';
-    dash.className = 'dashboard-card';
-    const sidebarScroll = document.querySelector('.sidebar__scroll');
-    sidebarScroll.appendChild(dash);
+    const contentArea = document.getElementById('sidebar-content-area');
+    if (contentArea) {
+        contentArea.appendChild(dash);
+    } else {
+        // Fallback for old structure
+        const sidebarScroll = document.querySelector('.sidebar__scroll');
+        sidebarScroll.appendChild(dash);
+    }
   }
+
+  // New dashboard design
   dash.innerHTML = `
-    <div class="dashboard-header">
-      <div class="dashboard-avatar">👤</div>
-      <div class="dashboard-user-info">
-        <div class="dashboard-name">User</div>
-        <div class="dashboard-phone">+252 ••••••••</div>
+    <div style="padding: 2em 1.5em; display: flex; flex-direction: column; gap: 2.5em;">
+      <div style="text-align: center;">
+        <div style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 0.5em; text-transform: uppercase; letter-spacing: 0.8px;">Your 6D Address</div>
+        <div style="font-size: 2.2rem; font-weight: 700; letter-spacing: 2px; margin-bottom: 0.5rem;">
+          <span class="code-part code-red">45</span><span class="code-dash">-</span><span class="code-part code-green">78</span><span class="code-dash">-</span><span class="code-part code-blue">12</span>
+        </div>
+        <div style="font-size: 1.2rem; color: var(--text-primary);">Shangaani, Banaadir 03</div>
       </div>
-    </div>
-    <div class="dashboard-map" id="dashboard-mini-map" style="width:100%;height:160px;border-radius:12px;margin:1em 0;background:#e5e7eb;"></div>
-    <div class="dashboard-6d">
-      <span class="code-part code-red">45</span><span class="code-dash">-</span><span class="code-part code-green">78</span><span class="code-dash">-</span><span class="code-part code-blue">12</span>
-    </div>
-    <div class="dashboard-address">Shangaani, Banaadir 03</div>
-    <div class="dashboard-actions">
-      <button class="btn btn--primary" id="dashboard-update-btn">Update My Address</button>
-      <button class="btn" id="dashboard-share-btn">Share My Address</button>
+
+      <div style="border-top: 1px solid var(--panel-border); padding-top: 1.5em; display: flex; flex-direction: column; gap: 0.5em;">
+        <a href="#" id="dashboard-update-btn" class="sidebar__link" style="justify-content: flex-start; padding: 0.8em 1em; border-radius: 8px;">
+          <span class="sidebar__icon" style="font-size: 1.2em;">🔄</span>
+          <span class="link-text">Update My Address</span>
+        </a>
+        <a href="#" id="dashboard-share-btn" class="sidebar__link" style="justify-content: flex-start; padding: 0.8em 1em; border-radius: 8px;">
+          <span class="sidebar__icon" style="font-size: 1.2em;">🔗</span>
+          <span class="link-text">Share My Address</span>
+        </a>
+      </div>
     </div>
   `;
 }
+
 // Hide dashboard by default on page load
 document.addEventListener('DOMContentLoaded', () => {
   const dash = document.getElementById('dashboard');
@@ -38,37 +50,67 @@ let appState = { isAuthenticated: false, user: null };
 function renderSidebarLoggedIn() {
   const sidebarScroll = document.querySelector('.sidebar__scroll');
   if (!sidebarScroll) return;
-  sidebarScroll.innerHTML = `
-    <nav class="sidebar__nav" aria-label="Main">
+
+  // Setup flex container for proper layout
+  sidebarScroll.style.display = 'flex';
+  sidebarScroll.style.flexDirection = 'column';
+  sidebarScroll.style.height = '100%';
+  sidebarScroll.innerHTML = ''; // Clear previous content
+
+  // --- Top Section (Nav + Content) ---
+  const topSection = document.createElement('div');
+  topSection.innerHTML = `
+    <nav class="sidebar__nav" aria-label="Main" style="padding: 1.5em 1.5em 1em;">
       <a class="sidebar__link active" id="sidebar-dashboard" href="#"><span class="sidebar__icon">🏠</span><span class="link-text">Dashboard</span></a>
       <a class="sidebar__link" id="sidebar-history" href="#"><span class="sidebar__icon">🕑</span><span class="link-text">History</span></a>
       <a class="sidebar__link" id="sidebar-settings" href="#"><span class="sidebar__icon">⚙️</span><span class="link-text">Settings</span></a>
-      <a class="sidebar__link" id="sidebar-logout" href="#"><span class="sidebar__icon">🚪</span><span class="link-text">Logout</span></a>
     </nav>
-    <div class="sidebar__profile" style="margin-top:2.5em;display:flex;flex-direction:column;align-items:center;gap:0.5em;">
-      <div class="profile-avatar" style="width:48px;height:48px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:1.7rem;">👤</div>
-      <div class="profile-name" style="font-weight:600;">User</div>
-      <div class="profile-phone" style="font-size:0.97rem;color:#888;">+252 ••••••••</div>
+    <div id="sidebar-content-area" style="padding: 0 0.5em;"></div>
+  `;
+
+  // --- Bottom Section (Profile + Logout) ---
+  const bottomSection = document.createElement('div');
+  bottomSection.style.marginTop = 'auto'; // Pushes this section to the bottom
+  bottomSection.innerHTML = `
+    <div class="sidebar__profile" style="padding: 1.5em; border-top: 1px solid var(--panel-border);">
+        <div style="display:flex; align-items: center; gap: 12px; margin-bottom: 1em;">
+            <div class="profile-avatar" style="width:40px;height:40px;border-radius:50%;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">👤</div>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+                <div class="profile-name" style="font-weight:600;">User</div>
+                <div class="profile-phone" style="font-size:0.9rem;color:var(--text-secondary);">+252 ••••••••</div>
+            </div>
+        </div>
+        <a class="sidebar__link" id="sidebar-logout" href="#"><span class="sidebar__icon">🚪</span><span class="link-text">Logout</span></a>
     </div>
   `;
-    // Render dashboard in sidebar
-    renderDashboardInSidebar();
-    // Hide info panel if open
-    const infoPanel = document.getElementById('info-panel');
-    if (infoPanel) infoPanel.style.display = 'none';
-    // Sidebar nav handlers
-    document.getElementById('sidebar-dashboard')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      renderDashboardInSidebar();
-    });
-    document.getElementById('sidebar-logout')?.addEventListener('click', () => {
-      localStorage.removeItem('sessionToken');
-      appState.isAuthenticated = false;
-      // Remove dashboard from sidebar
-      const dash = document.getElementById('sidebar-dashboard-panel');
-      if (dash) dash.remove();
-      renderSidebarLoggedOut();
-    });
+
+  sidebarScroll.appendChild(topSection);
+  sidebarScroll.appendChild(bottomSection);
+
+  // Render initial dashboard content
+  renderDashboardInSidebar();
+
+  // Hide the main map's info panel if it's open
+  const infoPanel = document.getElementById('info-panel');
+  if (infoPanel) infoPanel.style.display = 'none';
+
+  // --- Event Handlers ---
+  document.getElementById('sidebar-dashboard')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    // Here you would typically show the dashboard panel and hide others
+    renderDashboardInSidebar(); 
+  });
+  // Add handlers for History, Settings etc. here if they have their own render functions
+
+  document.getElementById('sidebar-logout')?.addEventListener('click', () => {
+    localStorage.removeItem('sessionToken');
+    appState.isAuthenticated = false;
+    // Reset the flex styles on logout
+    sidebarScroll.style.display = '';
+    sidebarScroll.style.flexDirection = '';
+    sidebarScroll.style.height = '';
+    renderSidebarLoggedOut();
+  });
 }
 
 function renderSidebarLoggedOut() {
