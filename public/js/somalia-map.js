@@ -467,49 +467,57 @@ function bindFloatingPanelUI(map, getCurrent6D, getCurrentLatLng) {
       if (regView) regView.classList.add('is-active');
       // Add back button if not present
       let backBtn = document.getElementById('sidebar-back-btn');
-        if (!backBtn) {
-          const sidebarHeader = document.querySelector('.sidebar__header');
-          backBtn = document.createElement('button');
-          backBtn.id = 'sidebar-back-btn';
-          backBtn.title = 'Back to menu';
-          backBtn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M15 19l-7-7 7-7" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-          backBtn.style.background = 'none';
-          backBtn.style.border = 'none';
-          backBtn.style.marginRight = '8px';
-          backBtn.style.cursor = 'pointer';
-          sidebarHeader.insertBefore(backBtn, sidebarHeader.firstChild);
-          backBtn.addEventListener('click', () => {
-            // Restore menu/groups
-            document.querySelectorAll('.sidebar__section-heading, .sidebar__nav, .sidebar__utility').forEach(el => el.style.display = '');
-            if (regView) regView.classList.remove('is-active');
-            backBtn.remove();
-          });
-        }
-        // Set code value and update colored code plaque
-        const codeInput = document.getElementById('code');
-        const code = getCurrent6D();
-        if (codeInput) codeInput.value = code;
-        const [rc1, rc2, rc3] = (code || '').split('-');
-        const p1 = document.getElementById('register-code-part-1');
-        const p2 = document.getElementById('register-code-part-2');
-        const p3 = document.getElementById('register-code-part-3');
-        if (p1) p1.textContent = rc1 || '';
-        if (p2) p2.textContent = rc2 || '';
-        if (p3) p3.textContent = rc3 || '';
+      if (!backBtn) {
+        const sidebarHeader = document.querySelector('.sidebar__header');
+        backBtn = document.createElement('button');
+        backBtn.id = 'sidebar-back-btn';
+        backBtn.title = 'Back to menu';
+        backBtn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M15 19l-7-7 7-7" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        backBtn.style.background = 'none';
+        backBtn.style.border = 'none';
+        backBtn.style.marginRight = '8px';
+        backBtn.style.cursor = 'pointer';
+        sidebarHeader.insertBefore(backBtn, sidebarHeader.firstChild);
+        backBtn.addEventListener('click', () => {
+          // Restore menu/groups
+          document.querySelectorAll('.sidebar__section-heading, .sidebar__nav, .sidebar__utility').forEach(el => el.style.display = '');
+          if (regView) regView.classList.remove('is-active');
+          backBtn.remove();
+        });
+      }
+      // Set code value and update colored code plaque
+      const codeInput = document.getElementById('code');
+      const code = getCurrent6D();
+      if (codeInput) codeInput.value = code;
+      const [rc1, rc2, rc3] = (code || '').split('-');
+      const p1 = document.getElementById('register-code-part-1');
+      const p2 = document.getElementById('register-code-part-2');
+      const p3 = document.getElementById('register-code-part-3');
+      if (p1) p1.textContent = rc1 || '';
+      if (p2) p2.textContent = rc2 || '';
+      if (p3) p3.textContent = rc3 || '';
 
-        const { regionName, districtName } = lastAddressDetails;
+      const { regionName, districtName } = lastAddressDetails;
 
-        const districtMsg = document.getElementById('district-detected');
-        if (districtMsg) {
-          if (districtName) {
-            districtMsg.innerHTML = `Your district is <strong>${districtName}</strong>. If this is not correct, please choose from the dropdown.`;
-          } else {
-            districtMsg.textContent = 'Could not detect your district. Please select it from the dropdown.';
-          }
+      const districtMsg = document.getElementById('district-detected');
+      if (districtMsg) {
+        if (districtName) {
+          districtMsg.innerHTML = `Your district is <strong>${districtName}</strong>. If this is not correct, please choose from the dropdown.`;
+        } else {
+          districtMsg.textContent = 'Could not detect your district. Please select it from the dropdown.';
         }
-        
-        populateDistrictsDropdown(regionName, districtName);
-        styleRegistrationForm();
+      }
+      
+      if (regionName) {
+        autoSelectRegion(regionName);
+        autoSelectDistrict(regionName, districtName);
+      } else {
+        const regionSel = $('#region');
+        if(regionSel) regionSel.disabled = false;
+        populateDistrictsDropdown(''); // Clear districts
+      }
+
+      styleRegistrationForm();
     });
   }
 }
