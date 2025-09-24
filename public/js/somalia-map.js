@@ -15,17 +15,25 @@ function renderDashboardInSidebar() {
   }
 
   // New dashboard design
+  // Use demo user data if available
+  const user = appState.user || {};
+  const code = user.code || '---';
+  const name = user.name || 'User';
+  const region = user.region || '';
+  const district = user.district || '';
+  const [c1, c2, c3] = code.split('-');
   dash.innerHTML = `
     <div style="padding: 2em 1.5em; display: flex; flex-direction: column; gap: 2.5em;">
       <div style="text-align: center;">
         <div style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 0.5em; text-transform: uppercase; letter-spacing: 0.8px;">Your 6D Address</div>
         <div style="font-size: 2.2rem; font-weight: 700; letter-spacing: 2px; margin-bottom: 0.5rem;">
-          <span class="code-part code-red">45</span><span class="code-dash">-</span><span class="code-part code-green">78</span><span class="code-dash">-</span><span class="code-part code-blue">12</span>
+          <span class="code-part code-red">${c1 || ''}</span><span class="code-dash">-</span><span class="code-part code-green">${c2 || ''}</span><span class="code-dash">-</span><span class="code-part code-blue">${c3 || ''}</span>
         </div>
-        <div style="font-size: 1.2rem; color: var(--text-primary);">Shangaani, Banaadir 03</div>
+        <div style="font-size: 1.2rem; color: var(--text-primary);">${district}${district && region ? ', ' : ''}${region}</div>
       </div>
 
       <div style="border-top: 1px solid var(--panel-border); padding-top: 1.5em; display: flex; flex-direction: column; gap: 0.5em;">
+        <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.7em;">${name}</div>
         <a href="#" id="dashboard-update-btn" class="sidebar__link" style="justify-content: flex-start; padding: 0.8em 1em; border-radius: 8px;">
           <span class="sidebar__icon" style="font-size: 1.2em;">🔄</span>
           <span class="link-text">Update My Address</span>
@@ -135,6 +143,14 @@ function handleOtpSuccess(token) {
   localStorage.setItem('sessionToken', token);
   closeAuthModal();
   appState.isAuthenticated = true;
+  // For demo: grab registration form data
+  const name = document.getElementById('name')?.value || 'User';
+  const code = document.getElementById('code')?.value || '---';
+  const regionSel = document.getElementById('region');
+  const region = regionSel ? regionSel.options[regionSel.selectedIndex]?.text || '' : '';
+  const districtSel = document.getElementById('district');
+  const district = districtSel ? districtSel.options[districtSel.selectedIndex]?.text || '' : '';
+  appState.user = { name, code, region, district };
   renderSidebarLoggedIn();
 }
 
