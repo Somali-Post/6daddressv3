@@ -431,17 +431,6 @@ function styleRegistrationForm() {
             input.style.marginTop = '0.5em';
         });
 
-        const districtMsg = document.getElementById('district-detected');
-        if (districtMsg) {
-            districtMsg.style.padding = '1em';
-            districtMsg.style.backgroundColor = 'var(--surface-1)';
-            districtMsg.style.borderRadius = '8px';
-            districtMsg.style.fontSize = '0.95em';
-            districtMsg.style.lineHeight = '1.5';
-            districtMsg.style.border = '1px solid var(--panel-border)';
-            districtMsg.style.marginBottom = '0.5em';
-        }
-
         const submitBtn = view.querySelector('button[type="submit"]');
         if(submitBtn) {
             submitBtn.style.padding = '1em';
@@ -541,13 +530,24 @@ function bindFloatingPanelUI(map, getCurrent6D, getCurrentLatLng) {
 
       const { regionName, districtName } = lastAddressDetails;
 
-      const districtMsg = document.getElementById('district-detected');
-      if (districtMsg) {
-        if (districtName) {
-          districtMsg.innerHTML = `Your district is <strong>${districtName}</strong>. If this is not correct, please choose from the dropdown.`;
-        } else {
-          districtMsg.textContent = 'Could not detect your district. Please select it from the dropdown.';
-        }
+      // --- District Message ---
+      // Remove any existing message to avoid duplicates
+      const existingMsg = document.getElementById('district-detected-message');
+      if (existingMsg) existingMsg.remove();
+
+      const districtDropdown = document.getElementById('district');
+      if (districtDropdown) {
+          const messageDiv = document.createElement('div');
+          messageDiv.id = 'district-detected-message'; // Give it a unique ID
+          
+          if (districtName) {
+              messageDiv.innerHTML = `Your district is <strong>${districtName}</strong>. If this is not correct, please choose from the dropdown.`;
+          } else {
+              messageDiv.textContent = 'Could not detect your district. Please select it from the dropdown.';
+          }
+
+          // Insert before the parent of the dropdown (likely a label or a div containing the label and select)
+          districtDropdown.parentNode.insertBefore(messageDiv, districtDropdown);
       }
       
       if (regionName) {
