@@ -213,24 +213,6 @@
         </form>
       </section>
 
-        <!-- OTP Modal for phone verification -->
-        <div id="otp-modal-overlay" class="modal-overlay"></div>
-        <div id="otp-modal" class="auth-modal" aria-hidden="true">
-          <button id="otp-modal-close" class="modal-close" aria-label="Close">&times;</button>
-          <h2>Enter Verification Code</h2>
-          <div id="otp-message">We've sent a 6-digit code to <span id="otp-phone-display">+252 XXXXXXXX</span>.</div>
-          <form id="otp-form" autocomplete="off">
-            <label for="otp-input">Verification Code</label>
-            <div class="otp-input-group">
-              <input id="otp-input" type="text" maxlength="6" pattern="[0-9]{6}" required />
-            </div>
-            <button type="submit" class="btn btn--primary">Verify</button>
-          </form>
-          <div class="auth-modal-footer">
-            <a href="#" id="otp-resend">Resend Code</a>
-          </div>
-          <div id="otp-error" class="auth-error" style="display:none;"></div>
-        </div>
     </div>
   </div>
 

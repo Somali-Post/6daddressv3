@@ -137,12 +137,8 @@ function checkSessionOnLoad() {
 }
 
 document.addEventListener('DOMContentLoaded', checkSessionOnLoad);
-// --- OTP Verification and Session Logic ---
-function handleOtpSuccess(token) {
-  // Store session token in localStorage
-  localStorage.setItem('sessionToken', token);
-  closeAuthModal();
-  appState.isAuthenticated = true;
+// --- Registration direct-to-dashboard logic ---
+function handleRegistrationSuccess() {
   // For demo: grab registration form data
   const name = document.getElementById('name')?.value || 'User';
   const code = document.getElementById('code')?.value || '---';
@@ -150,34 +146,24 @@ function handleOtpSuccess(token) {
   const region = regionSel ? regionSel.options[regionSel.selectedIndex]?.text || '' : '';
   const districtSel = document.getElementById('district');
   const district = districtSel ? districtSel.options[districtSel.selectedIndex]?.text || '' : '';
+  appState.isAuthenticated = true;
   appState.user = { name, code, region, district };
   renderSidebarLoggedIn();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // OTP form submit
-  const otpForm = document.getElementById('otp-form');
-  if (otpForm) {
-    otpForm.addEventListener('submit', async (e) => {
+  // Registration form submit
+  const registerForm = document.getElementById('registerForm');
+  if (registerForm) {
+    registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      clearAuthError();
-      const otp = document.getElementById('otp-input').value.trim();
-      if (!/^\d{6}$/.test(otp)) {
-        showAuthError('Please enter the 6-digit code.');
-        return;
-      }
       // Simulate API call
-      otpForm.querySelector('button[type="submit"]').disabled = true;
-      otpForm.querySelector('button[type="submit"]').textContent = 'Verifying...';
+      registerForm.querySelector('button[type="submit"]').disabled = true;
+      registerForm.querySelector('button[type="submit"]').textContent = 'Registering...';
       await new Promise(r => setTimeout(r, 900)); // mock delay
-      // Mock: accept 123456 as valid, else error
-      if (otp === '123456') {
-        handleOtpSuccess('mock-session-token');
-      } else {
-        showAuthError('The code you entered is incorrect or has expired. Please try again.');
-      }
-      otpForm.querySelector('button[type="submit"]').disabled = false;
-      otpForm.querySelector('button[type="submit"]').textContent = 'Verify & Login';
+      handleRegistrationSuccess();
+      registerForm.querySelector('button[type="submit"]').disabled = false;
+      registerForm.querySelector('button[type="submit"]').textContent = 'Submit';
     });
   }
 });
