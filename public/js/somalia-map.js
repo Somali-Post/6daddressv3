@@ -839,12 +839,21 @@ function waitForGoogleMaps(timeoutMs = 15000) {
 function setSidebarExpanded(expanded) {
   const sidebar = $('#sidebar');
   if (!sidebar) return;
+
+  const contentArea = document.getElementById('sidebar-content-area');
+
   if (expanded) {
     sidebar.classList.remove('collapsed');
     sidebar.setAttribute('aria-expanded', 'true');
+    if (contentArea) {
+      contentArea.style.display = '';
+    }
   } else {
     sidebar.classList.add('collapsed');
     sidebar.setAttribute('aria-expanded', 'false');
+    if (contentArea) {
+      contentArea.style.display = 'none';
+    }
   }
 }
 function showSidebarView(viewId) {
