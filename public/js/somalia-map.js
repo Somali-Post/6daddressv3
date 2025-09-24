@@ -398,7 +398,6 @@ function styleRegistrationForm() {
     const view = document.getElementById('view-register');
     if (!view) return;
 
-    // Using a small delay to ensure view is rendered and transitions are complete
     setTimeout(() => {
         view.style.padding = '1.5em 2em';
         view.style.color = 'var(--text-primary)';
@@ -419,7 +418,7 @@ function styleRegistrationForm() {
             label.style.letterSpacing = '0.5px';
         });
 
-        const inputs = view.querySelectorAll('input[type="text"], input[type="tel"], select');
+        const inputs = view.querySelectorAll('input[type="text"], select');
         inputs.forEach(input => {
             input.style.width = '100%';
             input.style.padding = '1em';
@@ -431,6 +430,33 @@ function styleRegistrationForm() {
             input.style.marginTop = '0.5em';
         });
 
+        // --- Phone Field Styling ---
+        const phoneInput = view.querySelector('input[type="tel"]');
+        if (phoneInput && phoneInput.parentElement) {
+            const phoneContainer = phoneInput.parentElement;
+            phoneContainer.style.display = 'flex';
+            phoneContainer.style.alignItems = 'center';
+            phoneContainer.style.border = '1px solid var(--panel-border)';
+            phoneContainer.style.borderRadius = '8px';
+            phoneContainer.style.backgroundColor = 'var(--surface-2)';
+            phoneContainer.style.marginTop = '0.5em';
+
+            const prefix = phoneContainer.querySelector('span');
+            if (prefix) {
+                prefix.style.padding = '1em';
+                prefix.style.borderRight = '1px solid var(--panel-border)';
+                prefix.style.marginRight = '1em';
+                prefix.style.color = 'var(--text-secondary)';
+            }
+
+            phoneInput.style.border = 'none';
+            phoneInput.style.padding = '1em';
+            phoneInput.style.flexGrow = '1';
+            phoneInput.style.width = 'auto';
+            phoneInput.style.marginTop = '0';
+            phoneInput.style.backgroundColor = 'transparent';
+        }
+
         const submitBtn = view.querySelector('button[type="submit"]');
         if(submitBtn) {
             submitBtn.style.padding = '1em';
@@ -438,6 +464,18 @@ function styleRegistrationForm() {
             submitBtn.style.fontWeight = '700';
             submitBtn.style.borderRadius = '8px';
         }
+        
+        const districtMsg = document.getElementById('district-detected-message');
+        if (districtMsg) {
+            districtMsg.style.padding = '1em';
+            districtMsg.style.backgroundColor = 'var(--surface-1)';
+            districtMsg.style.borderRadius = '8px';
+            districtMsg.style.fontSize = '0.95em';
+            districtMsg.style.lineHeight = '1.5';
+            districtMsg.style.border = '1px solid var(--panel-border)';
+            districtMsg.style.marginBottom = '0.5em';
+        }
+
     }, 50);
 }
 
