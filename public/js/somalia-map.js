@@ -496,6 +496,7 @@ function bindFloatingPanelUI(map, getCurrent6D, getCurrentLatLng) {
       document.querySelectorAll('.sidebar__section-heading, .sidebar__nav, .sidebar__utility').forEach(el => el.style.display = 'none');
       const regView = document.getElementById('view-register');
       if (regView) regView.classList.add('is-active');
+      
       // Add back button if not present
       let backBtn = document.getElementById('sidebar-back-btn');
       if (!backBtn) {
@@ -503,7 +504,11 @@ function bindFloatingPanelUI(map, getCurrent6D, getCurrentLatLng) {
         backBtn = document.createElement('button');
         backBtn.id = 'sidebar-back-btn';
         backBtn.title = 'Back to menu';
-        backBtn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M15 19l-7-7 7-7" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        
+        const isLightMode = document.documentElement.getAttribute('data-theme') === 'light';
+        const iconColor = isLightMode ? '#000' : '#fff';
+        backBtn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M15 19l-7-7 7-7" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        
         backBtn.style.background = 'none';
         backBtn.style.border = 'none';
         backBtn.style.marginRight = '8px';
@@ -516,6 +521,7 @@ function bindFloatingPanelUI(map, getCurrent6D, getCurrentLatLng) {
           backBtn.remove();
         });
       }
+
       // Set code value and update colored code plaque
       const codeInput = document.getElementById('code');
       const code = getCurrent6D();
@@ -531,22 +537,19 @@ function bindFloatingPanelUI(map, getCurrent6D, getCurrentLatLng) {
       const { regionName, districtName } = lastAddressDetails;
 
       // --- District Message ---
-      // Remove any existing message to avoid duplicates
       const existingMsg = document.getElementById('district-detected-message');
       if (existingMsg) existingMsg.remove();
 
       const districtDropdown = document.getElementById('district');
       if (districtDropdown) {
           const messageDiv = document.createElement('div');
-          messageDiv.id = 'district-detected-message'; // Give it a unique ID
+          messageDiv.id = 'district-detected-message';
           
           if (districtName) {
               messageDiv.innerHTML = `Your district is <strong>${districtName}</strong>. If this is not correct, please choose from the dropdown.`;
           } else {
               messageDiv.textContent = 'Could not detect your district. Please select it from the dropdown.';
           }
-
-          // Insert before the parent of the dropdown (likely a label or a div containing the label and select)
           districtDropdown.parentNode.insertBefore(messageDiv, districtDropdown);
       }
       
