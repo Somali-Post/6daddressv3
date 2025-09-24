@@ -342,6 +342,7 @@ body.dark-mode .info-panel__code-plaque {
   display: flex;
   align-items: stretch;
   width: 100%;
+  max-width: 370px; /* Match sidebar field width */
 }
 .input-group-addon {
   background: #f3f4f6;
@@ -354,6 +355,7 @@ body.dark-mode .info-panel__code-plaque {
   display: flex;
   align-items: center;
   min-width: 48px;
+  max-width: 70px;
   justify-content: center;
   height: 44px;
 }
@@ -364,6 +366,8 @@ body.dark-mode .info-panel__code-plaque {
   padding: 0.6em 1em;
   font-size: 1rem;
   width: 100%;
+  min-width: 0;
+  max-width: 300px;
   background: #fff;
   color: #222;
   outline: none;
