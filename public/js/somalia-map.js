@@ -137,18 +137,18 @@ function checkSessionOnLoad() {
 }
 
 document.addEventListener('DOMContentLoaded', checkSessionOnLoad);
-// --- Registration direct-to-dashboard logic ---
+
+// --- Registration OTP success logic ---
+let pendingRegistration = null;
 function handleRegistrationSuccess() {
-  // For demo: grab registration form data
-  const name = document.getElementById('name')?.value || 'User';
-  const code = document.getElementById('code')?.value || '---';
-  const regionSel = document.getElementById('region');
-  const region = regionSel ? regionSel.options[regionSel.selectedIndex]?.text || '' : '';
-  const districtSel = document.getElementById('district');
-  const district = districtSel ? districtSel.options[districtSel.selectedIndex]?.text || '' : '';
-  appState.isAuthenticated = true;
-  appState.user = { name, code, region, district };
-  renderSidebarLoggedIn();
+  // Use pending registration data after OTP
+  if (pendingRegistration) {
+    const { name, code, region, district } = pendingRegistration;
+    appState.isAuthenticated = true;
+    appState.user = { name, code, region, district };
+    pendingRegistration = null;
+    renderSidebarLoggedIn();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -157,13 +157,53 @@ document.addEventListener('DOMContentLoaded', () => {
   if (registerForm) {
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      // Simulate API call
-      registerForm.querySelector('button[type="submit"]').disabled = true;
-      registerForm.querySelector('button[type="submit"]').textContent = 'Registering...';
+      // Collect registration data
+      const name = document.getElementById('name')?.value || 'User';
+      const code = document.getElementById('code')?.value || '---';
+      const regionSel = document.getElementById('region');
+      const region = regionSel ? regionSel.options[regionSel.selectedIndex]?.text || '' : '';
+      const districtSel = document.getElementById('district');
+      const district = districtSel ? districtSel.options[districtSel.selectedIndex]?.text || '' : '';
+      const phone = document.getElementById('phone')?.value || '';
+      pendingRegistration = { name, code, region, district, phone };
+      // Show OTP modal (reuse login OTP modal logic)
+      openAuthModal('otp');
+      // Set phone in OTP modal
+      const otpPhoneDisplay = document.getElementById('otp-phone-display');
+      if (otpPhoneDisplay) otpPhoneDisplay.textContent = '+252 ' + phone;
+      // Optionally, trigger sending OTP here (API call)
+    });
+  }
+});
+// Patch OTP form submit to handle registration as well
+document.addEventListener('DOMContentLoaded', () => {
+  const otpForm = document.getElementById('otp-form');
+  if (otpForm) {
+    otpForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAuthError();
+      const otp = document.getElementById('otp-input').value.trim();
+      if (!/^\d{6}$/.test(otp)) {
+        showAuthError('Please enter the 6-digit code.');
+        return;
+      }
+      otpForm.querySelector('button[type="submit"]').disabled = true;
+      otpForm.querySelector('button[type="submit"]').textContent = 'Verifying...';
       await new Promise(r => setTimeout(r, 900)); // mock delay
-      handleRegistrationSuccess();
-      registerForm.querySelector('button[type="submit"]').disabled = false;
-      registerForm.querySelector('button[type="submit"]').textContent = 'Submit';
+      // Mock: accept 123456 as valid, else error
+      if (otp === '123456') {
+        if (pendingRegistration) {
+          handleRegistrationSuccess();
+          closeAuthModal();
+        } else {
+          // fallback to login OTP flow if not registration
+          handleOtpSuccess('mock-session-token');
+        }
+      } else {
+        showAuthError('The code you entered is incorrect or has expired. Please try again.');
+      }
+      otpForm.querySelector('button[type="submit"]').disabled = false;
+      otpForm.querySelector('button[type="submit"]').textContent = 'Verify & Login';
     });
   }
 });
