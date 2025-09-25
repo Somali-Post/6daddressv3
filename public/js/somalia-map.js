@@ -53,7 +53,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (dash) dash.style.display = 'none';
 });
 // --- Sidebar transformation and session persistence ---
-let appState = { isAuthenticated: false, user: null };
+const appState = {
+  isLoggedIn: false,
+  isSidebarExpanded: false,
+  activeSidebarView: 'register-cta',
+  isAuthenticated: false, // from old state
+  user: null // from old state
+};
 
 function renderSidebarLoggedIn() {
   const sidebarScroll = document.querySelector('.sidebar__scroll');
@@ -571,13 +577,12 @@ function bindFloatingPanelUI(map, getCurrent6D, getCurrentLatLng) {
   const regBtn = document.getElementById('register-this-address-btn');
   if (regBtn) {
     regBtn.addEventListener('click', () => {
-      setSidebarExpanded(true);
-      // Hide all sidebar content except registration view
-      document.querySelectorAll('.sidebar__section-heading, .sidebar__nav, .sidebar__utility').forEach(el => el.style.display = 'none');
-      const regView = document.getElementById('view-register');
-      if (regView) regView.classList.add('is-active');
+      appState.isSidebarExpanded = true;
+      appState.activeSidebarView = 'register';
+      render();
       
-      // Add back button if not present
+      // This back button logic is tricky. It's not really state-driven.
+      // Let's leave it for now, but ideally this would be part of the render function.
       let backBtn = document.getElementById('sidebar-back-btn');
       if (!backBtn) {
         const sidebarHeader = document.querySelector('.sidebar__header');
@@ -878,33 +883,43 @@ function waitForGoogleMaps(timeoutMs = 15000) {
     })();
   });
 }
-function setSidebarExpanded(expanded) {
+function render() {
   const sidebar = $('#sidebar');
   if (!sidebar) return;
 
-  const contentArea = document.getElementById('sidebar-content-area');
+  // 1. Handle sidebar expansion
+  sidebar.classList.toggle('is-expanded', appState.isSidebarExpanded);
+  sidebar.setAttribute('aria-expanded', appState.isSidebarExpanded);
 
-  if (expanded) {
-    sidebar.classList.remove('collapsed');
-    sidebar.setAttribute('aria-expanded', 'true');
-    if (contentArea) {
-      contentArea.style.display = '';
-    }
-  } else {
-    sidebar.classList.add('collapsed');
-    sidebar.setAttribute('aria-expanded', 'false');
-    if (contentArea) {
-      contentArea.style.display = 'none';
-    }
+  // This is a bit of a hack from the old code, let's keep it for now.
+  const contentArea = document.getElementById('sidebar-content-area');
+  if (contentArea) {
+      contentArea.style.display = appState.isSidebarExpanded ? '' : 'none';
   }
-}
-function showSidebarView(viewId) {
-  document.querySelectorAll('.sidebar-view').forEach((v) => v.classList.remove('is-active'));
-  const panel = $(`#view-${viewId}`);
-  if (panel) panel.classList.add('is-active');
-  document.querySelectorAll('.sidebar__link').forEach((btn) => btn.classList.remove('is-active'));
-  const currentBtn = $(`.sidebar__link[data-view="${viewId}"]`);
-  if (currentBtn) currentBtn.classList.add('is-active');
+
+  // 2. Handle active sidebar view
+  const activeViewId = `view-${appState.activeSidebarView}`;
+  
+  // Deactivate all views
+  document.querySelectorAll('.sidebar-view').forEach(view => {
+    view.classList.remove('active', 'is-active');
+  });
+
+  // Activate the correct one
+  const activeView = document.getElementById(activeViewId);
+  if (activeView) {
+    activeView.classList.add('active', 'is-active');
+  }
+
+  // 3. Handle active navigation link state
+  document.querySelectorAll('.sidebar__link').forEach(link => {
+    link.classList.remove('is-active', 'active');
+  });
+
+  const activeLink = document.querySelector(`.sidebar__link[data-view="${appState.activeSidebarView}"]`);
+  if (activeLink) {
+    activeLink.classList.add('is-active', 'active');
+  }
 }
 
 /* Recenter visibility */
@@ -1028,9 +1043,21 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ---------- Bind + init ---------- */
 function bindUI() {
   $('#sidebarToggle')?.addEventListener('click', () => {
-    const sb = $('#sidebar');
-    const willExpand = sb?.classList.contains('collapsed');
-    setSidebarExpanded(!!willExpand);
+    appState.isSidebarExpanded = !appState.isSidebarExpanded;
+    render();
+  });
+
+  // Example of how other links should work
+  document.querySelectorAll('.sidebar__link[data-view]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const view = link.getAttribute('data-view');
+      if (view) {
+        appState.activeSidebarView = view;
+        appState.isSidebarExpanded = true; // Clicking a view should always expand
+        render();
+      }
+    });
   });
 
   $('#ctaFind')?.addEventListener('click', handleFindMyLocation);
@@ -1083,7 +1110,7 @@ async function initMapOnceReady() {
   // Map click gives a Google LatLng
   map.addListener('click', (e) => handleSelectLatLng(e.latLng));
 
-  setSidebarExpanded(false);
+  render(); // Initial render
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
